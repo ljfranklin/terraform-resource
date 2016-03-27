@@ -1,12 +1,12 @@
 package models
 
 type Version struct {
-	Number string `json:"number"`
+	Version string `json:"version"`
 }
 
 type InRequest struct {
 	Source  Source  `json:"source"`
-	Version Version `json:"version"`
+	Version Version `json:"version,omitempty"` // absent on initial request
 }
 
 type InResponse struct {
@@ -31,6 +31,19 @@ type MetadataField struct {
 	Value interface{} `json:"value"`
 }
 
-type Source struct{}
+type Source struct {
+	StorageDriver string `json:"storage_driver"`
+
+	// S3 driver
+	Bucket          string `json:"bucket"`
+	Key             string `json:"key"`
+	AccessKeyID     string `json:"access_key_id"`
+	SecretAccessKey string `json:"secret_access_key"`
+	RegionName      string `json:"region_name,omitempty"` // optional
+}
 
 type Params map[string]interface{}
+
+const (
+	S3Driver = "s3"
+)

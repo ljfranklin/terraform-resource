@@ -25,7 +25,7 @@ func main() {
 
 	req := models.OutRequest{}
 	if err := json.NewDecoder(os.Stdin).Decode(&req); err != nil {
-		log.Fatalf("Failed to read InRequest: %s", err)
+		log.Fatalf("Failed to read OutRequest: %s", err)
 	}
 
 	terraformSource, ok := req.Params["terraform_source"]
@@ -57,7 +57,7 @@ func main() {
 
 	resp := models.OutResponse{
 		Version: models.Version{
-			Number: "0.0.0",
+			Version: "0.0.0",
 		},
 		Metadata: metadata,
 	}

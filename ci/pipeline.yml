@@ -1,0 +1,15 @@
+resource_types:
+- name: terraform
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+
+resources:
+- name: terraform
+  type: terraform
+  source: {}
+
+jobs:
+  - name: hello-world
+    plan:
+    - put: terraform

@@ -8,7 +8,9 @@ import (
 	"testing"
 )
 
-var pathToCheckBinary string
+var (
+	pathToCheckBinary string
+)
 
 func TestCheck(t *testing.T) {
 	RegisterFailHandler(Fail)

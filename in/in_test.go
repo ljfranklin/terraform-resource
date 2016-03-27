@@ -25,7 +25,7 @@ var _ = Describe("In", func() {
 		input := models.InRequest{
 			Source: models.Source{},
 			Version: models.Version{
-				Number: "1.1.1",
+				Version: "1.1.1",
 			},
 		}
 		err = json.NewEncoder(stdin).Encode(input)
@@ -40,7 +40,7 @@ var _ = Describe("In", func() {
 
 		expectedOutput := models.InResponse{
 			Version: models.Version{
-				Number: "1.1.1",
+				Version: "1.1.1",
 			},
 			Metadata: []models.MetadataField{},
 		}
