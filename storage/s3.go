@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	awss3 "github.com/aws/aws-sdk-go/service/s3"
@@ -50,8 +51,22 @@ func NewS3(accessKey string, secretKey string, regionName string, bucketName str
 	}
 }
 
-func (s *s3) Download(key string) (io.ReadCloser, error) {
-	return nil, nil
+func (s *s3) Download(key string, destination io.Writer) error {
+	client := awss3.New(s.session, s.awsConfig)
+
+	params := &awss3.GetObjectInput{
+		Bucket: aws.String(s.bucketName),
+		Key:    aws.String(key),
+	}
+
+	resp, err := client.GetObject(params)
+	if err != nil {
+		return fmt.Errorf("GetObject request failed.\nError: %s", err.Error())
+	}
+	defer resp.Body.Close()
+
+	_, err = io.Copy(destination, resp.Body)
+	return nil
 }
 
 func (s *s3) Upload(key string, content io.Reader) error {
@@ -96,6 +111,9 @@ func (s *s3) Version(key string) (string, error) {
 
 	resp, err := client.HeadObject(params)
 	if err != nil {
+		if reqErr, ok := err.(awserr.RequestFailure); ok && reqErr.StatusCode() == 404 {
+			return "", nil // no versions exist
+		}
 		return "", fmt.Errorf("HeadObject request failed.\nError: %s", err.Error())
 	}
 

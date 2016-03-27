@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-var pathToCheckBinary string
+var pathToInBinary string
 
 func TestIn(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -17,7 +17,7 @@ func TestIn(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	var err error
-	pathToCheckBinary, err = gexec.Build("github.com/ljfranklin/terraform-resource/in")
+	pathToInBinary, err = gexec.Build("github.com/ljfranklin/terraform-resource/in")
 	Expect(err).ToNot(HaveOccurred())
 })
 

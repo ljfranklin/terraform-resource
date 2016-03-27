@@ -40,10 +40,11 @@ func main() {
 		log.Fatalf("Failed to check storage backend for version: %s", err)
 	}
 
-	resp := []models.Version{
-		models.Version{
+	resp := []models.Version{}
+	if version != "" {
+		resp = append(resp, models.Version{
 			Version: version,
-		},
+		})
 	}
 
 	if err := json.NewEncoder(os.Stdout).Encode(resp); err != nil {
