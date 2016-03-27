@@ -15,8 +15,8 @@ type InResponse struct {
 }
 
 type OutRequest struct {
-	Source  Source  `json:"source"`
-	Version Version `json:"version"`
+	Source Source `json:"source"`
+	Params Params `json:"params"`
 }
 
 type OutResponse struct {
@@ -27,8 +27,10 @@ type OutResponse struct {
 type Metadata []MetadataField
 
 type MetadataField struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Name  string      `json:"name"`
+	Value interface{} `json:"value"`
 }
 
-type Source map[string]interface{}
+type Source struct{}
+
+type Params map[string]interface{}
