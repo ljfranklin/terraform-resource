@@ -16,49 +16,71 @@ import (
 
 var _ = Describe("Out", func() {
 
-	It("applies the AWS template from a local directory", func() {
-		accessKey := os.Getenv("AWS_ACCESS_KEY")
-		Expect(accessKey).ToNot(BeEmpty(), "AWS_ACCESS_KEY must be set")
+	var terraformSource string
 
-		secretKey := os.Getenv("AWS_SECRET_KEY")
-		Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
+	assertOutLifecycle := func() {
+		It("succeeds in creating, outputing, and deleting infrastructure", func() {
 
-		pathToSources := getProjectRoot()
+			accessKey := os.Getenv("AWS_ACCESS_KEY")
+			Expect(accessKey).ToNot(BeEmpty(), "AWS_ACCESS_KEY must be set")
 
-		command := exec.Command(pathToOutBinary, pathToSources)
+			secretKey := os.Getenv("AWS_SECRET_KEY")
+			Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
 
-		stdin, err := command.StdinPipe()
-		Expect(err).ToNot(HaveOccurred())
+			pathToSources := getProjectRoot()
 
-		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-		Expect(err).ToNot(HaveOccurred())
+			command := exec.Command(pathToOutBinary, pathToSources)
 
-		input := models.OutRequest{
-			Params: models.Params{
-				"terraform_source": "fixtures/aws/",
-				"access_key":       accessKey,
-				"secret_key":       secretKey,
-			},
-		}
-		err = json.NewEncoder(stdin).Encode(input)
-		Expect(err).ToNot(HaveOccurred())
-		stdin.Close()
+			stdin, err := command.StdinPipe()
+			Expect(err).ToNot(HaveOccurred())
 
-		Eventually(session, 2*time.Minute).Should(gexec.Exit(0))
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
 
-		actualOutput := models.OutResponse{}
-		err = json.Unmarshal(session.Out.Contents(), &actualOutput)
-		Expect(err).ToNot(HaveOccurred())
-
-		Expect(actualOutput.Metadata).ToNot(BeEmpty())
-		vpcID := ""
-		for _, field := range actualOutput.Metadata {
-			if field.Name == "vpc_id" {
-				vpcID = field.Value.(string)
-				break
+			input := models.OutRequest{
+				Params: models.Params{
+					"terraform_source": terraformSource,
+					"access_key":       accessKey,
+					"secret_key":       secretKey,
+				},
 			}
-		}
-		Expect(vpcID).ToNot(BeEmpty())
+			err = json.NewEncoder(stdin).Encode(input)
+			Expect(err).ToNot(HaveOccurred())
+			stdin.Close()
+
+			Eventually(session, 2*time.Minute).Should(gexec.Exit(0))
+
+			actualOutput := models.OutResponse{}
+			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(actualOutput.Metadata).ToNot(BeEmpty())
+			vpcID := ""
+			for _, field := range actualOutput.Metadata {
+				if field.Name == "vpc_id" {
+					vpcID = field.Value.(string)
+					break
+				}
+			}
+			Expect(vpcID).ToNot(BeEmpty())
+		})
+	}
+
+	Context("when provided a local terraform source", func() {
+		BeforeEach(func() {
+			terraformSource = "fixtures/aws/"
+		})
+
+		assertOutLifecycle()
+	})
+
+	Context("when provided a remote terraform source", func() {
+		BeforeEach(func() {
+			// changes to fixture must be pushed before running this test
+			terraformSource = "github.com/ljfranklin/terraform-resource//fixtures/aws/"
+		})
+
+		assertOutLifecycle()
 	})
 })
 
