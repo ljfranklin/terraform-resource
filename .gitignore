@@ -1,0 +1,2 @@
+# opting to ignore vendor as aws-sdk-go is ~50MB
+vendor/
