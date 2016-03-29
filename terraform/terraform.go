@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -12,8 +14,8 @@ import (
 type Client struct {
 	// Source can be a local directory or a valid Terraform module source:
 	// https://www.terraform.io/docs/modules/
-	Source    string
-	StateFile string
+	Source        string
+	StateFilePath string
 }
 
 func (c Client) Apply(inputs map[string]interface{}) error {
@@ -21,39 +23,54 @@ func (c Client) Apply(inputs map[string]interface{}) error {
 	if c.Source == "" {
 		return errors.New("Client.source can not be empty")
 	}
-	if c.StateFile == "" {
-		return errors.New("Client.StateFile can not be empty")
+	if c.StateFilePath == "" {
+		return errors.New("Client.StateFilePath can not be empty")
 	}
 
-	args := []string{
+	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-client")
+	if err != nil {
+		return fmt.Errorf("Failed to create temporary working dir at '%s'", os.TempDir())
+	}
+	defer os.RemoveAll(tmpDir)
+
+	initArgs := []string{
+		"terraform",
+		"init",
+		c.Source,
+		tmpDir,
+	}
+	if initOutput, initErr := runCmd(initArgs); initErr != nil {
+		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", initErr, initOutput)
+	}
+
+	applyArgs := []string{
 		"terraform",
 		"apply",
 		"-backup='-'",  // no need to backup state file
 		"-input=false", // do not prompt for inputs
-		fmt.Sprintf("-state=%s", c.StateFile),
+		fmt.Sprintf("-state=%s", c.StateFilePath),
 	}
 	for key, val := range inputs {
-		args = append(args, "-var", fmt.Sprintf("'%s=%v'", key, val))
+		applyArgs = append(applyArgs, "-var", fmt.Sprintf("'%s=%v'", key, val))
 	}
-	args = append(args, c.Source)
+	applyArgs = append(applyArgs, tmpDir)
 
-	output, err := runCmd(args)
-	if err != nil {
-		return fmt.Errorf("terraform command failed.\nError: %s\nOutput: %s", err, output)
+	if applyOutput, err := runCmd(applyArgs); err != nil {
+		return fmt.Errorf("terraform apply command failed.\nError: %s\nOutput: %s", err, applyOutput)
 	}
 	return nil
 }
 
 func (c Client) Output() (map[string]interface{}, error) {
 
-	if c.StateFile == "" {
-		return nil, errors.New("Client.StateFile can not be empty")
+	if c.StateFilePath == "" {
+		return nil, errors.New("Client.StateFilePath can not be empty")
 	}
 
 	rawOutput, err := runCmd([]string{
 		"terraform",
 		"output",
-		fmt.Sprintf("-state=%s", c.StateFile),
+		fmt.Sprintf("-state=%s", c.StateFilePath),
 	})
 
 	if err != nil {
