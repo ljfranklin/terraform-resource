@@ -43,13 +43,6 @@ var _ = Describe("Check", func() {
 
 		pathToS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture"))
 
-		fixture, err := os.Open(getFileLocation("fixtures/s3/terraform.tfstate"))
-		Expect(err).ToNot(HaveOccurred())
-		defer fixture.Close()
-
-		err = s3.Upload(pathToS3Fixture, fixture)
-		Expect(err).ToNot(HaveOccurred())
-
 		checkInput = models.InRequest{
 			Source: models.Source{
 				Bucket:          bucket,
@@ -64,36 +57,73 @@ var _ = Describe("Check", func() {
 		_ = s3.Delete(pathToS3Fixture) // ignore error on cleanup
 	})
 
-	It("returns the version of the fixture on S3", func() {
-		command := exec.Command(pathToCheckBinary)
+	Context("when bucket is empty", func() {
+		It("returns an empty version list", func() {
+			command := exec.Command(pathToCheckBinary)
 
-		stdin, err := command.StdinPipe()
-		Expect(err).ToNot(HaveOccurred())
+			stdin, err := command.StdinPipe()
+			Expect(err).ToNot(HaveOccurred())
 
-		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-		Expect(err).ToNot(HaveOccurred())
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
 
-		err = json.NewEncoder(stdin).Encode(checkInput)
-		Expect(err).ToNot(HaveOccurred())
-		stdin.Close()
+			err = json.NewEncoder(stdin).Encode(checkInput)
+			Expect(err).ToNot(HaveOccurred())
+			stdin.Close()
 
-		Eventually(session, 15*time.Second).Should(gexec.Exit(0))
+			Eventually(session, 15*time.Second).Should(gexec.Exit(0))
 
-		actualOutput := []models.Version{}
-		err = json.Unmarshal(session.Out.Contents(), &actualOutput)
-		Expect(err).ToNot(HaveOccurred())
+			actualOutput := []models.Version{}
+			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
+			Expect(err).ToNot(HaveOccurred())
 
-		version, err := s3.Version(pathToS3Fixture)
-		Expect(err).ToNot(HaveOccurred())
-		_, err = time.Parse(time.RFC3339, version) // does version match format "2006-01-02T15:04:05Z"
-		Expect(err).ToNot(HaveOccurred())
+			expectedOutput := []models.Version{}
+			Expect(actualOutput).To(Equal(expectedOutput))
+		})
+	})
 
-		expectOutput := []models.Version{
-			models.Version{
-				Version: version,
-			},
-		}
-		Expect(actualOutput).To(Equal(expectOutput))
+	Context("when bucket contains state file", func() {
+		BeforeEach(func() {
+
+			fixture, err := os.Open(getFileLocation("fixtures/s3/terraform.tfstate"))
+			Expect(err).ToNot(HaveOccurred())
+			defer fixture.Close()
+
+			err = s3.Upload(pathToS3Fixture, fixture)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("returns the version of the fixture on S3", func() {
+			command := exec.Command(pathToCheckBinary)
+
+			stdin, err := command.StdinPipe()
+			Expect(err).ToNot(HaveOccurred())
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = json.NewEncoder(stdin).Encode(checkInput)
+			Expect(err).ToNot(HaveOccurred())
+			stdin.Close()
+
+			Eventually(session, 15*time.Second).Should(gexec.Exit(0))
+
+			actualOutput := []models.Version{}
+			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
+			Expect(err).ToNot(HaveOccurred())
+
+			version, err := s3.Version(pathToS3Fixture)
+			Expect(err).ToNot(HaveOccurred())
+			_, err = time.Parse(time.RFC3339, version) // does version match format "2006-01-02T15:04:05Z"
+			Expect(err).ToNot(HaveOccurred())
+
+			expectOutput := []models.Version{
+				models.Version{
+					Version: version,
+				},
+			}
+			Expect(actualOutput).To(Equal(expectOutput))
+		})
 	})
 
 	Context("when key is omitted from source", func() {
