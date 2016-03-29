@@ -16,6 +16,16 @@ func main() {
 		log.Fatalf("Failed to read InRequest: %s", err)
 	}
 
+	if req.Source.Key == "" {
+		// checking for new versions only works if `source.key` is specified
+		// return empty version list if `key` is specified as a put param instead
+		resp := []models.Version{}
+		if err := json.NewEncoder(os.Stdout).Encode(resp); err != nil {
+			log.Fatalf("Failed to write Versions to stdout: %s", err)
+		}
+		return
+	}
+
 	driverType := req.Source.StorageDriver
 	if driverType == "" {
 		driverType = models.S3Driver
