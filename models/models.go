@@ -45,5 +45,6 @@ type Source struct {
 type Params map[string]interface{}
 
 const (
-	S3Driver = "s3"
+	S3Driver      = "s3"
+	DestroyAction = "destroy"
 )

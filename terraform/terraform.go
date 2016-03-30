@@ -61,6 +61,49 @@ func (c Client) Apply(inputs map[string]interface{}) error {
 	return nil
 }
 
+func (c Client) Destroy(inputs map[string]interface{}) error {
+
+	if c.Source == "" {
+		return errors.New("Client.source can not be empty")
+	}
+	if c.StateFilePath == "" {
+		return errors.New("Client.StateFilePath can not be empty")
+	}
+
+	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-client")
+	if err != nil {
+		return fmt.Errorf("Failed to create temporary working dir at '%s'", os.TempDir())
+	}
+	defer os.RemoveAll(tmpDir)
+
+	initArgs := []string{
+		"terraform",
+		"init",
+		c.Source,
+		tmpDir,
+	}
+	if initOutput, initErr := runCmd(initArgs); initErr != nil {
+		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", initErr, initOutput)
+	}
+
+	destroyArgs := []string{
+		"terraform",
+		"destroy",
+		"-backup='-'", // no need to backup state file
+		"-force",      // do not prompt for confirmation
+		fmt.Sprintf("-state=%s", c.StateFilePath),
+	}
+	for key, val := range inputs {
+		destroyArgs = append(destroyArgs, "-var", fmt.Sprintf("'%s=%v'", key, val))
+	}
+	destroyArgs = append(destroyArgs, tmpDir)
+
+	if destroyOutput, err := runCmd(destroyArgs); err != nil {
+		return fmt.Errorf("terraform destroy command failed.\nError: %s\nOutput: %s", err, destroyOutput)
+	}
+	return nil
+}
+
 func (c Client) Output() (map[string]interface{}, error) {
 
 	if c.StateFilePath == "" {

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/storage"
@@ -38,27 +39,6 @@ func main() {
 		log.Fatalf("Must specify 'key' under resource.source")
 	}
 
-	terraformSource, ok := req.Params["terraform_source"]
-	if !ok {
-		log.Fatalf("Must specify 'terraform_source' under put params")
-	}
-	delete(req.Params, "terraform_source")
-
-	stateFilePath := path.Join(tmpDir, "terraform.tfstate")
-	client := terraform.Client{
-		Source:        terraformSource.(string),
-		StateFilePath: stateFilePath,
-	}
-
-	if err = client.Apply(req.Params); err != nil {
-		log.Fatalf("Failed to run terraform apply.\nError: %s", err)
-	}
-	stateFile, err := os.Open(stateFilePath)
-	if err != nil {
-		log.Fatalf("Failed to open state file at '%s'", stateFilePath)
-	}
-	defer stateFile.Close()
-
 	driverType := req.Source.StorageDriver
 	if driverType == "" {
 		driverType = models.S3Driver
@@ -78,28 +58,77 @@ func main() {
 		log.Fatalf("Unknown storage_driver '%s'. Supported drivers are: %v", driverType, strings.Join(supportedDrivers, ", "))
 	}
 
-	err = storageDriver.Upload(storageKey, stateFile)
-	if err != nil {
-		log.Fatalf("Failed to upload state file: %s", err)
+	terraformSource, ok := req.Params["terraform_source"]
+	if !ok {
+		log.Fatalf("Must specify 'terraform_source' under put params")
 	}
-	version, err := storageDriver.Version(storageKey)
-	if err != nil {
-		log.Fatalf("Failed to retrieve version from '%s': %s", storageKey, err)
-	}
-	if version == "" {
-		log.Fatalf("Couldn't find state file at: %s", storageKey)
+	delete(req.Params, "terraform_source")
+
+	stateFilePath := path.Join(tmpDir, "terraform.tfstate")
+	client := terraform.Client{
+		Source:        terraformSource.(string),
+		StateFilePath: stateFilePath,
 	}
 
-	output, err := client.Output()
-	if err != nil {
-		log.Fatalf("Failed to terraform output.\nError: %s", err)
-	}
+	version := ""
 	metadata := []models.MetadataField{}
-	for key, value := range output {
-		metadata = append(metadata, models.MetadataField{
-			Name:  key,
-			Value: value,
-		})
+
+	if req.Params["action"] == models.DestroyAction {
+		stateFile, createErr := os.Create(stateFilePath)
+		if createErr != nil {
+			log.Fatalf("Failed to create state file at '%s': %s", stateFilePath, createErr)
+		}
+		defer stateFile.Close()
+
+		err = storageDriver.Download(storageKey, stateFile)
+		if err != nil {
+			log.Fatalf("Failed to download state file: %s", err)
+		}
+		stateFile.Close()
+
+		if err = client.Destroy(req.Params); err != nil {
+			log.Fatalf("Failed to run terraform destroy.\nError: %s", err)
+		}
+
+		err = storageDriver.Delete(storageKey)
+		if err != nil {
+			log.Fatalf("Failed to delete state file: %s", err)
+		}
+
+		version = time.Now().UTC().Format(time.RFC3339)
+	} else {
+		if err = client.Apply(req.Params); err != nil {
+			log.Fatalf("Failed to run terraform apply.\nError: %s", err)
+		}
+		stateFile, err := os.Open(stateFilePath)
+		if err != nil {
+			log.Fatalf("Failed to open state file at '%s'", stateFilePath)
+		}
+		defer stateFile.Close()
+
+		err = storageDriver.Upload(storageKey, stateFile)
+		if err != nil {
+			log.Fatalf("Failed to upload state file: %s", err)
+		}
+
+		version, err = storageDriver.Version(storageKey)
+		if err != nil {
+			log.Fatalf("Failed to retrieve version from '%s': %s", storageKey, err)
+		}
+		if version == "" {
+			log.Fatalf("Couldn't find state file at: %s", storageKey)
+		}
+
+		output, err := client.Output()
+		if err != nil {
+			log.Fatalf("Failed to terraform output.\nError: %s", err)
+		}
+		for key, value := range output {
+			metadata = append(metadata, models.MetadataField{
+				Name:  key,
+				Value: value,
+			})
+		}
 	}
 
 	resp := models.OutResponse{
