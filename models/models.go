@@ -42,7 +42,13 @@ type Source struct {
 	RegionName      string `json:"region_name,omitempty"` // optional
 }
 
-type Params map[string]interface{}
+type Params struct {
+	TerraformSource string        `json:"terraform_source"`
+	TerraformVars   TerraformVars `json:"terraform_vars"`
+	Action          string        `json:"action,omitempty"` // optional
+}
+
+type TerraformVars map[string]interface{}
 
 const (
 	S3Driver      = "s3"

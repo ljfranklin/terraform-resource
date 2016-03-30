@@ -63,9 +63,11 @@ var _ = Describe("Out", func() {
 				SecretAccessKey: secretKey,
 			},
 			Params: models.Params{
-				"terraform_source": "", // overridden in contexts
-				"access_key":       accessKey,
-				"secret_key":       secretKey,
+				TerraformSource: "", // overridden in contexts
+				TerraformVars: map[string]interface{}{
+					"access_key": accessKey,
+					"secret_key": secretKey,
+				},
 			},
 		}
 	})
@@ -134,7 +136,7 @@ var _ = Describe("Out", func() {
 
 			By("running 'out' to delete the VPC")
 
-			outRequest.Params["action"] = models.DestroyAction
+			outRequest.Params.Action = models.DestroyAction
 			deleteCommand := exec.Command(pathToOutBinary, pathToSources)
 
 			deleteStdin, err := deleteCommand.StdinPipe()
@@ -165,7 +167,7 @@ var _ = Describe("Out", func() {
 
 	Context("when provided a local terraform source", func() {
 		BeforeEach(func() {
-			outRequest.Params["terraform_source"] = "fixtures/aws/"
+			outRequest.Params.TerraformSource = "fixtures/aws/"
 		})
 
 		assertOutLifecycle()
@@ -174,7 +176,7 @@ var _ = Describe("Out", func() {
 	Context("when provided a remote terraform source", func() {
 		BeforeEach(func() {
 			// changes to fixture must be pushed before running this test
-			outRequest.Params["terraform_source"] = "github.com/ljfranklin/terraform-resource//fixtures/aws/"
+			outRequest.Params.TerraformSource = "github.com/ljfranklin/terraform-resource//fixtures/aws/"
 		})
 
 		assertOutLifecycle()

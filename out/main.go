@@ -58,22 +58,20 @@ func main() {
 		log.Fatalf("Unknown storage_driver '%s'. Supported drivers are: %v", driverType, strings.Join(supportedDrivers, ", "))
 	}
 
-	terraformSource, ok := req.Params["terraform_source"]
-	if !ok {
+	if req.Params.TerraformSource == "" {
 		log.Fatalf("Must specify 'terraform_source' under put params")
 	}
-	delete(req.Params, "terraform_source")
 
 	stateFilePath := path.Join(tmpDir, "terraform.tfstate")
 	client := terraform.Client{
-		Source:        terraformSource.(string),
+		Source:        req.Params.TerraformSource,
 		StateFilePath: stateFilePath,
 	}
 
 	version := ""
 	metadata := []models.MetadataField{}
 
-	if req.Params["action"] == models.DestroyAction {
+	if req.Params.Action == models.DestroyAction {
 		stateFile, createErr := os.Create(stateFilePath)
 		if createErr != nil {
 			log.Fatalf("Failed to create state file at '%s': %s", stateFilePath, createErr)
@@ -86,7 +84,7 @@ func main() {
 		}
 		stateFile.Close()
 
-		if err = client.Destroy(req.Params); err != nil {
+		if err = client.Destroy(req.Params.TerraformVars); err != nil {
 			log.Fatalf("Failed to run terraform destroy.\nError: %s", err)
 		}
 
@@ -97,7 +95,7 @@ func main() {
 
 		version = time.Now().UTC().Format(time.RFC3339)
 	} else {
-		if err = client.Apply(req.Params); err != nil {
+		if err = client.Apply(req.Params.TerraformVars); err != nil {
 			log.Fatalf("Failed to run terraform apply.\nError: %s", err)
 		}
 		stateFile, err := os.Open(stateFilePath)
