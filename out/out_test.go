@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	awsec2 "github.com/aws/aws-sdk-go/service/ec2"
@@ -134,6 +135,45 @@ var _ = Describe("Out", func() {
 			Expect(resp.Vpcs).To(HaveLen(1))
 			Expect(*resp.Vpcs[0].VpcId).To(Equal(vpcID))
 
+			By("running 'out' to update the VPC")
+
+			outRequest.Params.TerraformVars["tag_name"] = "terraform-resource-test-updated"
+
+			updateCommand := exec.Command(pathToOutBinary, pathToSources)
+
+			updateStdin, err := updateCommand.StdinPipe()
+			Expect(err).ToNot(HaveOccurred())
+
+			updateSession, err := gexec.Start(updateCommand, GinkgoWriter, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = json.NewEncoder(updateStdin).Encode(outRequest)
+			Expect(err).ToNot(HaveOccurred())
+			stdin.Close()
+
+			Eventually(updateSession, 2*time.Minute).Should(gexec.Exit(0))
+
+			version, err = s3.Version(outRequest.Source.Key)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(version).ToNot(BeEmpty())
+
+			updateOutput := models.OutResponse{}
+			err = json.Unmarshal(updateSession.Out.Contents(), &updateOutput)
+			Expect(err).ToNot(HaveOccurred())
+
+			updatedVersion, err := time.Parse(time.RFC3339, updateOutput.Version.Version)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(updatedVersion).To(BeTemporally(">", createVersion))
+
+			resp, err = ec2.DescribeVpcs(vpcParams)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.Vpcs).To(HaveLen(1))
+			tags := resp.Vpcs[0].Tags
+			Expect(tags).To(HaveLen(1))
+			Expect(*tags[0].Key).To(Equal("Name"))
+			Expect(*tags[0].Value).To(Equal("terraform-resource-test-updated"))
+
 			By("running 'out' to delete the VPC")
 
 			outRequest.Params.Action = models.DestroyAction
@@ -161,7 +201,13 @@ var _ = Describe("Out", func() {
 
 			deletedVersion, err := time.Parse(time.RFC3339, deleteOutput.Version.Version)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(deletedVersion).To(BeTemporally(">", createVersion))
+			Expect(deletedVersion).To(BeTemporally(">", updatedVersion))
+
+			_, err = ec2.DescribeVpcs(vpcParams)
+			Expect(err).To(HaveOccurred())
+			ec2err := err.(awserr.Error)
+
+			Expect(ec2err.Code()).To(Equal("InvalidVpcID.NotFound"))
 		})
 	}
 

@@ -95,6 +95,25 @@ func main() {
 
 		version = time.Now().UTC().Format(time.RFC3339)
 	} else {
+
+		version, err = storageDriver.Version(storageKey)
+		if err != nil {
+			log.Fatalf("Failed to check for existing state file from '%s': %s", storageKey, err)
+		}
+		if version != "" {
+			stateFile, createErr := os.Create(stateFilePath)
+			if createErr != nil {
+				log.Fatalf("Failed to create state file at '%s': %s", stateFilePath, createErr)
+			}
+			defer stateFile.Close()
+
+			err = storageDriver.Download(storageKey, stateFile)
+			if err != nil {
+				log.Fatalf("Failed to download state file: %s", err)
+			}
+			stateFile.Close()
+		}
+
 		if err = client.Apply(req.Params.TerraformVars); err != nil {
 			log.Fatalf("Failed to run terraform apply.\nError: %s", err)
 		}
