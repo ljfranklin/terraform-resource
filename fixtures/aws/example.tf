@@ -8,6 +8,6 @@ resource "aws_vpc" "test_vpc" {
     cidr_block = "10.0.99.0/24"
 
     tags {
-        Name = "terraform-resource-test"
+        Name = "${var.tag_name}"
     }
 }
