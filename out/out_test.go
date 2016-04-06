@@ -16,7 +16,7 @@ import (
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	awsec2 "github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/ljfranklin/terraform-resource/models"
-	"github.com/ljfranklin/terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -25,9 +25,9 @@ import (
 var _ = Describe("Out", func() {
 
 	var (
-		outRequest models.OutRequest
-		s3         storage.Storage
-		ec2        *awsec2.EC2
+		outRequest  models.OutRequest
+		ec2         *awsec2.EC2
+		awsVerifier helpers.AWSVerifier
 	)
 
 	BeforeEach(func() {
@@ -47,12 +47,17 @@ var _ = Describe("Out", func() {
 			region = "us-east-1"
 		}
 
+		awsVerifier = helpers.AWSVerifier{
+			AccessKey: accessKey,
+			SecretKey: secretKey,
+			Region:    region,
+		}
+
 		awsConfig := &aws.Config{
 			Region:      aws.String(region),
 			Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
 		}
 		ec2 = awsec2.New(awsSession.New(awsConfig))
-		s3 = storage.NewS3(accessKey, secretKey, region, bucket)
 
 		stateFileKey := path.Join(bucketPath, randomString("out-test"))
 
@@ -77,9 +82,10 @@ var _ = Describe("Out", func() {
 		It("succeeds in creating, outputing, and deleting infrastructure", func() {
 			By("ensuring state file does not already exist")
 
-			version, err := s3.Version(outRequest.Source.Key)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(version).To(BeEmpty())
+			awsVerifier.ExpectS3FileToNotExist(
+				outRequest.Source.Bucket,
+				outRequest.Source.Key,
+			)
 
 			By("running 'out' to create an AWS VPC")
 
@@ -100,9 +106,10 @@ var _ = Describe("Out", func() {
 
 			By("ensuring that state file exists with valid version (LastModified)")
 
-			version, err = s3.Version(outRequest.Source.Key)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(version).ToNot(BeEmpty(), fmt.Sprintf("Failed to find state file at %s", outRequest.Source.Key))
+			awsVerifier.ExpectS3FileToExist(
+				outRequest.Source.Bucket,
+				outRequest.Source.Key,
+			)
 
 			actualOutput := models.OutResponse{}
 			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
@@ -153,9 +160,10 @@ var _ = Describe("Out", func() {
 
 			Eventually(updateSession, 2*time.Minute).Should(gexec.Exit(0))
 
-			version, err = s3.Version(outRequest.Source.Key)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(version).ToNot(BeEmpty())
+			awsVerifier.ExpectS3FileToExist(
+				outRequest.Source.Bucket,
+				outRequest.Source.Key,
+			)
 
 			updateOutput := models.OutResponse{}
 			err = json.Unmarshal(updateSession.Out.Contents(), &updateOutput)
@@ -191,9 +199,10 @@ var _ = Describe("Out", func() {
 
 			Eventually(deleteSession, 2*time.Minute).Should(gexec.Exit(0))
 
-			version, err = s3.Version(outRequest.Source.Key)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(version).To(BeEmpty())
+			awsVerifier.ExpectS3FileToNotExist(
+				outRequest.Source.Bucket,
+				outRequest.Source.Key,
+			)
 
 			deleteOutput := models.OutResponse{}
 			err = json.Unmarshal(deleteSession.Out.Contents(), &deleteOutput)
