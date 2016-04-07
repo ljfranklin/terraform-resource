@@ -10,11 +10,6 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	awsSession "github.com/aws/aws-sdk-go/aws/session"
-	awsec2 "github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/test/helpers"
 	. "github.com/onsi/ginkgo"
@@ -26,8 +21,7 @@ var _ = Describe("Out", func() {
 
 	var (
 		outRequest  models.OutRequest
-		ec2         *awsec2.EC2
-		awsVerifier helpers.AWSVerifier
+		awsVerifier *helpers.AWSVerifier
 	)
 
 	BeforeEach(func() {
@@ -47,17 +41,11 @@ var _ = Describe("Out", func() {
 			region = "us-east-1"
 		}
 
-		awsVerifier = helpers.AWSVerifier{
-			AccessKey: accessKey,
-			SecretKey: secretKey,
-			Region:    region,
-		}
-
-		awsConfig := &aws.Config{
-			Region:      aws.String(region),
-			Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
-		}
-		ec2 = awsec2.New(awsSession.New(awsConfig))
+		awsVerifier = helpers.NewAWSVerifier(
+			accessKey,
+			secretKey,
+			region,
+		)
 
 		stateFileKey := path.Join(bucketPath, randomString("out-test"))
 
@@ -89,20 +77,20 @@ var _ = Describe("Out", func() {
 
 			By("running 'out' to create an AWS VPC")
 
-			pathToSources := getProjectRoot()
-			command := exec.Command(pathToOutBinary, pathToSources)
+			createOutput := models.OutResponse{}
+			runOutCommand(outRequest, &createOutput)
 
-			stdin, err := command.StdinPipe()
-			Expect(err).ToNot(HaveOccurred())
+			Expect(createOutput.Metadata).ToNot(BeEmpty())
+			vpcID := ""
+			for _, field := range createOutput.Metadata {
+				if field.Name == "vpc_id" {
+					vpcID = field.Value.(string)
+					break
+				}
+			}
+			Expect(vpcID).ToNot(BeEmpty())
 
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = json.NewEncoder(stdin).Encode(outRequest)
-			Expect(err).ToNot(HaveOccurred())
-			stdin.Close()
-
-			Eventually(session, 2*time.Minute).Should(gexec.Exit(0))
+			awsVerifier.ExpectVPCToExist(vpcID)
 
 			By("ensuring that state file exists with valid version (LastModified)")
 
@@ -111,112 +99,49 @@ var _ = Describe("Out", func() {
 				outRequest.Source.Key,
 			)
 
-			actualOutput := models.OutResponse{}
-			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
+			// does version match format "2006-01-02T15:04:05Z"?
+			createVersion, err := time.Parse(time.RFC3339, createOutput.Version.Version)
 			Expect(err).ToNot(HaveOccurred())
-
-			// does version match format "2006-01-02T15:04:05Z"
-			createVersion, err := time.Parse(time.RFC3339, actualOutput.Version.Version)
-			Expect(err).ToNot(HaveOccurred())
-
-			By("ensuring that output contains VPC ID and VPC exists")
-
-			Expect(actualOutput.Metadata).ToNot(BeEmpty())
-			vpcID := ""
-			for _, field := range actualOutput.Metadata {
-				if field.Name == "vpc_id" {
-					vpcID = field.Value.(string)
-					break
-				}
-			}
-			Expect(vpcID).ToNot(BeEmpty())
-
-			vpcParams := &awsec2.DescribeVpcsInput{
-				VpcIds: []*string{
-					aws.String(vpcID),
-				},
-			}
-			resp, err := ec2.DescribeVpcs(vpcParams)
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(resp.Vpcs).To(HaveLen(1))
-			Expect(*resp.Vpcs[0].VpcId).To(Equal(vpcID))
 
 			By("running 'out' to update the VPC")
 
 			outRequest.Params.TerraformVars["tag_name"] = "terraform-resource-test-updated"
+			updateOutput := models.OutResponse{}
+			runOutCommand(outRequest, &updateOutput)
 
-			updateCommand := exec.Command(pathToOutBinary, pathToSources)
+			awsVerifier.ExpectVPCToHaveTags(vpcID, map[string]string{
+				"Name": "terraform-resource-test-updated",
+			})
 
-			updateStdin, err := updateCommand.StdinPipe()
-			Expect(err).ToNot(HaveOccurred())
-
-			updateSession, err := gexec.Start(updateCommand, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = json.NewEncoder(updateStdin).Encode(outRequest)
-			Expect(err).ToNot(HaveOccurred())
-			stdin.Close()
-
-			Eventually(updateSession, 2*time.Minute).Should(gexec.Exit(0))
+			By("ensuring that state file has been updated")
 
 			awsVerifier.ExpectS3FileToExist(
 				outRequest.Source.Bucket,
 				outRequest.Source.Key,
 			)
 
-			updateOutput := models.OutResponse{}
-			err = json.Unmarshal(updateSession.Out.Contents(), &updateOutput)
-			Expect(err).ToNot(HaveOccurred())
-
 			updatedVersion, err := time.Parse(time.RFC3339, updateOutput.Version.Version)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(updatedVersion).To(BeTemporally(">", createVersion))
 
-			resp, err = ec2.DescribeVpcs(vpcParams)
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(resp.Vpcs).To(HaveLen(1))
-			tags := resp.Vpcs[0].Tags
-			Expect(tags).To(HaveLen(1))
-			Expect(*tags[0].Key).To(Equal("Name"))
-			Expect(*tags[0].Value).To(Equal("terraform-resource-test-updated"))
-
 			By("running 'out' to delete the VPC")
 
 			outRequest.Params.Action = models.DestroyAction
-			deleteCommand := exec.Command(pathToOutBinary, pathToSources)
+			deleteOutput := models.OutResponse{}
+			runOutCommand(outRequest, &deleteOutput)
 
-			deleteStdin, err := deleteCommand.StdinPipe()
-			Expect(err).ToNot(HaveOccurred())
+			awsVerifier.ExpectVPCToNotExist(vpcID)
 
-			deleteSession, err := gexec.Start(deleteCommand, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = json.NewEncoder(deleteStdin).Encode(outRequest)
-			Expect(err).ToNot(HaveOccurred())
-			stdin.Close()
-
-			Eventually(deleteSession, 2*time.Minute).Should(gexec.Exit(0))
+			By("ensuring that state file no longer exists")
 
 			awsVerifier.ExpectS3FileToNotExist(
 				outRequest.Source.Bucket,
 				outRequest.Source.Key,
 			)
 
-			deleteOutput := models.OutResponse{}
-			err = json.Unmarshal(deleteSession.Out.Contents(), &deleteOutput)
-			Expect(err).ToNot(HaveOccurred())
-
 			deletedVersion, err := time.Parse(time.RFC3339, deleteOutput.Version.Version)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(deletedVersion).To(BeTemporally(">", updatedVersion))
-
-			_, err = ec2.DescribeVpcs(vpcParams)
-			Expect(err).To(HaveOccurred())
-			ec2err := err.(awserr.Error)
-
-			Expect(ec2err.Code()).To(Equal("InvalidVpcID.NotFound"))
 		})
 	}
 
@@ -230,13 +155,33 @@ var _ = Describe("Out", func() {
 
 	Context("when provided a remote terraform source", func() {
 		BeforeEach(func() {
-			// changes to fixture must be pushed before running this test
+			// Note: changes to fixture must be pushed before running this test
 			outRequest.Params.TerraformSource = "github.com/ljfranklin/terraform-resource//fixtures/aws/"
 		})
 
 		assertOutLifecycle()
 	})
 })
+
+func runOutCommand(input interface{}, output interface{}) {
+	pathToSources := getProjectRoot()
+	command := exec.Command(pathToOutBinary, pathToSources)
+
+	stdin, err := command.StdinPipe()
+	Expect(err).ToNot(HaveOccurred())
+
+	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = json.NewEncoder(stdin).Encode(input)
+	Expect(err).ToNot(HaveOccurred())
+	stdin.Close()
+
+	Eventually(session, 2*time.Minute).Should(gexec.Exit(0))
+
+	err = json.Unmarshal(session.Out.Contents(), output)
+	Expect(err).ToNot(HaveOccurred())
+}
 
 func getProjectRoot() string {
 	_, filename, _, _ := runtime.Caller(1)
