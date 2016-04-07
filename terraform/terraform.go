@@ -9,13 +9,17 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/ljfranklin/terraform-resource/storage"
 )
 
 type Client struct {
 	// Source can be a local directory or a valid Terraform module source:
 	// https://www.terraform.io/docs/modules/
-	Source        string
-	StateFilePath string
+	Source             string
+	StateFilePath      string
+	StateFileRemoteKey string
+	StorageDriver      storage.Storage
 }
 
 func (c Client) Apply(inputs map[string]interface{}) error {
@@ -132,6 +136,65 @@ func (c Client) Output() (map[string]interface{}, error) {
 	}
 
 	return output, nil
+}
+
+func (c Client) DownloadStateFileIfExists() (string, error) {
+	if c.StateFilePath == "" {
+		return "", errors.New("Client.StateFilePath can not be empty")
+	}
+	if c.StateFileRemoteKey == "" {
+		return "", errors.New("Client.StateFileRemoteKey can not be empty")
+	}
+
+	version, err := c.StorageDriver.Version(c.StateFileRemoteKey)
+	if err != nil {
+		return "", fmt.Errorf("Failed to check for existing state file from '%s': %s", c.StateFileRemoteKey, err)
+	}
+	if version != "" {
+		stateFile, createErr := os.Create(c.StateFilePath)
+		if createErr != nil {
+			return "", fmt.Errorf("Failed to create state file at '%s': %s", c.StateFilePath, createErr)
+		}
+		defer stateFile.Close()
+
+		err = c.StorageDriver.Download(c.StateFileRemoteKey, stateFile)
+		if err != nil {
+			return "", fmt.Errorf("Failed to download state file: %s", err)
+		}
+		stateFile.Close()
+	}
+
+	return version, nil
+}
+
+func (c Client) UploadStateFile() (string, error) {
+	stateFile, err := os.Open(c.StateFilePath)
+	if err != nil {
+		return "", fmt.Errorf("Failed to open state file at '%s'", c.StateFilePath)
+	}
+	defer stateFile.Close()
+
+	err = c.StorageDriver.Upload(c.StateFileRemoteKey, stateFile)
+	if err != nil {
+		return "", fmt.Errorf("Failed to upload state file: %s", err)
+	}
+
+	version, err := c.StorageDriver.Version(c.StateFileRemoteKey)
+	if err != nil {
+		return "", fmt.Errorf("Failed to retrieve version from '%s': %s", c.StateFileRemoteKey, err)
+	}
+	if version == "" {
+		return "", fmt.Errorf("Couldn't find state file at: %s", c.StateFileRemoteKey)
+	}
+
+	return version, nil
+}
+
+func (c Client) DeleteStateFile() error {
+	if err := c.StorageDriver.Delete(c.StateFileRemoteKey); err != nil {
+		return fmt.Errorf("Failed to delete state file: %s", err)
+	}
+	return nil
 }
 
 func runCmd(args []string) ([]byte, error) {
