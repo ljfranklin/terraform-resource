@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -36,9 +37,39 @@ func main() {
 
 	storageKey := req.Source.Key
 	if storageKey == "" {
-		log.Fatalf("Must specify 'key' under resource.source")
+		log.Fatal("Must specify 'key' under resource.source")
+	}
+	if req.Params.TerraformSource == "" {
+		log.Fatal("Must specify 'terraform_source' under put params")
 	}
 
+	storageDriver, err := buildStorageDriver(req)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	stateFilePath := path.Join(tmpDir, "terraform.tfstate")
+	client := terraform.Client{
+		Source:        req.Params.TerraformSource,
+		StateFilePath: stateFilePath,
+	}
+
+	resp := models.OutResponse{}
+	if req.Params.Action == models.DestroyAction {
+		resp, err = performDestroy(stateFilePath, req, client, storageDriver)
+	} else {
+		resp, err = performApply(stateFilePath, req, client, storageDriver)
+	}
+	if err != nil {
+		log.Fatalf("Failed to run terraform with action '%s': %s", req.Params.Action, err)
+	}
+
+	if err := json.NewEncoder(os.Stdout).Encode(resp); err != nil {
+		log.Fatalf("Failed to write OutResponse: %s", err)
+	}
+}
+
+func buildStorageDriver(req models.OutRequest) (storage.Storage, error) {
 	driverType := req.Source.StorageDriver
 	if driverType == "" {
 		driverType = models.S3Driver
@@ -55,97 +86,67 @@ func main() {
 		)
 	default:
 		supportedDrivers := []string{models.S3Driver}
-		log.Fatalf("Unknown storage_driver '%s'. Supported drivers are: %v", driverType, strings.Join(supportedDrivers, ", "))
+		return nil, fmt.Errorf("Unknown storage_driver '%s'. Supported drivers are: %v", driverType, strings.Join(supportedDrivers, ", "))
 	}
 
-	if req.Params.TerraformSource == "" {
-		log.Fatalf("Must specify 'terraform_source' under put params")
+	return storageDriver, nil
+}
+
+func performApply(stateFilePath string, req models.OutRequest, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
+	var nilResponse models.OutResponse
+
+	storageKey := req.Source.Key
+	version, err := storageDriver.Version(storageKey)
+	if err != nil {
+		return nilResponse, fmt.Errorf("Failed to check for existing state file from '%s': %s", storageKey, err)
 	}
-
-	stateFilePath := path.Join(tmpDir, "terraform.tfstate")
-	client := terraform.Client{
-		Source:        req.Params.TerraformSource,
-		StateFilePath: stateFilePath,
-	}
-
-	version := ""
-	metadata := []models.MetadataField{}
-
-	if req.Params.Action == models.DestroyAction {
+	if version != "" {
 		stateFile, createErr := os.Create(stateFilePath)
 		if createErr != nil {
-			log.Fatalf("Failed to create state file at '%s': %s", stateFilePath, createErr)
+			return nilResponse, fmt.Errorf("Failed to create state file at '%s': %s", stateFilePath, createErr)
 		}
 		defer stateFile.Close()
 
 		err = storageDriver.Download(storageKey, stateFile)
 		if err != nil {
-			log.Fatalf("Failed to download state file: %s", err)
+			return nilResponse, fmt.Errorf("Failed to download state file: %s", err)
 		}
 		stateFile.Close()
+	}
 
-		if err = client.Destroy(req.Params.TerraformVars); err != nil {
-			log.Fatalf("Failed to run terraform destroy.\nError: %s", err)
-		}
+	if err = client.Apply(req.Params.TerraformVars); err != nil {
+		return nilResponse, fmt.Errorf("Failed to run terraform apply.\nError: %s", err)
+	}
+	stateFile, err := os.Open(stateFilePath)
+	if err != nil {
+		return nilResponse, fmt.Errorf("Failed to open state file at '%s'", stateFilePath)
+	}
+	defer stateFile.Close()
 
-		err = storageDriver.Delete(storageKey)
-		if err != nil {
-			log.Fatalf("Failed to delete state file: %s", err)
-		}
+	err = storageDriver.Upload(storageKey, stateFile)
+	if err != nil {
+		return nilResponse, fmt.Errorf("Failed to upload state file: %s", err)
+	}
 
-		version = time.Now().UTC().Format(time.RFC3339)
-	} else {
+	version, err = storageDriver.Version(storageKey)
+	if err != nil {
+		return nilResponse, fmt.Errorf("Failed to retrieve version from '%s': %s", storageKey, err)
+	}
+	if version == "" {
+		return nilResponse, fmt.Errorf("Couldn't find state file at: %s", storageKey)
+	}
 
-		version, err = storageDriver.Version(storageKey)
-		if err != nil {
-			log.Fatalf("Failed to check for existing state file from '%s': %s", storageKey, err)
-		}
-		if version != "" {
-			stateFile, createErr := os.Create(stateFilePath)
-			if createErr != nil {
-				log.Fatalf("Failed to create state file at '%s': %s", stateFilePath, createErr)
-			}
-			defer stateFile.Close()
+	clientOutput, err := client.Output()
+	if err != nil {
+		return nilResponse, fmt.Errorf("Failed to terraform output.\nError: %s", err)
+	}
 
-			err = storageDriver.Download(storageKey, stateFile)
-			if err != nil {
-				log.Fatalf("Failed to download state file: %s", err)
-			}
-			stateFile.Close()
-		}
-
-		if err = client.Apply(req.Params.TerraformVars); err != nil {
-			log.Fatalf("Failed to run terraform apply.\nError: %s", err)
-		}
-		stateFile, err := os.Open(stateFilePath)
-		if err != nil {
-			log.Fatalf("Failed to open state file at '%s'", stateFilePath)
-		}
-		defer stateFile.Close()
-
-		err = storageDriver.Upload(storageKey, stateFile)
-		if err != nil {
-			log.Fatalf("Failed to upload state file: %s", err)
-		}
-
-		version, err = storageDriver.Version(storageKey)
-		if err != nil {
-			log.Fatalf("Failed to retrieve version from '%s': %s", storageKey, err)
-		}
-		if version == "" {
-			log.Fatalf("Couldn't find state file at: %s", storageKey)
-		}
-
-		output, err := client.Output()
-		if err != nil {
-			log.Fatalf("Failed to terraform output.\nError: %s", err)
-		}
-		for key, value := range output {
-			metadata = append(metadata, models.MetadataField{
-				Name:  key,
-				Value: value,
-			})
-		}
+	metadata := []models.MetadataField{}
+	for key, value := range clientOutput {
+		metadata = append(metadata, models.MetadataField{
+			Name:  key,
+			Value: value,
+		})
 	}
 
 	resp := models.OutResponse{
@@ -154,8 +155,39 @@ func main() {
 		},
 		Metadata: metadata,
 	}
+	return resp, nil
+}
 
-	if err := json.NewEncoder(os.Stdout).Encode(resp); err != nil {
-		log.Fatalf("Failed to write OutResponse: %s", err)
+func performDestroy(stateFilePath string, req models.OutRequest, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
+	var nilResponse models.OutResponse
+	stateFile, createErr := os.Create(stateFilePath)
+	if createErr != nil {
+		return nilResponse, fmt.Errorf("Failed to create state file at '%s': %s", stateFilePath, createErr)
 	}
+	defer stateFile.Close()
+
+	err := storageDriver.Download(req.Source.Key, stateFile)
+	if err != nil {
+		return nilResponse, fmt.Errorf("Failed to download state file: %s", err)
+	}
+	stateFile.Close()
+
+	if err = client.Destroy(req.Params.TerraformVars); err != nil {
+		return nilResponse, fmt.Errorf("Failed to run terraform destroy.\nError: %s", err)
+	}
+
+	err = storageDriver.Delete(req.Source.Key)
+	if err != nil {
+		return nilResponse, fmt.Errorf("Failed to delete state file: %s", err)
+	}
+
+	version := time.Now().UTC().Format(time.RFC3339)
+
+	resp := models.OutResponse{
+		Version: models.Version{
+			Version: version,
+		},
+		Metadata: []models.MetadataField{},
+	}
+	return resp, nil
 }
