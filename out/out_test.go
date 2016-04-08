@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -17,6 +18,8 @@ import (
 	"github.com/onsi/gomega/gexec"
 	"gopkg.in/yaml.v2"
 )
+
+var workingDir string
 
 var _ = Describe("Out", func() {
 
@@ -65,6 +68,18 @@ var _ = Describe("Out", func() {
 				},
 			},
 		}
+
+		var err error
+		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test")
+		Expect(err).ToNot(HaveOccurred())
+
+		fixturesDir := path.Join(getProjectRoot(), "fixtures")
+		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	AfterEach(func() {
+		_ = os.RemoveAll(workingDir)
 	})
 
 	assertOutLifecycle := func() {
@@ -182,9 +197,7 @@ var _ = Describe("Out", func() {
 			fileContent, err := yaml.Marshal(fileParams)
 			Expect(err).ToNot(HaveOccurred())
 
-			pathToSources := getProjectRoot()
-			// TODO: do not store files in project/tmp
-			varFilePath := path.Join(pathToSources, "tmp", "test-terraform-variables.tf")
+			varFilePath := path.Join(workingDir, "test-terraform-variables.tf")
 			varFile, err := os.Create(varFilePath)
 			Expect(err).ToNot(HaveOccurred())
 			defer varFile.Close()
@@ -195,14 +208,8 @@ var _ = Describe("Out", func() {
 			outRequest.Params = models.Params{
 				TerraformSource:  "fixtures/aws/",
 				TerraformVars:    pipelineParams,
-				TerraformVarFile: path.Join("tmp", "test-terraform-variables.tf"),
+				TerraformVarFile: "test-terraform-variables.tf",
 			}
-		})
-
-		AfterEach(func() {
-			pathToSources := getProjectRoot()
-			varFilePath := path.Join(pathToSources, "tmp", "test-terraform-variables.tf")
-			_ = os.RemoveAll(varFilePath)
 		})
 
 		It("merges variables from the file and the 'out' params", func() {
@@ -231,8 +238,7 @@ var _ = Describe("Out", func() {
 })
 
 func runOutCommand(input interface{}, output interface{}) {
-	pathToSources := getProjectRoot()
-	command := exec.Command(pathToOutBinary, pathToSources)
+	command := exec.Command(pathToOutBinary, workingDir)
 
 	stdin, err := command.StdinPipe()
 	Expect(err).ToNot(HaveOccurred())
