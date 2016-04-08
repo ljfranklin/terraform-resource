@@ -37,6 +37,11 @@ func main() {
 		log.Fatalf("Failed to read OutRequest: %s", err)
 	}
 
+	terraformVars, err := getTerraformVariables(req, sourceDir)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	storageKey := req.Source.Key
 	if storageKey == "" {
 		log.Fatal("Must specify 'key' under resource.source")
@@ -61,28 +66,6 @@ func main() {
 	_, err = client.DownloadStateFileIfExists()
 	if err != nil {
 		log.Fatal(err.Error())
-	}
-
-	terraformVars := models.TerraformVars{}
-	for key, value := range req.Params.TerraformVars {
-		terraformVars[key] = value
-	}
-	if req.Params.TerraformVarFile != "" {
-		varFilePath := path.Join(sourceDir, req.Params.TerraformVarFile)
-		fileContents, readErr := ioutil.ReadFile(varFilePath)
-		if readErr != nil {
-			log.Fatalf("Failed to read TerraformVarFile at '%s': %s", varFilePath, readErr)
-		}
-
-		fileVars := map[string]interface{}{}
-		readErr = yaml.Unmarshal(fileContents, &fileVars)
-		if readErr != nil {
-			log.Fatalf("Failed to parse TerraformVarFile at '%s': %s", varFilePath, readErr)
-		}
-
-		for key, value := range fileVars {
-			terraformVars[key] = value
-		}
 	}
 
 	resp := models.OutResponse{}
@@ -121,6 +104,32 @@ func buildStorageDriver(req models.OutRequest) (storage.Storage, error) {
 	}
 
 	return storageDriver, nil
+}
+
+func getTerraformVariables(req models.OutRequest, sourceDir string) (models.TerraformVars, error) {
+	terraformVars := models.TerraformVars{}
+	for key, value := range req.Params.TerraformVars {
+		terraformVars[key] = value
+	}
+	if req.Params.TerraformVarFile != "" {
+		varFilePath := path.Join(sourceDir, req.Params.TerraformVarFile)
+		fileContents, readErr := ioutil.ReadFile(varFilePath)
+		if readErr != nil {
+			return nil, fmt.Errorf("Failed to read TerraformVarFile at '%s': %s", varFilePath, readErr)
+		}
+
+		fileVars := map[string]interface{}{}
+		readErr = yaml.Unmarshal(fileContents, &fileVars)
+		if readErr != nil {
+			return nil, fmt.Errorf("Failed to parse TerraformVarFile at '%s': %s", varFilePath, readErr)
+		}
+
+		for key, value := range fileVars {
+			terraformVars[key] = value
+		}
+	}
+
+	return terraformVars, nil
 }
 
 func performApply(stateFilePath string, terraformVars models.TerraformVars, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
