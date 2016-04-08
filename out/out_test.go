@@ -15,6 +15,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"gopkg.in/yaml.v2"
 )
 
 var _ = Describe("Out", func() {
@@ -160,6 +161,72 @@ var _ = Describe("Out", func() {
 		})
 
 		assertOutLifecycle()
+	})
+
+	Context("when given a yaml file containing variables", func() {
+		BeforeEach(func() {
+			accessKey := os.Getenv("AWS_ACCESS_KEY")
+			Expect(accessKey).ToNot(BeEmpty(), "AWS_ACCESS_KEY must be set")
+
+			secretKey := os.Getenv("AWS_SECRET_KEY")
+			Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
+
+			pipelineParams := map[string]interface{}{
+				"access_key": accessKey,
+				"tag_name":   "terraform-resource-test-original",
+			}
+			fileParams := map[string]interface{}{
+				"secret_key": secretKey,
+				"tag_name":   "terraform-resource-test-override",
+			}
+			fileContent, err := yaml.Marshal(fileParams)
+			Expect(err).ToNot(HaveOccurred())
+
+			pathToSources := getProjectRoot()
+			// TODO: do not store files in project/tmp
+			varFilePath := path.Join(pathToSources, "tmp", "test-terraform-variables.tf")
+			varFile, err := os.Create(varFilePath)
+			Expect(err).ToNot(HaveOccurred())
+			defer varFile.Close()
+
+			_, err = varFile.Write(fileContent)
+			Expect(err).ToNot(HaveOccurred())
+
+			outRequest.Params = models.Params{
+				TerraformSource:  "fixtures/aws/",
+				TerraformVars:    pipelineParams,
+				TerraformVarFile: path.Join("tmp", "test-terraform-variables.tf"),
+			}
+		})
+
+		AfterEach(func() {
+			pathToSources := getProjectRoot()
+			varFilePath := path.Join(pathToSources, "tmp", "test-terraform-variables.tf")
+			_ = os.RemoveAll(varFilePath)
+		})
+
+		It("merges variables from the file and the 'out' params", func() {
+			By("running 'out' to create an AWS VPC")
+
+			createOutput := models.OutResponse{}
+			runOutCommand(outRequest, &createOutput)
+
+			Expect(createOutput.Metadata).ToNot(BeEmpty())
+			vpcID := ""
+			for _, field := range createOutput.Metadata {
+				if field.Name == "vpc_id" {
+					vpcID = field.Value.(string)
+					break
+				}
+			}
+			Expect(vpcID).ToNot(BeEmpty())
+
+			awsVerifier.ExpectVPCToExist(vpcID)
+
+			awsVerifier.ExpectVPCToHaveTags(vpcID, map[string]string{
+				"Name": "terraform-resource-test-override",
+			})
+		})
 	})
 })
 

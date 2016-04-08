@@ -43,9 +43,10 @@ type Source struct {
 }
 
 type Params struct {
-	TerraformSource string        `json:"terraform_source"`
-	TerraformVars   TerraformVars `json:"terraform_vars"`
-	Action          string        `json:"action,omitempty"` // optional
+	TerraformSource  string        `json:"terraform_source"`
+	TerraformVars    TerraformVars `json:"terraform_vars,omitempty"`     // optional
+	TerraformVarFile string        `json:"terraform_var_file,omitempty"` // optional
+	Action           string        `json:"action,omitempty"`             // optional
 }
 
 type TerraformVars map[string]interface{}

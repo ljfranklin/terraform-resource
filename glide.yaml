@@ -1,3 +1,4 @@
 package: github.com/ljfranklin/terraform-resource
 import:
 - package: github.com/aws/aws-sdk-go
+- package: gopkg.in/yaml.v2

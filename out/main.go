@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
@@ -61,11 +63,33 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
+	terraformVars := models.TerraformVars{}
+	for key, value := range req.Params.TerraformVars {
+		terraformVars[key] = value
+	}
+	if req.Params.TerraformVarFile != "" {
+		varFilePath := path.Join(sourceDir, req.Params.TerraformVarFile)
+		fileContents, readErr := ioutil.ReadFile(varFilePath)
+		if readErr != nil {
+			log.Fatalf("Failed to read TerraformVarFile at '%s': %s", varFilePath, readErr)
+		}
+
+		fileVars := map[string]interface{}{}
+		readErr = yaml.Unmarshal(fileContents, &fileVars)
+		if readErr != nil {
+			log.Fatalf("Failed to parse TerraformVarFile at '%s': %s", varFilePath, readErr)
+		}
+
+		for key, value := range fileVars {
+			terraformVars[key] = value
+		}
+	}
+
 	resp := models.OutResponse{}
 	if req.Params.Action == models.DestroyAction {
-		resp, err = performDestroy(stateFilePath, req, client, storageDriver)
+		resp, err = performDestroy(stateFilePath, terraformVars, client, storageDriver)
 	} else {
-		resp, err = performApply(stateFilePath, req, client, storageDriver)
+		resp, err = performApply(stateFilePath, terraformVars, client, storageDriver)
 	}
 	if err != nil {
 		log.Fatalf("Failed to run terraform with action '%s': %s", req.Params.Action, err)
@@ -99,10 +123,10 @@ func buildStorageDriver(req models.OutRequest) (storage.Storage, error) {
 	return storageDriver, nil
 }
 
-func performApply(stateFilePath string, req models.OutRequest, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
+func performApply(stateFilePath string, terraformVars models.TerraformVars, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
 	var nilResponse models.OutResponse
 
-	if err := client.Apply(req.Params.TerraformVars); err != nil {
+	if err := client.Apply(terraformVars); err != nil {
 		return nilResponse, fmt.Errorf("Failed to run terraform apply.\nError: %s", err)
 	}
 
@@ -133,10 +157,10 @@ func performApply(stateFilePath string, req models.OutRequest, client terraform.
 	return resp, nil
 }
 
-func performDestroy(stateFilePath string, req models.OutRequest, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
+func performDestroy(stateFilePath string, terraformVars models.TerraformVars, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
 	var nilResponse models.OutResponse
 
-	if err := client.Destroy(req.Params.TerraformVars); err != nil {
+	if err := client.Destroy(terraformVars); err != nil {
 		return nilResponse, fmt.Errorf("Failed to run terraform destroy.\nError: %s", err)
 	}
 
