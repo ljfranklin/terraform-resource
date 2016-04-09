@@ -25,12 +25,8 @@ const (
 )
 
 func NewS3(accessKey string, secretKey string, regionName string, bucketName string) Storage {
-	var creds *credentials.Credentials
-	if accessKey == "" && secretKey == "" {
-		creds = credentials.AnonymousCredentials
-	} else {
-		creds = credentials.NewStaticCredentials(accessKey, secretKey, "")
-	}
+
+	creds := credentials.NewStaticCredentials(accessKey, secretKey, "")
 
 	if len(regionName) == 0 {
 		regionName = defaultRegion

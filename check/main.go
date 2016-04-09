@@ -34,6 +34,16 @@ func main() {
 	var storageDriver storage.Storage
 	switch driverType {
 	case models.S3Driver:
+		if req.Source.AccessKeyID == "" {
+			log.Fatal("Must specify 'access_key_id' under resource.source")
+		}
+		if req.Source.SecretAccessKey == "" {
+			log.Fatal("Must specify 'secret_access_key' under resource.source")
+		}
+		if req.Source.Bucket == "" {
+			log.Fatal("Must specify 'bucket' under resource.source")
+		}
+
 		storageDriver = storage.NewS3(
 			req.Source.AccessKeyID,
 			req.Source.SecretAccessKey,
