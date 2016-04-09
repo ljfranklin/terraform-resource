@@ -49,12 +49,6 @@ func main() {
 		log.Fatalf("Unknown storage_driver '%s'. Supported drivers are: %v", driverType, strings.Join(supportedDrivers, ", "))
 	}
 
-	outputFilepath := path.Join(outputDir, path.Base(req.Source.Key))
-	outputFile, err := os.Create(outputFilepath)
-	if err != nil {
-		log.Fatalf("Failed to create output file at path '%s': %s", outputFilepath, err)
-	}
-
 	stateFilePath := path.Join(tmpDir, "terraform.tfstate")
 	client := terraform.Client{
 		StateFilePath:      stateFilePath,
@@ -73,6 +67,12 @@ func main() {
 	output, err := client.Output()
 	if err != nil {
 		log.Fatalf("Failed to parse terraform output.\nError: %s", err)
+	}
+
+	outputFilepath := path.Join(outputDir, "metadata")
+	outputFile, err := os.Create(outputFilepath)
+	if err != nil {
+		log.Fatalf("Failed to create output file at path '%s': %s", outputFilepath, err)
 	}
 	if err := json.NewEncoder(outputFile).Encode(output); err != nil {
 		log.Fatalf("Failed to write output file: %s", err)

@@ -72,8 +72,6 @@ var _ = Describe("In", func() {
 	})
 
 	It("fetches state file from S3", func() {
-		expectedOutputPath := path.Join(tmpDir, path.Base(pathToS3Fixture))
-		Expect(expectedOutputPath).ToNot(BeAnExistingFile())
 
 		command := exec.Command(pathToInBinary, tmpDir)
 
@@ -97,6 +95,7 @@ var _ = Describe("In", func() {
 		_, err = time.Parse(time.RFC3339, actualOutput.Version.Version)
 		Expect(err).ToNot(HaveOccurred())
 
+		expectedOutputPath := path.Join(tmpDir, "metadata")
 		Expect(expectedOutputPath).To(BeAnExistingFile())
 		outputFile, err := os.Open(expectedOutputPath)
 		Expect(err).ToNot(HaveOccurred())
