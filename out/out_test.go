@@ -15,6 +15,7 @@ import (
 	"github.com/ljfranklin/terraform-resource/test/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"gopkg.in/yaml.v2"
 )
@@ -254,6 +255,8 @@ func runOutCommand(input interface{}, output interface{}) {
 
 	err = json.Unmarshal(session.Out.Contents(), output)
 	Expect(err).ToNot(HaveOccurred())
+
+	Expect(session.Err).To(gbytes.Say("Apply complete!"))
 }
 
 func getProjectRoot() string {

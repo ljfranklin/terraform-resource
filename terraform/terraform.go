@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -20,6 +21,7 @@ type Client struct {
 	StateFilePath      string
 	StateFileRemoteKey string
 	StorageDriver      storage.Storage
+	OutputWriter       io.Writer
 }
 
 func (c Client) Apply(inputs map[string]interface{}) error {
@@ -37,18 +39,16 @@ func (c Client) Apply(inputs map[string]interface{}) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	initArgs := []string{
-		"terraform",
+	initCmd := terraformCmd([]string{
 		"init",
 		c.Source,
 		tmpDir,
-	}
-	if initOutput, initErr := runCmd(initArgs); initErr != nil {
+	})
+	if initOutput, initErr := initCmd.CombinedOutput(); initErr != nil {
 		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", initErr, initOutput)
 	}
 
 	applyArgs := []string{
-		"terraform",
 		"apply",
 		"-backup='-'",  // no need to backup state file
 		"-input=false", // do not prompt for inputs
@@ -59,9 +59,14 @@ func (c Client) Apply(inputs map[string]interface{}) error {
 	}
 	applyArgs = append(applyArgs, tmpDir)
 
-	if applyOutput, err := runCmd(applyArgs); err != nil {
-		return fmt.Errorf("terraform apply command failed.\nError: %s\nOutput: %s", err, applyOutput)
+	applyCmd := terraformCmd(applyArgs)
+	applyCmd.Stdout = c.OutputWriter
+	applyCmd.Stderr = c.OutputWriter
+	err = applyCmd.Run()
+	if err != nil {
+		return fmt.Errorf("Failed to run Terraform command: %s", err)
 	}
+
 	return nil
 }
 
@@ -80,18 +85,16 @@ func (c Client) Destroy(inputs map[string]interface{}) error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	initArgs := []string{
-		"terraform",
+	initCmd := terraformCmd([]string{
 		"init",
 		c.Source,
 		tmpDir,
-	}
-	if initOutput, initErr := runCmd(initArgs); initErr != nil {
+	})
+	if initOutput, initErr := initCmd.CombinedOutput(); initErr != nil {
 		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", initErr, initOutput)
 	}
 
 	destroyArgs := []string{
-		"terraform",
 		"destroy",
 		"-backup='-'", // no need to backup state file
 		"-force",      // do not prompt for confirmation
@@ -102,9 +105,14 @@ func (c Client) Destroy(inputs map[string]interface{}) error {
 	}
 	destroyArgs = append(destroyArgs, tmpDir)
 
-	if destroyOutput, err := runCmd(destroyArgs); err != nil {
-		return fmt.Errorf("terraform destroy command failed.\nError: %s\nOutput: %s", err, destroyOutput)
+	destroyCmd := terraformCmd(destroyArgs)
+	destroyCmd.Stdout = c.OutputWriter
+	destroyCmd.Stderr = c.OutputWriter
+	err = destroyCmd.Run()
+	if err != nil {
+		return fmt.Errorf("Failed to run Terraform command: %s", err)
 	}
+
 	return nil
 }
 
@@ -114,12 +122,11 @@ func (c Client) Output() (map[string]interface{}, error) {
 		return nil, errors.New("Client.StateFilePath can not be empty")
 	}
 
-	rawOutput, err := runCmd([]string{
-		"terraform",
+	outputCmd := terraformCmd([]string{
 		"output",
 		fmt.Sprintf("-state=%s", c.StateFilePath),
 	})
-
+	rawOutput, err := outputCmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to retrieve output.\nError: %s\nOutput: %s", err, rawOutput)
 	}
@@ -197,7 +204,6 @@ func (c Client) DeleteStateFile() error {
 	return nil
 }
 
-func runCmd(args []string) ([]byte, error) {
-	cmd := exec.Command("/bin/bash", "-c", strings.Join(args, " "))
-	return cmd.CombinedOutput()
+func terraformCmd(args []string) *exec.Cmd {
+	return exec.Command("/bin/bash", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
 }

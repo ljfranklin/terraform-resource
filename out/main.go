@@ -61,6 +61,7 @@ func main() {
 		StateFilePath:      stateFilePath,
 		StateFileRemoteKey: storageKey,
 		StorageDriver:      storageDriver,
+		OutputWriter:       os.Stderr,
 	}
 
 	_, err = client.DownloadStateFileIfExists()
