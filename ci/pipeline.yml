@@ -52,3 +52,5 @@ jobs:
         params:
           <<: *terraform-params
           action: destroy
+        get_params:
+          action: destroy

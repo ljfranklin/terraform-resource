@@ -30,6 +30,17 @@ func main() {
 		log.Fatalf("Failed to read InRequest: %s", err)
 	}
 
+	if req.Params.Action == models.DestroyAction {
+		resp := models.InResponse{
+			Version: req.Version,
+		}
+
+		if err := json.NewEncoder(os.Stdout).Encode(resp); err != nil {
+			log.Fatalf("Failed to write InResponse: %s", err)
+		}
+		return
+	}
+
 	driverType := req.Source.StorageDriver
 	if driverType == "" {
 		driverType = models.S3Driver

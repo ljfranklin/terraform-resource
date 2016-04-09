@@ -7,6 +7,7 @@ type Version struct {
 type InRequest struct {
 	Source  Source  `json:"source"`
 	Version Version `json:"version,omitempty"` // absent on initial request
+	Params  Params  `json:"params,omitempty"`  // used to specify 'destroy' action
 }
 
 type InResponse struct {
