@@ -49,35 +49,27 @@ func main() {
 		log.Fatalf("Unknown storage_driver '%s'. Supported drivers are: %v", driverType, strings.Join(supportedDrivers, ", "))
 	}
 
-	version, err := storageDriver.Version(req.Source.Key)
-	if err != nil {
-		log.Fatalf("Failed to check storage backend for version: %s", err)
-	}
-	if version == "" {
-		log.Fatalf("State file does not exist: %s", req.Source.Key)
-	}
-
-	stateFilepath := path.Join(tmpDir, path.Base(req.Source.Key))
-	stateFile, err := os.Create(stateFilepath)
-	if err != nil {
-		log.Fatalf("Failed to create temporary state file at path '%s': %s", stateFilepath, err)
-	}
-
-	err = storageDriver.Download(req.Source.Key, stateFile)
-	stateFile.Close()
-	if err != nil {
-		log.Fatalf("Failed to download state file from storage backend: %s", err)
-	}
-
 	outputFilepath := path.Join(outputDir, path.Base(req.Source.Key))
 	outputFile, err := os.Create(outputFilepath)
 	if err != nil {
 		log.Fatalf("Failed to create output file at path '%s': %s", outputFilepath, err)
 	}
 
+	stateFilePath := path.Join(tmpDir, "terraform.tfstate")
 	client := terraform.Client{
-		StateFile: stateFilepath,
+		StateFilePath:      stateFilePath,
+		StateFileRemoteKey: req.Source.Key,
+		StorageDriver:      storageDriver,
 	}
+
+	version, err := client.DownloadStateFileIfExists()
+	if err != nil {
+		log.Fatalf("Failed to download state file from storage backend: %s", err)
+	}
+	if version == "" {
+		log.Fatalf("StateFile does not exist with key '%s'", req.Source.Key)
+	}
+
 	output, err := client.Output()
 	if err != nil {
 		log.Fatalf("Failed to parse terraform output.\nError: %s", err)
