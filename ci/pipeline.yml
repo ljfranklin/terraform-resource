@@ -12,10 +12,11 @@ resources:
 - name: terraform
   type: terraform
   source:
-    access_key_id:     {{storage_access_key}}
-    secret_access_key: {{storage_secret_key}}
-    bucket:            {{storage_bucket}}
-    key:               terraform-test.tfstate
+    storage:
+      access_key_id:     {{storage_access_key}}
+      secret_access_key: {{storage_secret_key}}
+      bucket:            {{storage_bucket}}
+      key:               terraform-test.tfstate
 
 jobs:
   - name: create-infrastructure

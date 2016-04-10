@@ -56,10 +56,12 @@ var _ = Describe("Out", func() {
 
 		outRequest = models.OutRequest{
 			Source: models.Source{
-				Bucket:          bucket,
-				Key:             stateFileKey,
-				AccessKeyID:     accessKey,
-				SecretAccessKey: secretKey,
+				Storage: models.Storage{
+					Bucket:          bucket,
+					Key:             stateFileKey,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+				},
 			},
 			Params: models.Params{
 				TerraformSource: "", // overridden in contexts
@@ -88,8 +90,8 @@ var _ = Describe("Out", func() {
 			By("ensuring state file does not already exist")
 
 			awsVerifier.ExpectS3FileToNotExist(
-				outRequest.Source.Bucket,
-				outRequest.Source.Key,
+				outRequest.Source.Storage.Bucket,
+				outRequest.Source.Storage.Key,
 			)
 
 			By("running 'out' to create an AWS VPC")
@@ -112,8 +114,8 @@ var _ = Describe("Out", func() {
 			By("ensuring that state file exists with valid version (LastModified)")
 
 			awsVerifier.ExpectS3FileToExist(
-				outRequest.Source.Bucket,
-				outRequest.Source.Key,
+				outRequest.Source.Storage.Bucket,
+				outRequest.Source.Storage.Key,
 			)
 
 			// does version match format "2006-01-02T15:04:05Z"?
@@ -133,8 +135,8 @@ var _ = Describe("Out", func() {
 			By("ensuring that state file has been updated")
 
 			awsVerifier.ExpectS3FileToExist(
-				outRequest.Source.Bucket,
-				outRequest.Source.Key,
+				outRequest.Source.Storage.Bucket,
+				outRequest.Source.Storage.Key,
 			)
 
 			updatedVersion, err := time.Parse(time.RFC3339, updateOutput.Version.Version)
@@ -152,8 +154,8 @@ var _ = Describe("Out", func() {
 			By("ensuring that state file no longer exists")
 
 			awsVerifier.ExpectS3FileToNotExist(
-				outRequest.Source.Bucket,
-				outRequest.Source.Key,
+				outRequest.Source.Storage.Bucket,
+				outRequest.Source.Storage.Key,
 			)
 
 			deletedVersion, err := time.Parse(time.RFC3339, deleteOutput.Version.Version)

@@ -41,7 +41,7 @@ func main() {
 		return
 	}
 
-	driverType := req.Source.StorageDriver
+	driverType := req.Source.Storage.Driver
 	if driverType == "" {
 		driverType = models.S3Driver
 	}
@@ -49,21 +49,21 @@ func main() {
 	var storageDriver storage.Storage
 	switch driverType {
 	case models.S3Driver:
-		if req.Source.AccessKeyID == "" {
+		if req.Source.Storage.AccessKeyID == "" {
 			log.Fatal("Must specify 'access_key_id' under resource.source")
 		}
-		if req.Source.SecretAccessKey == "" {
+		if req.Source.Storage.SecretAccessKey == "" {
 			log.Fatal("Must specify 'secret_access_key' under resource.source")
 		}
-		if req.Source.Bucket == "" {
+		if req.Source.Storage.Bucket == "" {
 			log.Fatal("Must specify 'bucket' under resource.source")
 		}
 
 		storageDriver = storage.NewS3(
-			req.Source.AccessKeyID,
-			req.Source.SecretAccessKey,
-			req.Source.RegionName,
-			req.Source.Bucket,
+			req.Source.Storage.AccessKeyID,
+			req.Source.Storage.SecretAccessKey,
+			req.Source.Storage.RegionName,
+			req.Source.Storage.Bucket,
 		)
 	default:
 		supportedDrivers := []string{models.S3Driver}
@@ -73,7 +73,7 @@ func main() {
 	stateFilePath := path.Join(tmpDir, "terraform.tfstate")
 	client := terraform.Client{
 		StateFilePath:      stateFilePath,
-		StateFileRemoteKey: req.Source.Key,
+		StateFileRemoteKey: req.Source.Storage.Key,
 		StorageDriver:      storageDriver,
 	}
 
@@ -82,7 +82,7 @@ func main() {
 		log.Fatalf("Failed to download state file from storage backend: %s", err)
 	}
 	if version == "" {
-		log.Fatalf("StateFile does not exist with key '%s'", req.Source.Key)
+		log.Fatalf("StateFile does not exist with key '%s'", req.Source.Storage.Key)
 	}
 
 	output, err := client.Output()

@@ -49,10 +49,12 @@ var _ = Describe("In", func() {
 
 		inReq = models.InRequest{
 			Source: models.Source{
-				Bucket:          bucket,
-				Key:             pathToS3Fixture,
-				AccessKeyID:     accessKey,
-				SecretAccessKey: secretKey,
+				Storage: models.Storage{
+					Bucket:          bucket,
+					Key:             pathToS3Fixture,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+				},
 			},
 		}
 

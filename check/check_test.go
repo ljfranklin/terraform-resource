@@ -45,10 +45,12 @@ var _ = Describe("Check", func() {
 
 		checkInput = models.InRequest{
 			Source: models.Source{
-				Bucket:          bucket,
-				Key:             pathToS3Fixture,
-				AccessKeyID:     accessKey,
-				SecretAccessKey: secretKey,
+				Storage: models.Storage{
+					Bucket:          bucket,
+					Key:             pathToS3Fixture,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+				},
 			},
 		}
 	})
@@ -128,7 +130,7 @@ var _ = Describe("Check", func() {
 
 	Context("when key is omitted from source", func() {
 		BeforeEach(func() {
-			checkInput.Source.Key = ""
+			checkInput.Source.Storage.Key = ""
 		})
 
 		It("returns an empty list of versions", func() {
