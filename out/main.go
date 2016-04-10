@@ -46,8 +46,13 @@ func main() {
 	if storageKey == "" {
 		log.Fatal("Must specify 'key' under resource.source")
 	}
-	if req.Params.TerraformSource == "" {
-		log.Fatal("Must specify 'terraform_source' under put params")
+
+	terraformSource := req.Params.TerraformSource
+	if terraformSource == "" {
+		terraformSource = req.Source.TerraformSource
+	}
+	if terraformSource == "" {
+		log.Fatal("Must specify 'terraform_source' under `put.params` or `source`")
 	}
 
 	storageDriver, err := buildStorageDriver(req)
@@ -57,7 +62,7 @@ func main() {
 
 	stateFilePath := path.Join(tmpDir, "terraform.tfstate")
 	client := terraform.Client{
-		Source:             req.Params.TerraformSource,
+		Source:             terraformSource,
 		StateFilePath:      stateFilePath,
 		StateFileRemoteKey: storageKey,
 		StorageDriver:      storageDriver,
@@ -119,6 +124,9 @@ func buildStorageDriver(req models.OutRequest) (storage.Storage, error) {
 
 func getTerraformVariables(req models.OutRequest, sourceDir string) (models.TerraformVars, error) {
 	terraformVars := models.TerraformVars{}
+	for key, value := range req.Source.TerraformVars {
+		terraformVars[key] = value
+	}
 	for key, value := range req.Params.TerraformVars {
 		terraformVars[key] = value
 	}

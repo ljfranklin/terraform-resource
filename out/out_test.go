@@ -179,6 +179,88 @@ var _ = Describe("Out", func() {
 		assertOutLifecycle()
 	})
 
+	Context("when terraform options are specified only under `source`", func() {
+		BeforeEach(func() {
+			accessKey := os.Getenv("AWS_ACCESS_KEY")
+			Expect(accessKey).ToNot(BeEmpty(), "AWS_ACCESS_KEY must be set")
+
+			secretKey := os.Getenv("AWS_SECRET_KEY")
+			Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
+
+			outRequest.Source.TerraformSource = "fixtures/aws/"
+			outRequest.Source.TerraformVars = map[string]interface{}{
+				"access_key": accessKey,
+				"secret_key": secretKey,
+				"tag_name":   "terraform-resource-source-test",
+			}
+			outRequest.Params = models.Params{}
+		})
+
+		It("successfully creates new infrastructure", func() {
+			createOutput := models.OutResponse{}
+			runOutCommand(outRequest, &createOutput)
+
+			Expect(createOutput.Metadata).ToNot(BeEmpty())
+			vpcID := ""
+			for _, field := range createOutput.Metadata {
+				if field.Name == "vpc_id" {
+					vpcID = field.Value.(string)
+					break
+				}
+			}
+			Expect(vpcID).ToNot(BeEmpty())
+
+			awsVerifier.ExpectVPCToExist(vpcID)
+
+			awsVerifier.ExpectVPCToHaveTags(vpcID, map[string]string{
+				"Name": "terraform-resource-source-test",
+			})
+		})
+	})
+
+	Context("when terraform options are specified under `source` and `put.params`", func() {
+		BeforeEach(func() {
+			accessKey := os.Getenv("AWS_ACCESS_KEY")
+			Expect(accessKey).ToNot(BeEmpty(), "AWS_ACCESS_KEY must be set")
+
+			secretKey := os.Getenv("AWS_SECRET_KEY")
+			Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
+
+			outRequest.Source.TerraformSource = "fixtures/aws/"
+			outRequest.Source.TerraformVars = map[string]interface{}{
+				"access_key": accessKey,
+				"secret_key": "bad-secret-key", // will be overridden
+			}
+			outRequest.Params = models.Params{
+				TerraformVars: map[string]interface{}{
+					"secret_key": secretKey,
+					"tag_name":   "terraform-resource-options-test",
+				},
+			}
+		})
+
+		It("merges the variables, giving `put.params` preference", func() {
+			createOutput := models.OutResponse{}
+			runOutCommand(outRequest, &createOutput)
+
+			Expect(createOutput.Metadata).ToNot(BeEmpty())
+			vpcID := ""
+			for _, field := range createOutput.Metadata {
+				if field.Name == "vpc_id" {
+					vpcID = field.Value.(string)
+					break
+				}
+			}
+			Expect(vpcID).ToNot(BeEmpty())
+
+			awsVerifier.ExpectVPCToExist(vpcID)
+
+			awsVerifier.ExpectVPCToHaveTags(vpcID, map[string]string{
+				"Name": "terraform-resource-options-test",
+			})
+		})
+	})
+
 	Context("when given a yaml file containing variables", func() {
 		BeforeEach(func() {
 			accessKey := os.Getenv("AWS_ACCESS_KEY")

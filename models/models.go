@@ -41,6 +41,9 @@ type Source struct {
 	AccessKeyID     string `json:"access_key_id"`
 	SecretAccessKey string `json:"secret_access_key"`
 	RegionName      string `json:"region_name,omitempty"` // optional
+
+	TerraformSource string        `json:"terraform_source"`
+	TerraformVars   TerraformVars `json:"terraform_vars"`
 }
 
 type Params struct {
