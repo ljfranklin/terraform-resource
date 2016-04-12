@@ -217,6 +217,8 @@ var _ = Describe("Out", func() {
 			awsVerifier.ExpectVPCToHaveTags(vpcID, map[string]string{
 				"Name": "terraform-resource-source-test",
 			})
+
+			awsVerifier.DeleteVPC(vpcID)
 		})
 	})
 
@@ -260,6 +262,8 @@ var _ = Describe("Out", func() {
 			awsVerifier.ExpectVPCToHaveTags(vpcID, map[string]string{
 				"Name": "terraform-resource-options-test",
 			})
+
+			awsVerifier.DeleteVPC(vpcID)
 		})
 	})
 
@@ -318,6 +322,8 @@ var _ = Describe("Out", func() {
 			awsVerifier.ExpectVPCToHaveTags(vpcID, map[string]string{
 				"Name": "terraform-resource-test-override",
 			})
+
+			awsVerifier.DeleteVPC(vpcID)
 		})
 	})
 })

@@ -107,3 +107,11 @@ func (a AWSVerifier) ExpectVPCToHaveTags(vpcID string, expectedTags map[string]s
 	}
 	Expect(tags).To(ConsistOf(formattedTags))
 }
+
+func (a AWSVerifier) DeleteVPC(vpcID string) {
+	vpcParams := &awsec2.DeleteVpcInput{
+		VpcId: aws.String(vpcID),
+	}
+	_, err := a.ec2.DeleteVpc(vpcParams)
+	Expect(err).ToNot(HaveOccurred())
+}
