@@ -37,6 +37,10 @@ func main() {
 		log.Fatalf("Failed to read OutRequest: %s", err)
 	}
 
+	if err = req.Validate(); err != nil {
+		log.Fatalf("Failed to validate Check Request: %s", err)
+	}
+
 	terraformVars, err := getTerraformVariables(req, sourceDir)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -98,16 +102,6 @@ func buildStorageDriver(req models.OutRequest) (storage.Storage, error) {
 	var storageDriver storage.Storage
 	switch driverType {
 	case models.S3Driver:
-		if req.Source.Storage.AccessKeyID == "" {
-			log.Fatal("Must specify 'access_key_id' under resource.source")
-		}
-		if req.Source.Storage.SecretAccessKey == "" {
-			log.Fatal("Must specify 'secret_access_key' under resource.source")
-		}
-		if req.Source.Storage.Bucket == "" {
-			log.Fatal("Must specify 'bucket' under resource.source")
-		}
-
 		storageDriver = storage.NewS3(
 			req.Source.Storage.AccessKeyID,
 			req.Source.Storage.SecretAccessKey,

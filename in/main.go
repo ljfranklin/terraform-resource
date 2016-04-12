@@ -41,6 +41,10 @@ func main() {
 		return
 	}
 
+	if err := req.Validate(); err != nil {
+		log.Fatalf("Failed to validate Check Request: %s", err)
+	}
+
 	driverType := req.Source.Storage.Driver
 	if driverType == "" {
 		driverType = models.S3Driver
@@ -49,16 +53,6 @@ func main() {
 	var storageDriver storage.Storage
 	switch driverType {
 	case models.S3Driver:
-		if req.Source.Storage.AccessKeyID == "" {
-			log.Fatal("Must specify 'access_key_id' under resource.source")
-		}
-		if req.Source.Storage.SecretAccessKey == "" {
-			log.Fatal("Must specify 'secret_access_key' under resource.source")
-		}
-		if req.Source.Storage.Bucket == "" {
-			log.Fatal("Must specify 'bucket' under resource.source")
-		}
-
 		storageDriver = storage.NewS3(
 			req.Source.Storage.AccessKeyID,
 			req.Source.Storage.SecretAccessKey,
