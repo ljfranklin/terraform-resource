@@ -12,7 +12,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/out/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
 )
@@ -46,19 +46,6 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	storageKey := req.Source.Storage.Key
-	if storageKey == "" {
-		log.Fatal("Must specify 'key' under resource.source")
-	}
-
-	terraformSource := req.Params.TerraformSource
-	if terraformSource == "" {
-		terraformSource = req.Source.TerraformSource
-	}
-	if terraformSource == "" {
-		log.Fatal("Must specify 'terraform_source' under `put.params` or `source`")
-	}
-
 	storageDriver, err := buildStorageDriver(req)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -66,9 +53,9 @@ func main() {
 
 	stateFilePath := path.Join(tmpDir, "terraform.tfstate")
 	client := terraform.Client{
-		Source:             terraformSource,
+		Source:             req.TerraformSource(),
 		StateFilePath:      stateFilePath,
-		StateFileRemoteKey: storageKey,
+		StateFileRemoteKey: req.Source.Storage.Key,
 		StorageDriver:      storageDriver,
 		OutputWriter:       os.Stderr,
 	}
@@ -96,12 +83,12 @@ func main() {
 func buildStorageDriver(req models.OutRequest) (storage.Storage, error) {
 	driverType := req.Source.Storage.Driver
 	if driverType == "" {
-		driverType = models.S3Driver
+		driverType = storage.S3Driver
 	}
 
 	var storageDriver storage.Storage
 	switch driverType {
-	case models.S3Driver:
+	case storage.S3Driver:
 		storageDriver = storage.NewS3(
 			req.Source.Storage.AccessKeyID,
 			req.Source.Storage.SecretAccessKey,
@@ -109,23 +96,23 @@ func buildStorageDriver(req models.OutRequest) (storage.Storage, error) {
 			req.Source.Storage.Bucket,
 		)
 	default:
-		supportedDrivers := []string{models.S3Driver}
+		supportedDrivers := []string{storage.S3Driver}
 		return nil, fmt.Errorf("Unknown storage_driver '%s'. Supported drivers are: %v", driverType, strings.Join(supportedDrivers, ", "))
 	}
 
 	return storageDriver, nil
 }
 
-func getTerraformVariables(req models.OutRequest, sourceDir string) (models.TerraformVars, error) {
-	terraformVars := models.TerraformVars{}
-	for key, value := range req.Source.TerraformVars {
+func getTerraformVariables(req models.OutRequest, sourceDir string) (map[string]interface{}, error) {
+	terraformVars := map[string]interface{}{}
+	for key, value := range req.Source.Terraform.Vars {
 		terraformVars[key] = value
 	}
-	for key, value := range req.Params.TerraformVars {
+	for key, value := range req.Params.Terraform.Vars {
 		terraformVars[key] = value
 	}
-	if req.Params.TerraformVarFile != "" {
-		varFilePath := path.Join(sourceDir, req.Params.TerraformVarFile)
+	if req.Params.Terraform.VarFile != "" {
+		varFilePath := path.Join(sourceDir, req.Params.Terraform.VarFile)
 		fileContents, readErr := ioutil.ReadFile(varFilePath)
 		if readErr != nil {
 			return nil, fmt.Errorf("Failed to read TerraformVarFile at '%s': %s", varFilePath, readErr)
@@ -145,7 +132,7 @@ func getTerraformVariables(req models.OutRequest, sourceDir string) (models.Terr
 	return terraformVars, nil
 }
 
-func performApply(stateFilePath string, terraformVars models.TerraformVars, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
+func performApply(stateFilePath string, terraformVars map[string]interface{}, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
 	var nilResponse models.OutResponse
 
 	if err := client.Apply(terraformVars); err != nil {
@@ -179,7 +166,7 @@ func performApply(stateFilePath string, terraformVars models.TerraformVars, clie
 	return resp, nil
 }
 
-func performDestroy(stateFilePath string, terraformVars models.TerraformVars, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
+func performDestroy(stateFilePath string, terraformVars map[string]interface{}, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
 	var nilResponse models.OutResponse
 
 	if err := client.Destroy(terraformVars); err != nil {

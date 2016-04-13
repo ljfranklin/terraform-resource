@@ -11,7 +11,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/in/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 
 	. "github.com/onsi/ginkgo"
@@ -49,7 +49,7 @@ var _ = Describe("In", func() {
 
 		inReq = models.InRequest{
 			Source: models.Source{
-				Storage: models.Storage{
+				Storage: storage.Model{
 					Bucket:          bucket,
 					Key:             pathToS3Fixture,
 					AccessKeyID:     accessKey,

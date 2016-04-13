@@ -8,7 +8,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/in/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
 )
@@ -47,12 +47,12 @@ func main() {
 
 	driverType := req.Source.Storage.Driver
 	if driverType == "" {
-		driverType = models.S3Driver
+		driverType = storage.S3Driver
 	}
 
 	var storageDriver storage.Storage
 	switch driverType {
-	case models.S3Driver:
+	case storage.S3Driver:
 		storageDriver = storage.NewS3(
 			req.Source.Storage.AccessKeyID,
 			req.Source.Storage.SecretAccessKey,
@@ -60,7 +60,7 @@ func main() {
 			req.Source.Storage.Bucket,
 		)
 	default:
-		supportedDrivers := []string{models.S3Driver}
+		supportedDrivers := []string{storage.S3Driver}
 		log.Fatalf("Unknown storage_driver '%s'. Supported drivers are: %v", driverType, strings.Join(supportedDrivers, ", "))
 	}
 

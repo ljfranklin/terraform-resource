@@ -11,7 +11,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/out/models"
+	"github.com/ljfranklin/terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/terraform"
 	"github.com/ljfranklin/terraform-resource/test/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -56,7 +58,7 @@ var _ = Describe("Out", func() {
 
 		outRequest = models.OutRequest{
 			Source: models.Source{
-				Storage: models.Storage{
+				Storage: storage.Model{
 					Bucket:          bucket,
 					Key:             stateFileKey,
 					AccessKeyID:     accessKey,
@@ -64,10 +66,12 @@ var _ = Describe("Out", func() {
 				},
 			},
 			Params: models.Params{
-				TerraformSource: "", // overridden in contexts
-				TerraformVars: map[string]interface{}{
-					"access_key": accessKey,
-					"secret_key": secretKey,
+				Terraform: terraform.Model{
+					Source: "", // overridden in contexts
+					Vars: map[string]interface{}{
+						"access_key": accessKey,
+						"secret_key": secretKey,
+					},
 				},
 			},
 		}
@@ -124,7 +128,7 @@ var _ = Describe("Out", func() {
 
 			By("running 'out' to update the VPC")
 
-			outRequest.Params.TerraformVars["tag_name"] = "terraform-resource-test-updated"
+			outRequest.Params.Terraform.Vars["tag_name"] = "terraform-resource-test-updated"
 			updateOutput := models.OutResponse{}
 			runOutCommand(outRequest, &updateOutput)
 
@@ -166,7 +170,7 @@ var _ = Describe("Out", func() {
 
 	Context("when provided a local terraform source", func() {
 		BeforeEach(func() {
-			outRequest.Params.TerraformSource = "fixtures/aws/"
+			outRequest.Params.Terraform.Source = "fixtures/aws/"
 		})
 
 		assertOutLifecycle()
@@ -175,7 +179,7 @@ var _ = Describe("Out", func() {
 	Context("when provided a remote terraform source", func() {
 		BeforeEach(func() {
 			// Note: changes to fixture must be pushed before running this test
-			outRequest.Params.TerraformSource = "github.com/ljfranklin/terraform-resource//fixtures/aws/"
+			outRequest.Params.Terraform.Source = "github.com/ljfranklin/terraform-resource//fixtures/aws/"
 		})
 
 		assertOutLifecycle()
@@ -189,8 +193,8 @@ var _ = Describe("Out", func() {
 			secretKey := os.Getenv("AWS_SECRET_KEY")
 			Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
 
-			outRequest.Source.TerraformSource = "fixtures/aws/"
-			outRequest.Source.TerraformVars = map[string]interface{}{
+			outRequest.Source.Terraform.Source = "fixtures/aws/"
+			outRequest.Source.Terraform.Vars = map[string]interface{}{
 				"access_key": accessKey,
 				"secret_key": secretKey,
 				"tag_name":   "terraform-resource-source-test",
@@ -230,15 +234,17 @@ var _ = Describe("Out", func() {
 			secretKey := os.Getenv("AWS_SECRET_KEY")
 			Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
 
-			outRequest.Source.TerraformSource = "fixtures/aws/"
-			outRequest.Source.TerraformVars = map[string]interface{}{
+			outRequest.Source.Terraform.Source = "fixtures/aws/"
+			outRequest.Source.Terraform.Vars = map[string]interface{}{
 				"access_key": accessKey,
 				"secret_key": "bad-secret-key", // will be overridden
 			}
 			outRequest.Params = models.Params{
-				TerraformVars: map[string]interface{}{
-					"secret_key": secretKey,
-					"tag_name":   "terraform-resource-options-test",
+				Terraform: terraform.Model{
+					Vars: map[string]interface{}{
+						"secret_key": secretKey,
+						"tag_name":   "terraform-resource-options-test",
+					},
 				},
 			}
 		})
@@ -295,9 +301,11 @@ var _ = Describe("Out", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			outRequest.Params = models.Params{
-				TerraformSource:  "fixtures/aws/",
-				TerraformVars:    pipelineParams,
-				TerraformVarFile: "test-terraform-variables.tf",
+				Terraform: terraform.Model{
+					Source:  "fixtures/aws/",
+					Vars:    pipelineParams,
+					VarFile: "test-terraform-variables.tf",
+				},
 			}
 		})
 

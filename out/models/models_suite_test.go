@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestModels(t *testing.T) {
+func TestStorage(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Models Suite")
+	RunSpecs(t, "Out Models Suite")
 }

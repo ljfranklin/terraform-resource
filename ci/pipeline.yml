@@ -23,11 +23,12 @@ jobs:
     plan:
       - get: resource-src
       - put: terraform
-        params: &terraform-params
-          terraform_source: resource-src/fixtures/aws
-          terraform_vars:
-            access_key: {{ec2_access_key}}
-            secret_key: {{ec2_secret_key}}
+        params:
+          terraform: &terraform-params
+            source: resource-src/fixtures/aws
+            vars:
+              access_key: {{ec2_access_key}}
+              secret_key: {{ec2_secret_key}}
 
   - name: update-infrastructure
     plan:
@@ -37,11 +38,12 @@ jobs:
         passed: [create-infrastructure]
       - put: terraform
         params:
-          <<: *terraform-params
-          terraform_vars:
-            access_key: {{ec2_access_key}}
-            secret_key: {{ec2_secret_key}}
-            tag_name: "updated-terraform-resource-test"
+          terraform:
+            <<: *terraform-params
+            vars:
+              access_key: {{ec2_access_key}}
+              secret_key: {{ec2_secret_key}}
+              tag_name: "updated-terraform-resource-test"
 
   - name: destroy-infrastructure
     plan:
@@ -51,7 +53,8 @@ jobs:
         passed: [update-infrastructure]
       - put: terraform
         params:
-          <<: *terraform-params
           action: destroy
+          terraform:
+            <<: *terraform-params
         get_params:
           action: destroy
