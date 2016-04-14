@@ -10,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/ljfranklin/terraform-resource/out/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
@@ -41,9 +39,12 @@ func main() {
 		log.Fatalf("Failed to validate Check Request: %s", err)
 	}
 
-	terraformVars, err := getTerraformVariables(req, sourceDir)
-	if err != nil {
-		log.Fatal(err.Error())
+	terraformModel := req.Source.Terraform.Merge(req.Params.Terraform)
+	if terraformModel.VarFile != "" {
+		terraformModel.VarFile = path.Join(sourceDir, terraformModel.VarFile)
+	}
+	if err = terraformModel.ParseVarsFromFile(); err != nil {
+		log.Fatalf("Failed to parse `terraform.var_file`: %s", err)
 	}
 
 	storageDriver, err := buildStorageDriver(req)
@@ -67,9 +68,9 @@ func main() {
 
 	resp := models.OutResponse{}
 	if req.Params.Action == models.DestroyAction {
-		resp, err = performDestroy(stateFilePath, terraformVars, client, storageDriver)
+		resp, err = performDestroy(stateFilePath, terraformModel.Vars, client, storageDriver)
 	} else {
-		resp, err = performApply(stateFilePath, terraformVars, client, storageDriver)
+		resp, err = performApply(stateFilePath, terraformModel.Vars, client, storageDriver)
 	}
 	if err != nil {
 		log.Fatalf("Failed to run terraform with action '%s': %s", req.Params.Action, err)
@@ -101,35 +102,6 @@ func buildStorageDriver(req models.OutRequest) (storage.Storage, error) {
 	}
 
 	return storageDriver, nil
-}
-
-func getTerraformVariables(req models.OutRequest, sourceDir string) (map[string]interface{}, error) {
-	terraformVars := map[string]interface{}{}
-	for key, value := range req.Source.Terraform.Vars {
-		terraformVars[key] = value
-	}
-	for key, value := range req.Params.Terraform.Vars {
-		terraformVars[key] = value
-	}
-	if req.Params.Terraform.VarFile != "" {
-		varFilePath := path.Join(sourceDir, req.Params.Terraform.VarFile)
-		fileContents, readErr := ioutil.ReadFile(varFilePath)
-		if readErr != nil {
-			return nil, fmt.Errorf("Failed to read TerraformVarFile at '%s': %s", varFilePath, readErr)
-		}
-
-		fileVars := map[string]interface{}{}
-		readErr = yaml.Unmarshal(fileContents, &fileVars)
-		if readErr != nil {
-			return nil, fmt.Errorf("Failed to parse TerraformVarFile at '%s': %s", varFilePath, readErr)
-		}
-
-		for key, value := range fileVars {
-			terraformVars[key] = value
-		}
-	}
-
-	return terraformVars, nil
 }
 
 func performApply(stateFilePath string, terraformVars map[string]interface{}, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
