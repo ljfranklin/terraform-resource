@@ -34,7 +34,12 @@ func NewAWSVerifier(accessKey string, secretKey string, region string) *AWSVerif
 }
 
 func (a AWSVerifier) ExpectS3FileToExist(bucketName string, key string) {
-	s3 := storage.NewS3(a.accessKey, a.secretKey, a.region, bucketName)
+	s3 := storage.NewS3(storage.Model{
+		AccessKeyID:     a.accessKey,
+		SecretAccessKey: a.secretKey,
+		RegionName:      a.region,
+		Bucket:          bucketName,
+	})
 
 	version, err := s3.Version(key)
 	Expect(err).ToNot(HaveOccurred())
@@ -46,7 +51,12 @@ func (a AWSVerifier) ExpectS3FileToExist(bucketName string, key string) {
 }
 
 func (a AWSVerifier) ExpectS3FileToNotExist(bucketName string, key string) {
-	s3 := storage.NewS3(a.accessKey, a.secretKey, a.region, bucketName)
+	s3 := storage.NewS3(storage.Model{
+		AccessKeyID:     a.accessKey,
+		SecretAccessKey: a.secretKey,
+		RegionName:      a.region,
+		Bucket:          bucketName,
+	})
 
 	version, err := s3.Version(key)
 	Expect(err).ToNot(HaveOccurred())

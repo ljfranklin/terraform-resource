@@ -24,10 +24,11 @@ const (
 	defaultRegion = "us-east-1"
 )
 
-func NewS3(accessKey string, secretKey string, regionName string, bucketName string) Storage {
+func NewS3(m Model) Storage {
 
-	creds := credentials.NewStaticCredentials(accessKey, secretKey, "")
+	creds := credentials.NewStaticCredentials(m.AccessKeyID, m.SecretAccessKey, "")
 
+	regionName := m.RegionName
 	if len(regionName) == 0 {
 		regionName = defaultRegion
 	}
@@ -43,7 +44,7 @@ func NewS3(accessKey string, secretKey string, regionName string, bucketName str
 	return &s3{
 		session:    session,
 		awsConfig:  awsConfig,
-		bucketName: bucketName,
+		bucketName: m.Bucket,
 	}
 }
 

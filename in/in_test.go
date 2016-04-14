@@ -43,7 +43,12 @@ var _ = Describe("In", func() {
 
 		region := os.Getenv("AWS_REGION") // optional
 
-		s3 = storage.NewS3(accessKey, secretKey, region, bucket)
+		s3 = storage.NewS3(storage.Model{
+			AccessKeyID:     accessKey,
+			SecretAccessKey: secretKey,
+			RegionName:      region,
+			Bucket:          bucket,
+		})
 
 		pathToS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture"))
 

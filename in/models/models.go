@@ -1,11 +1,6 @@
 package models
 
-import (
-	"errors"
-	"fmt"
-
-	"github.com/ljfranklin/terraform-resource/storage"
-)
+import "github.com/ljfranklin/terraform-resource/storage"
 
 type InRequest struct {
 	Source  Source  `json:"source"`
@@ -40,15 +35,3 @@ type Params struct {
 const (
 	DestroyAction = "destroy"
 )
-
-func (r InRequest) Validate() error {
-	errMsg := ""
-	if err := r.Source.Storage.Validate(); err != nil {
-		errMsg += fmt.Sprintf("%s\n", err)
-	}
-
-	if len(errMsg) > 0 {
-		return errors.New(errMsg)
-	}
-	return nil
-}

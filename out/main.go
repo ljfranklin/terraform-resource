@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"strings"
 	"time"
 
 	"github.com/ljfranklin/terraform-resource/out/models"
@@ -35,10 +34,6 @@ func main() {
 		log.Fatalf("Failed to read OutRequest: %s", err)
 	}
 
-	if err = req.Validate(); err != nil {
-		log.Fatalf("Failed to validate Check Request: %s", err)
-	}
-
 	terraformModel := req.Source.Terraform.Merge(req.Params.Terraform)
 	if terraformModel.VarFile != "" {
 		terraformModel.VarFile = path.Join(sourceDir, terraformModel.VarFile)
@@ -53,10 +48,11 @@ func main() {
 		log.Fatalf("Failed to validate terraform Model: %s", err)
 	}
 
-	storageDriver, err := buildStorageDriver(req)
-	if err != nil {
-		log.Fatal(err.Error())
+	storageModel := req.Source.Storage
+	if err = storageModel.Validate(); err != nil {
+		log.Fatalf("Failed to validate storage Model: %s", err)
 	}
+	storageDriver := storage.BuildDriver(storageModel)
 
 	client := terraform.Client{
 		Model:         terraformModel,
@@ -82,29 +78,6 @@ func main() {
 	if err := json.NewEncoder(os.Stdout).Encode(resp); err != nil {
 		log.Fatalf("Failed to write OutResponse: %s", err)
 	}
-}
-
-func buildStorageDriver(req models.OutRequest) (storage.Storage, error) {
-	driverType := req.Source.Storage.Driver
-	if driverType == "" {
-		driverType = storage.S3Driver
-	}
-
-	var storageDriver storage.Storage
-	switch driverType {
-	case storage.S3Driver:
-		storageDriver = storage.NewS3(
-			req.Source.Storage.AccessKeyID,
-			req.Source.Storage.SecretAccessKey,
-			req.Source.Storage.RegionName,
-			req.Source.Storage.Bucket,
-		)
-	default:
-		supportedDrivers := []string{storage.S3Driver}
-		return nil, fmt.Errorf("Unknown storage_driver '%s'. Supported drivers are: %v", driverType, strings.Join(supportedDrivers, ", "))
-	}
-
-	return storageDriver, nil
 }
 
 func performApply(client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {

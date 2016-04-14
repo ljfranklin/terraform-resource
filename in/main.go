@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"strings"
 
 	"github.com/ljfranklin/terraform-resource/in/models"
 	"github.com/ljfranklin/terraform-resource/storage"
@@ -41,28 +40,11 @@ func main() {
 		return
 	}
 
-	if err := req.Validate(); err != nil {
-		log.Fatalf("Failed to validate Check Request: %s", err)
+	storageModel := req.Source.Storage
+	if err = storageModel.Validate(); err != nil {
+		log.Fatalf("Failed to validate storage Model: %s", err)
 	}
-
-	driverType := req.Source.Storage.Driver
-	if driverType == "" {
-		driverType = storage.S3Driver
-	}
-
-	var storageDriver storage.Storage
-	switch driverType {
-	case storage.S3Driver:
-		storageDriver = storage.NewS3(
-			req.Source.Storage.AccessKeyID,
-			req.Source.Storage.SecretAccessKey,
-			req.Source.Storage.RegionName,
-			req.Source.Storage.Bucket,
-		)
-	default:
-		supportedDrivers := []string{storage.S3Driver}
-		log.Fatalf("Unknown storage_driver '%s'. Supported drivers are: %v", driverType, strings.Join(supportedDrivers, ", "))
-	}
+	storageDriver := storage.BuildDriver(storageModel)
 
 	terraformModel := terraform.Model{
 		StateFileLocalPath:  path.Join(tmpDir, "terraform.tfstate"),
