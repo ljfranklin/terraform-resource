@@ -71,9 +71,9 @@ func main() {
 
 	resp := models.OutResponse{}
 	if req.Params.Action == models.DestroyAction {
-		resp, err = performDestroy(terraformModel.Vars, client, storageDriver)
+		resp, err = performDestroy(client, storageDriver)
 	} else {
-		resp, err = performApply(terraformModel.Vars, client, storageDriver)
+		resp, err = performApply(client, storageDriver)
 	}
 	if err != nil {
 		log.Fatalf("Failed to run terraform with action '%s': %s", req.Params.Action, err)
@@ -107,10 +107,10 @@ func buildStorageDriver(req models.OutRequest) (storage.Storage, error) {
 	return storageDriver, nil
 }
 
-func performApply(terraformVars map[string]interface{}, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
+func performApply(client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
 	var nilResponse models.OutResponse
 
-	if err := client.Apply(terraformVars); err != nil {
+	if err := client.Apply(); err != nil {
 		return nilResponse, fmt.Errorf("Failed to run terraform apply.\nError: %s", err)
 	}
 
@@ -141,10 +141,10 @@ func performApply(terraformVars map[string]interface{}, client terraform.Client,
 	return resp, nil
 }
 
-func performDestroy(terraformVars map[string]interface{}, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
+func performDestroy(client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
 	var nilResponse models.OutResponse
 
-	if err := client.Destroy(terraformVars); err != nil {
+	if err := client.Destroy(); err != nil {
 		return nilResponse, fmt.Errorf("Failed to run terraform destroy.\nError: %s", err)
 	}
 

@@ -19,7 +19,7 @@ type Client struct {
 	LogWriter     io.Writer
 }
 
-func (c Client) Apply(inputs map[string]interface{}) error {
+func (c Client) Apply() error {
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-client")
 	if err != nil {
 		return fmt.Errorf("Failed to create temporary working dir at '%s'", os.TempDir())
@@ -41,7 +41,7 @@ func (c Client) Apply(inputs map[string]interface{}) error {
 		"-input=false", // do not prompt for inputs
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
-	for key, val := range inputs {
+	for key, val := range c.Model.Vars {
 		applyArgs = append(applyArgs, "-var", fmt.Sprintf("'%s=%v'", key, val))
 	}
 	applyArgs = append(applyArgs, tmpDir)
@@ -57,7 +57,7 @@ func (c Client) Apply(inputs map[string]interface{}) error {
 	return nil
 }
 
-func (c Client) Destroy(inputs map[string]interface{}) error {
+func (c Client) Destroy() error {
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-client")
 	if err != nil {
 		return fmt.Errorf("Failed to create temporary working dir at '%s'", os.TempDir())
@@ -79,7 +79,7 @@ func (c Client) Destroy(inputs map[string]interface{}) error {
 		"-force",      // do not prompt for confirmation
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
-	for key, val := range inputs {
+	for key, val := range c.Model.Vars {
 		destroyArgs = append(destroyArgs, "-var", fmt.Sprintf("'%s=%v'", key, val))
 	}
 	destroyArgs = append(destroyArgs, tmpDir)
