@@ -1,24 +1,33 @@
 package terraform
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
 
 type Model struct {
-	Source  string                 `json:"source"`
-	Vars    map[string]interface{} `json:"vars,omitempty"`     // optional
-	VarFile string                 `json:"var_file,omitempty"` // optional
+	Source              string                 `json:"source"`
+	Vars                map[string]interface{} `json:"vars,omitempty"`     // optional
+	VarFile             string                 `json:"var_file,omitempty"` // optional
+	StateFileLocalPath  string                 `json:"-"`                  // not specified pipeline
+	StateFileRemotePath string                 `json:"-"`                  // not specified pipeline
 }
 
 func (m Model) Validate() error {
-	if m.Source == "" {
-		return errors.New("Missing required terraform field 'source'")
+	missingFields := []string{}
+	if m.StateFileLocalPath == "" {
+		missingFields = append(missingFields, "state_file_local_path")
+	}
+	if m.StateFileRemotePath == "" {
+		missingFields = append(missingFields, "state_file_remote_path")
 	}
 
+	if len(missingFields) > 0 {
+		return fmt.Errorf("Missing required terraform fields: %s", strings.Join(missingFields, ", "))
+	}
 	return nil
 }
 

@@ -64,11 +64,17 @@ func main() {
 		log.Fatalf("Unknown storage_driver '%s'. Supported drivers are: %v", driverType, strings.Join(supportedDrivers, ", "))
 	}
 
-	stateFilePath := path.Join(tmpDir, "terraform.tfstate")
+	terraformModel := terraform.Model{
+		StateFileLocalPath:  path.Join(tmpDir, "terraform.tfstate"),
+		StateFileRemotePath: req.Source.Storage.Key,
+	}
+	if err := terraformModel.Validate(); err != nil {
+		log.Fatalf("Failed to validate terraform Model: %s", err)
+	}
+
 	client := terraform.Client{
-		StateFilePath:      stateFilePath,
-		StateFileRemoteKey: req.Source.Storage.Key,
-		StorageDriver:      storageDriver,
+		Model:         terraformModel,
+		StorageDriver: storageDriver,
 	}
 
 	version, err := client.DownloadStateFileIfExists()

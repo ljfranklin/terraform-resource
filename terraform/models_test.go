@@ -31,7 +31,9 @@ var _ = Describe("Terraform Models", func() {
 
 		It("returns nil if all fields are provided", func() {
 			model := terraform.Model{
-				Source: "fake-source",
+				Source:              "fake-source",
+				StateFileLocalPath:  "fake-local-path",
+				StateFileRemotePath: "fake-remote-path",
 				Vars: map[string]interface{}{
 					"fake-key": "fake-value",
 				},
@@ -41,16 +43,24 @@ var _ = Describe("Terraform Models", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("returns an error if terraform.source is missing", func() {
+		It("returns an error if terraform fields are missing", func() {
+			requiredFields := []string{
+				"state_file_local_path",
+				"state_file_remote_path",
+			}
+
 			model := terraform.Model{}
 
 			err := model.Validate()
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("source"))
+
+			for _, field := range requiredFields {
+				Expect(err.Error()).To(ContainSubstring(field))
+			}
 		})
 	})
 
-	Describe("#BuildVars", func() {
+	Describe("Vars", func() {
 
 		It("returns fields from VarFile", func() {
 			varFile := path.Join(tmpDir, "var_file")

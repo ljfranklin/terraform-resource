@@ -55,18 +55,5 @@ var _ = Describe("Out Models", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("storage"))
 		})
-
-		It("returns error if terraform is invalid", func() {
-			req := models.OutRequest{
-				Source: models.Source{
-					Storage:   validStorage,
-					Terraform: terraform.Model{},
-				},
-			}
-
-			err := req.Validate()
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("terraform"))
-		})
 	})
 })

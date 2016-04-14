@@ -43,21 +43,10 @@ const (
 	DestroyAction = "destroy"
 )
 
-func (r OutRequest) TerraformSource() string {
-	if r.Params.Terraform.Source != "" {
-		return r.Params.Terraform.Source
-	}
-	return r.Source.Terraform.Source
-}
-
 func (r OutRequest) Validate() error {
 	errMsg := ""
 	if err := r.Source.Storage.Validate(); err != nil {
 		errMsg += fmt.Sprintf("%s\n", err)
-	}
-
-	if r.TerraformSource() == "" {
-		errMsg += "Must specify either `put.params.terraform_source` or `source.terraform_source`\n"
 	}
 
 	if len(errMsg) > 0 {

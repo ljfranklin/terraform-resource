@@ -46,19 +46,22 @@ func main() {
 	if err = terraformModel.ParseVarsFromFile(); err != nil {
 		log.Fatalf("Failed to parse `terraform.var_file`: %s", err)
 	}
+	terraformModel.StateFileLocalPath = path.Join(tmpDir, "terraform.tfstate")
+	terraformModel.StateFileRemotePath = req.Source.Storage.Key
+
+	if err = terraformModel.Validate(); err != nil {
+		log.Fatalf("Failed to validate terraform Model: %s", err)
+	}
 
 	storageDriver, err := buildStorageDriver(req)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	stateFilePath := path.Join(tmpDir, "terraform.tfstate")
 	client := terraform.Client{
-		Source:             req.TerraformSource(),
-		StateFilePath:      stateFilePath,
-		StateFileRemoteKey: req.Source.Storage.Key,
-		StorageDriver:      storageDriver,
-		OutputWriter:       os.Stderr,
+		Model:         terraformModel,
+		StorageDriver: storageDriver,
+		LogWriter:     os.Stderr,
 	}
 
 	_, err = client.DownloadStateFileIfExists()
@@ -68,9 +71,9 @@ func main() {
 
 	resp := models.OutResponse{}
 	if req.Params.Action == models.DestroyAction {
-		resp, err = performDestroy(stateFilePath, terraformModel.Vars, client, storageDriver)
+		resp, err = performDestroy(terraformModel.Vars, client, storageDriver)
 	} else {
-		resp, err = performApply(stateFilePath, terraformModel.Vars, client, storageDriver)
+		resp, err = performApply(terraformModel.Vars, client, storageDriver)
 	}
 	if err != nil {
 		log.Fatalf("Failed to run terraform with action '%s': %s", req.Params.Action, err)
@@ -104,7 +107,7 @@ func buildStorageDriver(req models.OutRequest) (storage.Storage, error) {
 	return storageDriver, nil
 }
 
-func performApply(stateFilePath string, terraformVars map[string]interface{}, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
+func performApply(terraformVars map[string]interface{}, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
 	var nilResponse models.OutResponse
 
 	if err := client.Apply(terraformVars); err != nil {
@@ -138,7 +141,7 @@ func performApply(stateFilePath string, terraformVars map[string]interface{}, cl
 	return resp, nil
 }
 
-func performDestroy(stateFilePath string, terraformVars map[string]interface{}, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
+func performDestroy(terraformVars map[string]interface{}, client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
 	var nilResponse models.OutResponse
 
 	if err := client.Destroy(terraformVars); err != nil {
