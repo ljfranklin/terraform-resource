@@ -17,20 +17,29 @@ resources:
       secret_access_key: {{storage_secret_key}}
       bucket:            {{storage_bucket}}
       key:               terraform-test.tfstate
+    terraform:
+      source: resource-src/fixtures/aws
+      vars:
+        access_key: {{ec2_access_key}}
+        secret_key: {{ec2_secret_key}}
 
 jobs:
   - name: create-infrastructure
     plan:
       - get: resource-src
       - put: terraform
-        params:
-          terraform: &terraform-params
-            source: resource-src/fixtures/aws
-            vars:
-              access_key: {{ec2_access_key}}
-              secret_key: {{ec2_secret_key}}
+      - task: show-outputs
+        config:
+          platform: linux
+          inputs:
+            - name: terraform
+          run:
+            path: /bin/sh
+            args:
+              - -c
+              - "cat terraform/metadata"
 
-  - name: update-infrastructure
+  - name: update-infrastructure-via-params
     plan:
       - get: resource-src
       - get: terraform
@@ -39,22 +48,38 @@ jobs:
       - put: terraform
         params:
           terraform:
-            <<: *terraform-params
             vars:
-              access_key: {{ec2_access_key}}
-              secret_key: {{ec2_secret_key}}
-              tag_name: "updated-terraform-resource-test"
+              tag_name: "params-terraform-resource-test"
+
+  - name: update-infrastructure-via-file
+    plan:
+      - get: resource-src
+      - get: terraform
+        trigger: true
+        passed: [update-infrastructure-via-params]
+      - task: make-var-file
+        config:
+          platform: linux
+          outputs:
+             - name: vars
+          run:
+            path: /bin/sh
+            args:
+              - -c
+              - "echo 'tag_name: file-terraform-resource-test' > vars/input.yml"
+      - put: terraform
+        params:
+          terraform:
+            var_file: vars/input.yml
 
   - name: destroy-infrastructure
     plan:
       - get: resource-src
       - get: terraform
         trigger: true
-        passed: [update-infrastructure]
+        passed: [update-infrastructure-via-file]
       - put: terraform
         params:
           action: destroy
-          terraform:
-            <<: *terraform-params
         get_params:
           action: destroy
