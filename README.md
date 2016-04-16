@@ -1,7 +1,7 @@
 ## Terraform Concourse Resource
 
-A work in-progress Concourse resource that allows jobs to modify IaaS resources via Terraform.
-Examples and setup instructions coming soon.
+A Concourse resource that allows jobs to modify IaaS resources via Terraform.
+Useful for creating reproducible testing and production environments. No more snowflakes!
 
 See what's in progress on the [Trello board](https://trello.com/b/s06sLNwc/terraform-resource).
 
@@ -130,3 +130,58 @@ This file can be in YAML or JSON format.
 Terraform variables will be merged from the following locations in increasing order of precedence: `source.terraform.vars`, `put.params.terraform.vars`, and `put.params.terraform.var_file`.
 
 * `action`: *Optional.* Used to indicate a destructive `put`. The only recognized value is `destroy`, create / update are the implicit defaults.
+
+#### Example
+
+**Create, Update, and Destroy:**
+
+```yaml
+resources:
+  - name: terraform
+    type: terraform
+    source:
+      terraform:
+        source: github.com/ljfranklin/terraform-resource//fixtures/aws
+        vars:
+          access_key: {{environment_access_key}}
+          secret_key: {{environment_secret_key}}
+          tag_name: default-resource-tag
+
+jobs:
+  - name: create-infrastructure
+    plan:
+      - get: project-src
+      - put: terraform
+        params:
+          terraform:
+            # local path to terraform templates
+            source: project-src/terraform
+
+  - name: update-infrastructure
+    plan:
+      - get: project-src
+      - get: terraform
+        passed: [create-infrastructure]
+      - put: terraform
+        params:
+          terraform:
+            source: project-src/terraform
+            vars:
+              # override default tag variable
+              tag_name: updated-resource-tag
+
+  - name: destroy-infrastructure
+    plan:
+      - get: project-src
+      - get: terraform
+        passed: [update-infrastructure]
+      - put: terraform
+        params:
+          action: destroy
+          terraform:
+            source: project-src/terraform
+        get_params:
+          action: destroy
+```
+
+**Note:** The strange looking `get_params` is a temporary workaround until Concourse adds support for `delete` as a first-class operation. See [this issue](https://github.com/concourse/concourse/issues/362) for more details.
