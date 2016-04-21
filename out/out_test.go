@@ -1,25 +1,22 @@
 package main_test
 
 import (
-	"crypto/rand"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path"
 	"runtime"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/ljfranklin/terraform-resource/out/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
-	"github.com/ljfranklin/terraform-resource/test/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
-	"github.com/onsi/gomega/gexec"
-	"gopkg.in/yaml.v2"
 )
 
 var workingDir string
@@ -27,53 +24,24 @@ var workingDir string
 var _ = Describe("Out", func() {
 
 	var (
-		outRequest  models.OutRequest
-		awsVerifier *helpers.AWSVerifier
+		storageModel      storage.Model
+		stateFileKey      string
+		subnetCIDR        string
+		workingDir        string
+		assertOutBehavior func(models.OutRequest, map[string]interface{})
 	)
 
 	BeforeEach(func() {
-		accessKey := os.Getenv("AWS_ACCESS_KEY")
-		Expect(accessKey).ToNot(BeEmpty(), "AWS_ACCESS_KEY must be set")
+		// TODO: avoid random clashes here
+		rand.Seed(time.Now().UnixNano())
+		subnetCIDR = fmt.Sprintf("10.0.%d.0/24", rand.Intn(256))
 
-		secretKey := os.Getenv("AWS_SECRET_KEY")
-		Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
-
-		bucket := os.Getenv("AWS_BUCKET")
-		Expect(bucket).ToNot(BeEmpty(), "AWS_BUCKET must be set")
-
-		bucketPath := os.Getenv("AWS_BUCKET_PATH") // optional
-
-		region := os.Getenv("AWS_REGION") // optional
-		if region == "" {
-			region = "us-east-1"
-		}
-
-		awsVerifier = helpers.NewAWSVerifier(
-			accessKey,
-			secretKey,
-			region,
-		)
-
-		stateFileKey := path.Join(bucketPath, randomString("out-test"))
-
-		outRequest = models.OutRequest{
-			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					Key:             stateFileKey,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-				},
-			},
-			Params: models.Params{
-				Terraform: terraform.Model{
-					Source: "", // overridden in contexts
-					Vars: map[string]interface{}{
-						"access_key": accessKey,
-						"secret_key": secretKey,
-					},
-				},
-			},
+		stateFileKey = path.Join(bucketPath, randomString("out-test"))
+		storageModel = storage.Model{
+			Bucket:          bucket,
+			Key:             stateFileKey,
+			AccessKeyID:     accessKey,
+			SecretAccessKey: secretKey,
 		}
 
 		var err error
@@ -87,275 +55,202 @@ var _ = Describe("Out", func() {
 
 	AfterEach(func() {
 		_ = os.RemoveAll(workingDir)
+		awsVerifier.DeleteSubnetWithCIDR(subnetCIDR, vpcID)
+		awsVerifier.DeleteObjectFromS3(bucket, stateFileKey)
 	})
 
-	assertOutLifecycle := func() {
-		It("succeeds in creating, outputing, and deleting infrastructure", func() {
-			By("ensuring state file does not already exist")
-
-			awsVerifier.ExpectS3FileToNotExist(
-				outRequest.Source.Storage.Bucket,
-				outRequest.Source.Storage.Key,
-			)
-
-			By("running 'out' to create an AWS VPC")
-
-			createOutput := models.OutResponse{}
-			runOutCommand(outRequest, &createOutput)
-
-			Expect(createOutput.Metadata).ToNot(BeEmpty())
-			vpcID := ""
-			for _, field := range createOutput.Metadata {
-				if field.Name == "vpc_id" {
-					vpcID = field.Value.(string)
-					break
-				}
-			}
-			Expect(vpcID).ToNot(BeEmpty())
-
-			awsVerifier.ExpectVPCToExist(vpcID)
-
-			By("ensuring that state file exists with valid version (LastModified)")
-
-			awsVerifier.ExpectS3FileToExist(
-				outRequest.Source.Storage.Bucket,
-				outRequest.Source.Storage.Key,
-			)
-
-			// does version match format "2006-01-02T15:04:05Z"?
-			createVersion, err := time.Parse(time.RFC3339, createOutput.Version.Version)
-			Expect(err).ToNot(HaveOccurred())
-
-			By("running 'out' to update the VPC")
-
-			outRequest.Params.Terraform.Vars["tag_name"] = "terraform-resource-test-updated"
-			updateOutput := models.OutResponse{}
-			runOutCommand(outRequest, &updateOutput)
-
-			awsVerifier.ExpectVPCToHaveTags(vpcID, map[string]string{
-				"Name": "terraform-resource-test-updated",
-			})
-
-			By("ensuring that state file has been updated")
-
-			awsVerifier.ExpectS3FileToExist(
-				outRequest.Source.Storage.Bucket,
-				outRequest.Source.Storage.Key,
-			)
-
-			updatedVersion, err := time.Parse(time.RFC3339, updateOutput.Version.Version)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(updatedVersion).To(BeTemporally(">", createVersion))
-
-			By("running 'out' to delete the VPC")
-
-			outRequest.Params.Action = models.DestroyAction
-			deleteOutput := models.OutResponse{}
-			runOutCommand(outRequest, &deleteOutput)
-
-			awsVerifier.ExpectVPCToNotExist(vpcID)
-
-			By("ensuring that state file no longer exists")
-
-			awsVerifier.ExpectS3FileToNotExist(
-				outRequest.Source.Storage.Bucket,
-				outRequest.Source.Storage.Key,
-			)
-
-			deletedVersion, err := time.Parse(time.RFC3339, deleteOutput.Version.Version)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(deletedVersion).To(BeTemporally(">", updatedVersion))
-		})
-	}
-
-	Context("when provided a local terraform source", func() {
-		BeforeEach(func() {
-			outRequest.Params.Terraform.Source = "fixtures/aws/"
-		})
-
-		assertOutLifecycle()
-	})
-
-	Context("when provided a remote terraform source", func() {
-		BeforeEach(func() {
-			// Note: changes to fixture must be pushed before running this test
-			outRequest.Params.Terraform.Source = "github.com/ljfranklin/terraform-resource//fixtures/aws/"
-		})
-
-		assertOutLifecycle()
-	})
-
-	Context("when terraform options are specified only under `source`", func() {
-		BeforeEach(func() {
-			accessKey := os.Getenv("AWS_ACCESS_KEY")
-			Expect(accessKey).ToNot(BeEmpty(), "AWS_ACCESS_KEY must be set")
-
-			secretKey := os.Getenv("AWS_SECRET_KEY")
-			Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
-
-			outRequest.Source.Terraform.Source = "fixtures/aws/"
-			outRequest.Source.Terraform.Vars = map[string]interface{}{
-				"access_key": accessKey,
-				"secret_key": secretKey,
-				"tag_name":   "terraform-resource-source-test",
-			}
-			outRequest.Params = models.Params{}
-		})
-
-		It("successfully creates new infrastructure", func() {
-			createOutput := models.OutResponse{}
-			runOutCommand(outRequest, &createOutput)
-
-			Expect(createOutput.Metadata).ToNot(BeEmpty())
-			vpcID := ""
-			for _, field := range createOutput.Metadata {
-				if field.Name == "vpc_id" {
-					vpcID = field.Value.(string)
-					break
-				}
-			}
-			Expect(vpcID).ToNot(BeEmpty())
-
-			awsVerifier.ExpectVPCToExist(vpcID)
-
-			awsVerifier.ExpectVPCToHaveTags(vpcID, map[string]string{
-				"Name": "terraform-resource-source-test",
-			})
-
-			awsVerifier.DeleteVPC(vpcID)
-		})
-	})
-
-	Context("when terraform options are specified under `source` and `put.params`", func() {
-		BeforeEach(func() {
-			accessKey := os.Getenv("AWS_ACCESS_KEY")
-			Expect(accessKey).ToNot(BeEmpty(), "AWS_ACCESS_KEY must be set")
-
-			secretKey := os.Getenv("AWS_SECRET_KEY")
-			Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
-
-			outRequest.Source.Terraform.Source = "fixtures/aws/"
-			outRequest.Source.Terraform.Vars = map[string]interface{}{
-				"access_key": accessKey,
-				"secret_key": "bad-secret-key", // will be overridden
-			}
-			outRequest.Params = models.Params{
+	It("creates IaaS resources from a local terraform source", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.Params{
 				Terraform: terraform.Model{
+					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
-						"secret_key": secretKey,
-						"tag_name":   "terraform-resource-options-test",
+						"access_key":  accessKey,
+						"secret_key":  secretKey,
+						"vpc_id":      vpcID,
+						"subnet_cidr": subnetCIDR,
 					},
 				},
-			}
-		})
+			},
+		}
+		expectedMetadata := map[string]interface{}{
+			"vpc_id":      vpcID,
+			"subnet_cidr": subnetCIDR,
+			"tag_name":    "terraform-resource-test", // template default
+		}
 
-		It("merges the variables, giving `put.params` preference", func() {
-			createOutput := models.OutResponse{}
-			runOutCommand(outRequest, &createOutput)
+		assertOutBehavior(req, expectedMetadata)
+	})
 
-			Expect(createOutput.Metadata).ToNot(BeEmpty())
-			vpcID := ""
-			for _, field := range createOutput.Metadata {
-				if field.Name == "vpc_id" {
-					vpcID = field.Value.(string)
-					break
-				}
-			}
-			Expect(vpcID).ToNot(BeEmpty())
+	It("creates IaaS resources from a remote terraform source", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.Params{
+				Terraform: terraform.Model{
+					// Note: changes to fixture must be pushed before running this test
+					Source: "github.com/ljfranklin/terraform-resource//fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":  accessKey,
+						"secret_key":  secretKey,
+						"vpc_id":      vpcID,
+						"subnet_cidr": subnetCIDR,
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]interface{}{
+			"vpc_id":      vpcID,
+			"subnet_cidr": subnetCIDR,
+			"tag_name":    "terraform-resource-test", // template default
+		}
 
-			awsVerifier.ExpectVPCToExist(vpcID)
+		assertOutBehavior(req, expectedMetadata)
+	})
 
-			awsVerifier.ExpectVPCToHaveTags(vpcID, map[string]string{
-				"Name": "terraform-resource-options-test",
-			})
+	It("creates IaaS resources from `source.terraform.vars`", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+				Terraform: terraform.Model{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":  accessKey,
+						"secret_key":  secretKey,
+						"vpc_id":      vpcID,
+						"subnet_cidr": subnetCIDR,
+						"tag_name":    "terraform-resource-source-test",
+					},
+				},
+			},
+			Params: models.Params{},
+		}
+		expectedMetadata := map[string]interface{}{
+			"vpc_id":      vpcID,
+			"subnet_cidr": subnetCIDR,
+			"tag_name":    "terraform-resource-source-test",
+		}
 
-			awsVerifier.DeleteVPC(vpcID)
-		})
+		assertOutBehavior(req, expectedMetadata)
+	})
+
+	It("creates IaaS resources from `source.terraform` and `put.params.terraform`", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+				Terraform: terraform.Model{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key": accessKey,
+						"secret_key": "bad-secret-key", // will be overridden
+					},
+				},
+			},
+			// put params take precedence
+			Params: models.Params{
+				Terraform: terraform.Model{
+					Vars: map[string]interface{}{
+						"secret_key":  secretKey,
+						"vpc_id":      vpcID,
+						"subnet_cidr": subnetCIDR,
+						"tag_name":    "terraform-resource-options-test",
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]interface{}{
+			"vpc_id":      vpcID,
+			"subnet_cidr": subnetCIDR,
+			"tag_name":    "terraform-resource-options-test",
+		}
+
+		assertOutBehavior(req, expectedMetadata)
 	})
 
 	Context("when given a yaml file containing variables", func() {
+		var varFileName string
+
 		BeforeEach(func() {
-			accessKey := os.Getenv("AWS_ACCESS_KEY")
-			Expect(accessKey).ToNot(BeEmpty(), "AWS_ACCESS_KEY must be set")
-
-			secretKey := os.Getenv("AWS_SECRET_KEY")
-			Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
-
-			pipelineParams := map[string]interface{}{
-				"access_key": accessKey,
-				"tag_name":   "terraform-resource-test-original",
-			}
 			fileParams := map[string]interface{}{
-				"secret_key": secretKey,
-				"tag_name":   "terraform-resource-test-override",
+				"vpc_id":   vpcID,
+				"tag_name": "terraform-resource-file-test",
 			}
 			fileContent, err := yaml.Marshal(fileParams)
 			Expect(err).ToNot(HaveOccurred())
 
-			varFilePath := path.Join(workingDir, "test-terraform-variables.tf")
+			varFileName = fmt.Sprintf("%s.tf", randomString("tf-variables"))
+			varFilePath := path.Join(workingDir, varFileName)
 			varFile, err := os.Create(varFilePath)
 			Expect(err).ToNot(HaveOccurred())
 			defer varFile.Close()
 
 			_, err = varFile.Write(fileContent)
 			Expect(err).ToNot(HaveOccurred())
+		})
 
-			outRequest.Params = models.Params{
-				Terraform: terraform.Model{
-					Source:  "fixtures/aws/",
-					Vars:    pipelineParams,
-					VarFile: "test-terraform-variables.tf",
+		It("creates IaaS resources from request vars and file vars", func() {
+			req := models.OutRequest{
+				Source: models.Source{
+					Storage: storageModel,
+					Terraform: terraform.Model{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key": accessKey,
+							// will be overridden
+							"secret_key": "bad-secret-key",
+						},
+					},
+				},
+				// put params overrides source
+				Params: models.Params{
+					Terraform: terraform.Model{
+						Vars: map[string]interface{}{
+							"secret_key":  secretKey,
+							"subnet_cidr": subnetCIDR,
+							// will be overridden
+							"tag_name": "terraform-resource-test-original",
+						},
+						// var file overrides put.params
+						VarFile: varFileName,
+					},
 				},
 			}
-		})
-
-		It("merges variables from the file and the 'out' params", func() {
-			By("running 'out' to create an AWS VPC")
-
-			createOutput := models.OutResponse{}
-			runOutCommand(outRequest, &createOutput)
-
-			Expect(createOutput.Metadata).ToNot(BeEmpty())
-			vpcID := ""
-			for _, field := range createOutput.Metadata {
-				if field.Name == "vpc_id" {
-					vpcID = field.Value.(string)
-					break
-				}
+			expectedMetadata := map[string]interface{}{
+				"vpc_id":      vpcID,
+				"subnet_cidr": subnetCIDR,
+				"tag_name":    "terraform-resource-file-test",
 			}
-			Expect(vpcID).ToNot(BeEmpty())
 
-			awsVerifier.ExpectVPCToExist(vpcID)
-
-			awsVerifier.ExpectVPCToHaveTags(vpcID, map[string]string{
-				"Name": "terraform-resource-test-override",
-			})
-
-			awsVerifier.DeleteVPC(vpcID)
+			assertOutBehavior(req, expectedMetadata)
 		})
 	})
+
+	assertOutBehavior = func(outRequest models.OutRequest, expectedMetadata map[string]interface{}) {
+		createOutput := models.OutResponse{}
+		runOutCommand(outRequest, &createOutput, workingDir)
+
+		Expect(createOutput.Metadata).ToNot(BeEmpty())
+		fields := map[string]interface{}{}
+		for _, field := range createOutput.Metadata {
+			fields[field.Name] = field.Value
+		}
+
+		for key, value := range expectedMetadata {
+			Expect(fields[key]).To(Equal(value))
+		}
+
+		Expect(fields["subnet_id"]).ToNot(BeEmpty())
+		subnetID := fields["subnet_id"].(string)
+		awsVerifier.ExpectSubnetToExist(subnetID)
+		awsVerifier.ExpectSubnetToHaveTags(subnetID, map[string]string{
+			"Name": fields["tag_name"].(string),
+		})
+	}
 })
-
-func runOutCommand(input interface{}, output interface{}) {
-	command := exec.Command(pathToOutBinary, workingDir)
-
-	stdin, err := command.StdinPipe()
-	Expect(err).ToNot(HaveOccurred())
-
-	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = json.NewEncoder(stdin).Encode(input)
-	Expect(err).ToNot(HaveOccurred())
-	stdin.Close()
-
-	Eventually(session, 2*time.Minute).Should(gexec.Exit(0))
-
-	err = json.Unmarshal(session.Out.Contents(), output)
-	Expect(err).ToNot(HaveOccurred())
-
-	Expect(session.Err).To(gbytes.Say("Apply complete!"))
-}
 
 func getProjectRoot() string {
 	_, filename, _, _ := runtime.Caller(1)

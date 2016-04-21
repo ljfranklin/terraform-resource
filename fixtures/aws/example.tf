@@ -4,8 +4,9 @@ provider "aws" {
     region = "${var.region}"
 }
 
-resource "aws_vpc" "test_vpc" {
-    cidr_block = "10.0.99.0/24"
+resource "aws_subnet" "test_subnet" {
+    vpc_id = "${var.vpc_id}"
+    cidr_block = "${var.subnet_cidr}"
 
     tags {
         Name = "${var.tag_name}"

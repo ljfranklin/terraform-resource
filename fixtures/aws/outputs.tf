@@ -1,6 +1,12 @@
 output "vpc_id" {
-    value = "${aws_vpc.test_vpc.id}"
+    value = "${aws_subnet.test_subnet.vpc_id}"
 }
-output "vpc_tag_name" {
-    value = "${aws_vpc.test_vpc.tags.Name}"
+output "subnet_id" {
+    value = "${aws_subnet.test_subnet.id}"
+}
+output "subnet_cidr" {
+    value = "${aws_subnet.test_subnet.cidr_block}"
+}
+output "tag_name" {
+    value = "${aws_subnet.test_subnet.tags.Name}"
 }
