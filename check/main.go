@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"time"
 
 	"github.com/ljfranklin/terraform-resource/in/models"
 	"github.com/ljfranklin/terraform-resource/storage"
@@ -25,6 +26,15 @@ func main() {
 		return
 	}
 
+	currentVersionTime := time.Time{}
+	if req.Version.Version != "" {
+		var err error
+		currentVersionTime, err = time.Parse(time.RFC3339, req.Version.Version)
+		if err != nil {
+			log.Fatalf("Failed to parse current version time: %s", err)
+		}
+	}
+
 	storageModel := req.Source.Storage
 	if err := storageModel.Validate(); err != nil {
 		log.Fatalf("Failed to validate storage Model: %s", err)
@@ -38,9 +48,16 @@ func main() {
 
 	resp := []models.Version{}
 	if version != "" {
-		resp = append(resp, models.Version{
-			Version: version,
-		})
+		lastModifiedTime, err := time.Parse(time.RFC3339, version)
+		if err != nil {
+			log.Fatalf("Failed to parse last modified time: %s", err)
+		}
+
+		if lastModifiedTime.After(currentVersionTime) {
+			resp = append(resp, models.Version{
+				Version: version,
+			})
+		}
 	}
 
 	if err := json.NewEncoder(os.Stdout).Encode(resp); err != nil {

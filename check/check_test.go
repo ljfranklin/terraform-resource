@@ -131,6 +131,35 @@ var _ = Describe("Check", func() {
 			}
 			Expect(actualOutput).To(Equal(expectOutput))
 		})
+
+		It("returns an empty version list when current version matches storage version", func() {
+			currentVersion, err := s3.Version(pathToS3Fixture)
+			Expect(err).ToNot(HaveOccurred())
+			checkInput.Version = models.Version{
+				Version: currentVersion,
+			}
+
+			command := exec.Command(pathToCheckBinary)
+
+			stdin, err := command.StdinPipe()
+			Expect(err).ToNot(HaveOccurred())
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = json.NewEncoder(stdin).Encode(checkInput)
+			Expect(err).ToNot(HaveOccurred())
+			stdin.Close()
+
+			Eventually(session, 15*time.Second).Should(gexec.Exit(0))
+
+			actualOutput := []models.Version{}
+			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
+			Expect(err).ToNot(HaveOccurred())
+
+			expectOutput := []models.Version{}
+			Expect(actualOutput).To(Equal(expectOutput))
+		})
 	})
 
 	Context("when key is omitted from source", func() {
