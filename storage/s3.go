@@ -3,7 +3,6 @@ package storage
 import (
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -97,7 +96,7 @@ func (s *s3) Delete(key string) error {
 	return nil
 }
 
-func (s *s3) Version(key string) (string, error) {
+func (s *s3) Version(key string) (Version, error) {
 
 	client := awss3.New(s.session, s.awsConfig)
 
@@ -109,11 +108,18 @@ func (s *s3) Version(key string) (string, error) {
 	resp, err := client.HeadObject(params)
 	if err != nil {
 		if reqErr, ok := err.(awserr.RequestFailure); ok && reqErr.StatusCode() == 404 {
-			return "", nil // no versions exist
+			return Version{}, nil // no versions exist
 		}
-		return "", fmt.Errorf("HeadObject request failed.\nError: %s", err.Error())
+		return Version{}, fmt.Errorf("HeadObject request failed.\nError: %s", err.Error())
 	}
 
-	lastModified := resp.LastModified.Format(time.RFC3339) // e.g. "2006-01-02T15:04:05Z"
-	return lastModified, nil
+	version := Version{
+		// e.g. "2006-01-02T15:04:05Z"
+		LastModified: resp.LastModified.Format(TimeFormat),
+		MD5:          *resp.ETag,
+	}
+	if err = version.Validate(); err != nil {
+		return Version{}, fmt.Errorf("Failed to validate state file version: %s", err)
+	}
+	return version, nil
 }

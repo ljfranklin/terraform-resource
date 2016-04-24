@@ -2,18 +2,22 @@ package helpers
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	awsec2 "github.com/aws/aws-sdk-go/service/ec2"
+	awss3 "github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/ljfranklin/terraform-resource/storage"
 	. "github.com/onsi/gomega"
 )
 
 type AWSVerifier struct {
 	ec2       *awsec2.EC2
+	s3        *awss3.S3
 	accessKey string
 	secretKey string
 	region    string
@@ -21,12 +25,16 @@ type AWSVerifier struct {
 
 func NewAWSVerifier(accessKey string, secretKey string, region string) *AWSVerifier {
 	awsConfig := &aws.Config{
-		Region:      aws.String(region),
-		Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
+		Region:           aws.String(region),
+		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
+		S3ForcePathStyle: aws.Bool(true),
+		MaxRetries:       aws.Int(10),
 	}
 	ec2 := awsec2.New(awsSession.New(awsConfig))
+	s3 := awss3.New(awsSession.New(awsConfig))
 	return &AWSVerifier{
 		ec2:       ec2,
+		s3:        s3,
 		accessKey: accessKey,
 		secretKey: secretKey,
 		region:    region,
@@ -34,37 +42,66 @@ func NewAWSVerifier(accessKey string, secretKey string, region string) *AWSVerif
 }
 
 func (a AWSVerifier) ExpectS3FileToExist(bucketName string, key string) {
-	s3 := storage.NewS3(storage.Model{
-		AccessKeyID:     a.accessKey,
-		SecretAccessKey: a.secretKey,
-		RegionName:      a.region,
-		Bucket:          bucketName,
-	})
+	params := &awss3.HeadObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+	}
 
-	version, err := s3.Version(key)
-	Expect(err).ToNot(HaveOccurred())
-
-	Expect(version).ToNot(BeEmpty(),
+	_, err := a.s3.HeadObject(params)
+	Expect(err).ToNot(HaveOccurred(),
 		"Expected S3 file '%s' to exist in bucket '%s', but it does not",
 		key,
 		bucketName)
 }
 
 func (a AWSVerifier) ExpectS3FileToNotExist(bucketName string, key string) {
-	s3 := storage.NewS3(storage.Model{
-		AccessKeyID:     a.accessKey,
-		SecretAccessKey: a.secretKey,
-		RegionName:      a.region,
-		Bucket:          bucketName,
-	})
 
-	version, err := s3.Version(key)
-	Expect(err).ToNot(HaveOccurred())
+	params := &awss3.HeadObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+	}
 
-	Expect(version).To(BeEmpty(),
+	_, err := a.s3.HeadObject(params)
+	Expect(err).To(HaveOccurred(),
 		"Expected S3 file '%s' to not exist in bucket '%s', but it does",
 		key,
 		bucketName)
+
+	reqErr, ok := err.(awserr.RequestFailure)
+	Expect(ok).To(BeTrue(), "Invalid AWS error type: %s", err)
+	Expect(reqErr.StatusCode()).To(Equal(404))
+}
+
+func (a AWSVerifier) GetLastModifiedFromS3(bucketName string, key string) string {
+	params := &awss3.HeadObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+	}
+
+	resp, err := a.s3.HeadObject(params)
+	Expect(err).ToNot(HaveOccurred())
+	return resp.LastModified.Format(storage.TimeFormat)
+}
+
+func (a AWSVerifier) GetMD5FromS3(bucketName string, key string) string {
+	params := &awss3.HeadObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+	}
+
+	resp, err := a.s3.HeadObject(params)
+	Expect(err).ToNot(HaveOccurred())
+	return *resp.ETag
+}
+
+func (a AWSVerifier) UploadObjectToS3(bucketName string, key string, content io.Reader) {
+	uploader := s3manager.NewUploaderWithClient(a.s3)
+	_, err := uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+		Body:   content,
+	})
+	Expect(err).ToNot(HaveOccurred())
 }
 
 func (a AWSVerifier) DeleteObjectFromS3(bucketName string, key string) {

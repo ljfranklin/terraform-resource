@@ -119,21 +119,21 @@ func (c Client) Output() (map[string]interface{}, error) {
 	return output, nil
 }
 
-func (c Client) DownloadStateFileIfExists() (string, error) {
+func (c Client) DownloadStateFileIfExists() (storage.Version, error) {
 	version, err := c.StorageDriver.Version(c.Model.StateFileRemotePath)
 	if err != nil {
-		return "", fmt.Errorf("Failed to check for existing state file from '%s': %s", c.Model.StateFileRemotePath, err)
+		return storage.Version{}, fmt.Errorf("Failed to check for existing state file from '%s': %s", c.Model.StateFileRemotePath, err)
 	}
-	if version != "" {
+	if version.IsZero() == false {
 		stateFile, createErr := os.Create(c.Model.StateFileLocalPath)
 		if createErr != nil {
-			return "", fmt.Errorf("Failed to create state file at '%s': %s", c.Model.StateFileLocalPath, createErr)
+			return storage.Version{}, fmt.Errorf("Failed to create state file at '%s': %s", c.Model.StateFileLocalPath, createErr)
 		}
 		defer stateFile.Close()
 
 		err = c.StorageDriver.Download(c.Model.StateFileRemotePath, stateFile)
 		if err != nil {
-			return "", fmt.Errorf("Failed to download state file: %s", err)
+			return storage.Version{}, fmt.Errorf("Failed to download state file: %s", err)
 		}
 		stateFile.Close()
 	}
@@ -141,24 +141,24 @@ func (c Client) DownloadStateFileIfExists() (string, error) {
 	return version, nil
 }
 
-func (c Client) UploadStateFile() (string, error) {
+func (c Client) UploadStateFile() (storage.Version, error) {
 	stateFile, err := os.Open(c.Model.StateFileLocalPath)
 	if err != nil {
-		return "", fmt.Errorf("Failed to open state file at '%s'", c.Model.StateFileLocalPath)
+		return storage.Version{}, fmt.Errorf("Failed to open state file at '%s'", c.Model.StateFileLocalPath)
 	}
 	defer stateFile.Close()
 
 	err = c.StorageDriver.Upload(c.Model.StateFileRemotePath, stateFile)
 	if err != nil {
-		return "", fmt.Errorf("Failed to upload state file: %s", err)
+		return storage.Version{}, fmt.Errorf("Failed to upload state file: %s", err)
 	}
 
 	version, err := c.StorageDriver.Version(c.Model.StateFileRemotePath)
 	if err != nil {
-		return "", fmt.Errorf("Failed to retrieve version from '%s': %s", c.Model.StateFileRemotePath, err)
+		return storage.Version{}, fmt.Errorf("Failed to retrieve version from '%s': %s", c.Model.StateFileRemotePath, err)
 	}
-	if version == "" {
-		return "", fmt.Errorf("Couldn't find state file at: %s", c.Model.StateFileRemotePath)
+	if version.IsZero() {
+		return storage.Version{}, fmt.Errorf("Couldn't find state file at: %s", c.Model.StateFileRemotePath)
 	}
 
 	return version, nil

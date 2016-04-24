@@ -63,7 +63,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to download state file from storage backend: %s", err)
 	}
-	if version == "" {
+	if version.IsZero() {
 		log.Fatalf("StateFile does not exist with key '%s'", req.Source.Storage.Key)
 	}
 
@@ -90,9 +90,7 @@ func main() {
 	}
 
 	resp := models.InResponse{
-		Version: models.Version{
-			Version: version,
-		},
+		Version:  version,
 		Metadata: metadata,
 	}
 

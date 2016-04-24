@@ -106,9 +106,7 @@ func performApply(client terraform.Client, storageDriver storage.Storage) (model
 	}
 
 	resp := models.OutResponse{
-		Version: models.Version{
-			Version: version,
-		},
+		Version:  version,
 		Metadata: metadata,
 	}
 	return resp, nil
@@ -126,12 +124,12 @@ func performDestroy(client terraform.Client, storageDriver storage.Storage) (mod
 	}
 
 	// use current time rather than state file LastModified time
-	version := time.Now().UTC().Format(time.RFC3339)
+	version := storage.Version{
+		LastModified: time.Now().UTC().Format(storage.TimeFormat),
+	}
 
 	resp := models.OutResponse{
-		Version: models.Version{
-			Version: version,
-		},
+		Version:  version,
 		Metadata: []models.MetadataField{},
 	}
 	return resp, nil

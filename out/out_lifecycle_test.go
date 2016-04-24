@@ -105,9 +105,9 @@ var _ = Describe("Out Lifecycle", func() {
 			outRequest.Source.Storage.Key,
 		)
 
-		// does version match format "2006-01-02T15:04:05Z"?
-		createVersion, err := time.Parse(time.RFC3339, createOutput.Version.Version)
+		createVersion, err := time.Parse(storage.TimeFormat, createOutput.Version.LastModified)
 		Expect(err).ToNot(HaveOccurred())
+		Expect(createOutput.Version.MD5).ToNot(BeEmpty())
 
 		By("running 'out' to update the VPC")
 
@@ -126,7 +126,7 @@ var _ = Describe("Out Lifecycle", func() {
 			outRequest.Source.Storage.Key,
 		)
 
-		updatedVersion, err := time.Parse(time.RFC3339, updateOutput.Version.Version)
+		updatedVersion, err := time.Parse(storage.TimeFormat, updateOutput.Version.LastModified)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(updatedVersion).To(BeTemporally(">", createVersion))
 
@@ -145,7 +145,7 @@ var _ = Describe("Out Lifecycle", func() {
 			outRequest.Source.Storage.Key,
 		)
 
-		deletedVersion, err := time.Parse(time.RFC3339, deleteOutput.Version.Version)
+		deletedVersion, err := time.Parse(storage.TimeFormat, deleteOutput.Version.LastModified)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(deletedVersion).To(BeTemporally(">", updatedVersion))
 	})

@@ -11,12 +11,8 @@ type OutRequest struct {
 }
 
 type OutResponse struct {
-	Version  Version  `json:"version"`
-	Metadata Metadata `json:"metadata"`
-}
-
-type Version struct {
-	Version string `json:"version"`
+	Version  storage.Version `json:"version"`
+	Metadata Metadata        `json:"metadata"`
 }
 
 type Metadata []MetadataField

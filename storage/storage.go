@@ -2,13 +2,19 @@ package storage
 
 import (
 	"io"
+	"time"
+)
+
+const (
+	// e.g. "2006-01-02T15:04:05Z"
+	TimeFormat = time.RFC3339
 )
 
 type Storage interface {
 	Download(string, io.Writer) error
 	Upload(string, io.Reader) error
 	Delete(string) error
-	Version(string) (string, error)
+	Version(string) (Version, error)
 }
 
 func BuildDriver(m Model) Storage {

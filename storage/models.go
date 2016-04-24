@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 const (
@@ -18,6 +19,11 @@ type Model struct {
 	AccessKeyID     string `json:"access_key_id"`
 	SecretAccessKey string `json:"secret_access_key"`
 	RegionName      string `json:"region_name,omitempty"` // optional
+}
+
+type Version struct {
+	LastModified string `json:"last_modified"`
+	MD5          string `json:"md5"`
 }
 
 func (m Model) Validate() error {
@@ -68,4 +74,23 @@ func (m Model) Validate() error {
 		return fmt.Errorf("Missing fields: %s", strings.Join(missingFields, ", "))
 	}
 	return nil
+}
+
+func (r Version) Validate() error {
+	_, err := time.Parse(TimeFormat, r.LastModified)
+	if err != nil {
+		return fmt.Errorf("LastModified field is in invalid format: %s", err)
+	}
+
+	return nil
+}
+
+func (r Version) IsZero() bool {
+	return r == Version{}
+}
+
+func (r Version) LastModifiedTime() time.Time {
+	// assumes Validate has already been called
+	time, _ := time.Parse(TimeFormat, r.LastModified)
+	return time
 }

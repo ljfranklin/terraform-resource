@@ -3,18 +3,14 @@ package models
 import "github.com/ljfranklin/terraform-resource/storage"
 
 type InRequest struct {
-	Source  Source  `json:"source"`
-	Version Version `json:"version,omitempty"` // absent on initial request
-	Params  Params  `json:"params,omitempty"`  // used to specify 'destroy' action
+	Source  Source          `json:"source"`
+	Version storage.Version `json:"version,omitempty"` // absent on initial request
+	Params  Params          `json:"params,omitempty"`  // used to specify 'destroy' action
 }
 
 type InResponse struct {
-	Version  Version  `json:"version"`
-	Metadata Metadata `json:"metadata"`
-}
-
-type Version struct {
-	Version string `json:"version"`
+	Version  storage.Version `json:"version"`
+	Metadata Metadata        `json:"metadata"`
 }
 
 type Metadata []MetadataField

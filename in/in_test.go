@@ -13,6 +13,7 @@ import (
 
 	"github.com/ljfranklin/terraform-resource/in/models"
 	"github.com/ljfranklin/terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -23,8 +24,9 @@ import (
 var _ = Describe("In", func() {
 
 	var (
-		s3              storage.Storage
+		awsVerifier     *helpers.AWSVerifier
 		inReq           models.InRequest
+		bucket          string
 		pathToS3Fixture string
 		tmpDir          string
 	)
@@ -36,20 +38,21 @@ var _ = Describe("In", func() {
 		secretKey := os.Getenv("AWS_SECRET_KEY")
 		Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
 
-		bucket := os.Getenv("AWS_BUCKET")
+		bucket = os.Getenv("AWS_BUCKET")
 		Expect(bucket).ToNot(BeEmpty(), "AWS_BUCKET must be set")
 
 		bucketPath := os.Getenv("AWS_BUCKET_PATH") // optional
 
 		region := os.Getenv("AWS_REGION") // optional
+		if region == "" {
+			region = "us-east-1"
+		}
 
-		s3 = storage.NewS3(storage.Model{
-			AccessKeyID:     accessKey,
-			SecretAccessKey: secretKey,
-			RegionName:      region,
-			Bucket:          bucket,
-		})
-
+		awsVerifier = helpers.NewAWSVerifier(
+			accessKey,
+			secretKey,
+			region,
+		)
 		pathToS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture"))
 
 		inReq = models.InRequest{
@@ -78,12 +81,11 @@ var _ = Describe("In", func() {
 			Expect(err).ToNot(HaveOccurred())
 			defer fixture.Close()
 
-			err = s3.Upload(pathToS3Fixture, fixture)
-			Expect(err).ToNot(HaveOccurred())
+			awsVerifier.UploadObjectToS3(bucket, pathToS3Fixture, fixture)
 		})
 
 		AfterEach(func() {
-			_ = s3.Delete(pathToS3Fixture)
+			awsVerifier.DeleteObjectFromS3(bucket, pathToS3Fixture)
 		})
 
 		It("fetches state file from S3", func() {
@@ -106,9 +108,9 @@ var _ = Describe("In", func() {
 			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
 			Expect(err).ToNot(HaveOccurred())
 
-			// does version match format "2006-01-02T15:04:05Z"
-			_, err = time.Parse(time.RFC3339, actualOutput.Version.Version)
+			_, err = time.Parse(storage.TimeFormat, actualOutput.Version.LastModified)
 			Expect(err).ToNot(HaveOccurred())
+			Expect(actualOutput.Version.MD5).ToNot(BeEmpty())
 
 			expectedOutputPath := path.Join(tmpDir, "metadata")
 			Expect(expectedOutputPath).To(BeAnExistingFile())
@@ -130,8 +132,8 @@ var _ = Describe("In", func() {
 
 			BeforeEach(func() {
 				inReq.Params.Action = models.DestroyAction
-				inReq.Version = models.Version{
-					Version: time.Now().UTC().Format(time.RFC3339),
+				inReq.Version = storage.Version{
+					LastModified: time.Now().UTC().Format(storage.TimeFormat),
 				}
 			})
 
@@ -155,8 +157,7 @@ var _ = Describe("In", func() {
 				err = json.Unmarshal(session.Out.Contents(), &actualOutput)
 				Expect(err).ToNot(HaveOccurred())
 
-				// does version match format "2006-01-02T15:04:05Z"
-				_, err = time.Parse(time.RFC3339, actualOutput.Version.Version)
+				_, err = time.Parse(storage.TimeFormat, actualOutput.Version.LastModified)
 				Expect(err).ToNot(HaveOccurred())
 
 				expectedOutputPath := path.Join(tmpDir, "metadata")
@@ -167,8 +168,8 @@ var _ = Describe("In", func() {
 		Context("and it was called as part of update or create", func() {
 			BeforeEach(func() {
 				inReq.Params.Action = ""
-				inReq.Version = models.Version{
-					Version: time.Now().UTC().Format(time.RFC3339),
+				inReq.Version = storage.Version{
+					LastModified: time.Now().UTC().Format(storage.TimeFormat),
 				}
 			})
 

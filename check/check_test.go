@@ -12,6 +12,7 @@ import (
 
 	"github.com/ljfranklin/terraform-resource/in/models"
 	"github.com/ljfranklin/terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -20,9 +21,10 @@ import (
 var _ = Describe("Check", func() {
 
 	var (
-		s3              storage.Storage
 		checkInput      models.InRequest
+		bucket          string
 		pathToS3Fixture string
+		awsVerifier     *helpers.AWSVerifier
 	)
 
 	BeforeEach(func() {
@@ -32,20 +34,21 @@ var _ = Describe("Check", func() {
 		secretKey := os.Getenv("AWS_SECRET_KEY")
 		Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
 
-		bucket := os.Getenv("AWS_BUCKET")
+		bucket = os.Getenv("AWS_BUCKET")
 		Expect(bucket).ToNot(BeEmpty(), "AWS_BUCKET must be set")
 
 		bucketPath := os.Getenv("AWS_BUCKET_PATH") // optional
 
 		region := os.Getenv("AWS_REGION") // optional
+		if region == "" {
+			region = "us-east-1"
+		}
 
-		s3 = storage.NewS3(storage.Model{
-			AccessKeyID:     accessKey,
-			SecretAccessKey: secretKey,
-			RegionName:      region,
-			Bucket:          bucket,
-		})
-
+		awsVerifier = helpers.NewAWSVerifier(
+			accessKey,
+			secretKey,
+			region,
+		)
 		pathToS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture"))
 
 		checkInput = models.InRequest{
@@ -61,7 +64,7 @@ var _ = Describe("Check", func() {
 	})
 
 	AfterEach(func() {
-		_ = s3.Delete(pathToS3Fixture) // ignore error on cleanup
+		awsVerifier.DeleteObjectFromS3(bucket, pathToS3Fixture)
 	})
 
 	Context("when bucket is empty", func() {
@@ -80,11 +83,11 @@ var _ = Describe("Check", func() {
 
 			Eventually(session, 15*time.Second).Should(gexec.Exit(0))
 
-			actualOutput := []models.Version{}
+			actualOutput := []storage.Version{}
 			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
 			Expect(err).ToNot(HaveOccurred())
 
-			expectedOutput := []models.Version{}
+			expectedOutput := []storage.Version{}
 			Expect(actualOutput).To(Equal(expectedOutput))
 		})
 	})
@@ -96,8 +99,7 @@ var _ = Describe("Check", func() {
 			Expect(err).ToNot(HaveOccurred())
 			defer fixture.Close()
 
-			err = s3.Upload(pathToS3Fixture, fixture)
-			Expect(err).ToNot(HaveOccurred())
+			awsVerifier.UploadObjectToS3(bucket, pathToS3Fixture, fixture)
 		})
 
 		It("returns the version of the fixture on S3", func() {
@@ -115,28 +117,26 @@ var _ = Describe("Check", func() {
 
 			Eventually(session, 15*time.Second).Should(gexec.Exit(0))
 
-			actualOutput := []models.Version{}
+			actualOutput := []storage.Version{}
 			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
 			Expect(err).ToNot(HaveOccurred())
 
-			version, err := s3.Version(pathToS3Fixture)
-			Expect(err).ToNot(HaveOccurred())
-			_, err = time.Parse(time.RFC3339, version) // does version match format "2006-01-02T15:04:05Z"
-			Expect(err).ToNot(HaveOccurred())
+			lastModified := awsVerifier.GetLastModifiedFromS3(bucket, pathToS3Fixture)
+			md5 := awsVerifier.GetMD5FromS3(bucket, pathToS3Fixture)
 
-			expectOutput := []models.Version{
-				models.Version{
-					Version: version,
+			expectOutput := []storage.Version{
+				storage.Version{
+					LastModified: lastModified,
+					MD5:          md5,
 				},
 			}
 			Expect(actualOutput).To(Equal(expectOutput))
 		})
 
 		It("returns an empty version list when current version matches storage version", func() {
-			currentVersion, err := s3.Version(pathToS3Fixture)
-			Expect(err).ToNot(HaveOccurred())
-			checkInput.Version = models.Version{
-				Version: currentVersion,
+			currentLastModified := awsVerifier.GetLastModifiedFromS3(bucket, pathToS3Fixture)
+			checkInput.Version = storage.Version{
+				LastModified: currentLastModified,
 			}
 
 			command := exec.Command(pathToCheckBinary)
@@ -153,11 +153,11 @@ var _ = Describe("Check", func() {
 
 			Eventually(session, 15*time.Second).Should(gexec.Exit(0))
 
-			actualOutput := []models.Version{}
+			actualOutput := []storage.Version{}
 			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
 			Expect(err).ToNot(HaveOccurred())
 
-			expectOutput := []models.Version{}
+			expectOutput := []storage.Version{}
 			Expect(actualOutput).To(Equal(expectOutput))
 		})
 	})
@@ -182,11 +182,11 @@ var _ = Describe("Check", func() {
 
 			Eventually(session, 15*time.Second).Should(gexec.Exit(0))
 
-			actualOutput := []models.Version{}
+			actualOutput := []storage.Version{}
 			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
 			Expect(err).ToNot(HaveOccurred())
 
-			expectOutput := []models.Version{}
+			expectOutput := []storage.Version{}
 			Expect(actualOutput).To(Equal(expectOutput))
 		})
 	})
