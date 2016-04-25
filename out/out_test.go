@@ -25,7 +25,7 @@ var _ = Describe("Out", func() {
 
 	var (
 		storageModel      storage.Model
-		stateFileKey      string
+		stateFileName     string
 		subnetCIDR        string
 		workingDir        string
 		assertOutBehavior func(models.OutRequest, map[string]interface{})
@@ -36,10 +36,12 @@ var _ = Describe("Out", func() {
 		rand.Seed(time.Now().UnixNano())
 		subnetCIDR = fmt.Sprintf("10.0.%d.0/24", rand.Intn(256))
 
-		stateFileKey = path.Join(bucketPath, randomString("out-test"))
+		stateFileName = randomString("out-test")
+
 		storageModel = storage.Model{
 			Bucket:          bucket,
-			Key:             stateFileKey,
+			BucketPath:      bucketPath,
+			StateFile:       stateFileName,
 			AccessKeyID:     accessKey,
 			SecretAccessKey: secretKey,
 		}
@@ -56,7 +58,7 @@ var _ = Describe("Out", func() {
 	AfterEach(func() {
 		_ = os.RemoveAll(workingDir)
 		awsVerifier.DeleteSubnetWithCIDR(subnetCIDR, vpcID)
-		awsVerifier.DeleteObjectFromS3(bucket, stateFileKey)
+		awsVerifier.DeleteObjectFromS3(bucket, path.Join(bucketPath, stateFileName))
 	})
 
 	It("creates IaaS resources from a local terraform source", func() {

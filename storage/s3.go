@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"io"
+	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -16,6 +17,7 @@ type s3 struct {
 	session    *awsSession.Session
 	awsConfig  *aws.Config
 	bucketName string
+	bucketPath string
 }
 
 const (
@@ -44,6 +46,7 @@ func NewS3(m Model) Storage {
 		session:    session,
 		awsConfig:  awsConfig,
 		bucketName: m.Bucket,
+		bucketPath: m.BucketPath,
 	}
 }
 
@@ -114,12 +117,48 @@ func (s *s3) Version(key string) (Version, error) {
 	}
 
 	version := Version{
-		// e.g. "2006-01-02T15:04:05Z"
 		LastModified: resp.LastModified.Format(TimeFormat),
-		MD5:          *resp.ETag,
+		StateFileKey: key,
 	}
 	if err = version.Validate(); err != nil {
 		return Version{}, fmt.Errorf("Failed to validate state file version: %s", err)
 	}
 	return version, nil
 }
+
+func (s *s3) LatestVersion() (Version, error) {
+
+	client := awss3.New(s.session, s.awsConfig)
+
+	params := &awss3.ListObjectsInput{
+		Bucket: aws.String(s.bucketName),
+		Prefix: aws.String(s.bucketPath),
+	}
+
+	resp, err := client.ListObjects(params)
+	if err != nil {
+		return Version{}, fmt.Errorf("ListObjects request failed.\nError: %s", err)
+	}
+
+	fileObjects := resp.Contents
+	if len(fileObjects) == 0 {
+		return Version{}, nil // no versions exist
+	}
+	sort.Sort(ByLastModified(fileObjects))
+
+	latest := fileObjects[len(fileObjects)-1]
+	version := Version{
+		LastModified: latest.LastModified.Format(TimeFormat),
+		StateFileKey: *latest.Key,
+	}
+	if err = version.Validate(); err != nil {
+		return Version{}, fmt.Errorf("Failed to validate state file version: %s", err)
+	}
+	return version, nil
+}
+
+type ByLastModified []*awss3.Object
+
+func (a ByLastModified) Len() int           { return len(a) }
+func (a ByLastModified) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByLastModified) Less(i, j int) bool { return a[i].LastModified.Before(*a[j].LastModified) }

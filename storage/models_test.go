@@ -18,7 +18,7 @@ var _ = Describe("Storage Models", func() {
 				model := storage.Model{
 					Driver:          storage.S3Driver,
 					Bucket:          "fake-bucket",
-					Key:             "fake-key",
+					BucketPath:      "fake-bucket-path",
 					AccessKeyID:     "fake-access-key",
 					SecretAccessKey: "fake-secret-key",
 					RegionName:      "fake-region",
@@ -31,7 +31,7 @@ var _ = Describe("Storage Models", func() {
 			It("returns error if storage fields are missing", func() {
 				requiredFields := []string{
 					"storage.bucket",
-					"storage.key",
+					"storage.bucket_path",
 					"storage.access_key_id",
 					"storage.secret_access_key",
 				}
@@ -61,16 +61,31 @@ var _ = Describe("Storage Models", func() {
 			It("returns nil if all fields are provided", func() {
 				model := storage.Version{
 					LastModified: "2006-01-02T15:04:05Z",
-					MD5:          "7a63ed6fbcede31d157c9c52a8cef535",
+					StateFileKey: "fake-path",
 				}
 
 				err := model.Validate()
 				Expect(err).ToNot(HaveOccurred())
 			})
 
+			It("returns error if storage fields are missing", func() {
+				requiredFields := []string{
+					"version.last_modified",
+					"version.state_file_key",
+				}
+
+				version := storage.Version{}
+				err := version.Validate()
+				Expect(err).To(HaveOccurred())
+				for _, field := range requiredFields {
+					Expect(err.Error()).To(ContainSubstring(field))
+				}
+			})
+
 			It("returns error if LastModified is in invalid format", func() {
 				model := storage.Version{
 					LastModified: "Mon Jan _2 15:04:05 2006",
+					StateFileKey: "fake-path",
 				}
 				err := model.Validate()
 				expectedErr := "LastModified field is in invalid format"

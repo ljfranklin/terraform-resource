@@ -15,15 +15,16 @@ type Model struct {
 
 	// S3 driver
 	Bucket          string `json:"bucket"`
-	Key             string `json:"key"`
+	BucketPath      string `json:"bucket_path"`
 	AccessKeyID     string `json:"access_key_id"`
 	SecretAccessKey string `json:"secret_access_key"`
 	RegionName      string `json:"region_name,omitempty"` // optional
+	StateFile       string `json:"state_file,omitempty"`  // optional
 }
 
 type Version struct {
 	LastModified string `json:"last_modified"`
-	MD5          string `json:"md5"`
+	StateFileKey string `json:"state_file_key"`
 }
 
 func (m Model) Validate() error {
@@ -56,8 +57,8 @@ func (m Model) Validate() error {
 		if m.Bucket == "" {
 			missingFields = append(missingFields, fmt.Sprintf("%s.bucket", fieldPrefix))
 		}
-		if m.Key == "" {
-			missingFields = append(missingFields, fmt.Sprintf("%s.key", fieldPrefix))
+		if m.BucketPath == "" {
+			missingFields = append(missingFields, fmt.Sprintf("%s.bucket_path", fieldPrefix))
 		}
 		if m.AccessKeyID == "" {
 			missingFields = append(missingFields, fmt.Sprintf("%s.access_key_id", fieldPrefix))
@@ -77,6 +78,22 @@ func (m Model) Validate() error {
 }
 
 func (r Version) Validate() error {
+	missingFields := []string{}
+	fieldPrefix := "version"
+	if r.LastModified == "" {
+		missingFields = append(missingFields, fmt.Sprintf("%s.last_modified", fieldPrefix))
+	}
+	if r.StateFileKey == "" {
+		missingFields = append(missingFields, fmt.Sprintf("%s.state_file_key", fieldPrefix))
+	}
+
+	if len(missingFields) > 0 {
+		for i, value := range missingFields {
+			missingFields[i] = fmt.Sprintf("'%s'", value)
+		}
+		return fmt.Errorf("Missing fields: %s", strings.Join(missingFields, ", "))
+	}
+
 	_, err := time.Parse(TimeFormat, r.LastModified)
 	if err != nil {
 		return fmt.Errorf("LastModified field is in invalid format: %s", err)

@@ -28,6 +28,9 @@ func main() {
 	if err := json.NewDecoder(os.Stdin).Decode(&req); err != nil {
 		log.Fatalf("Failed to read InRequest: %s", err)
 	}
+	if err := req.Version.Validate(); err != nil {
+		log.Fatalf("Invalid Version request: %s", err)
+	}
 
 	if req.Params.Action == models.DestroyAction {
 		resp := models.InResponse{
@@ -48,7 +51,7 @@ func main() {
 
 	terraformModel := terraform.Model{
 		StateFileLocalPath:  path.Join(tmpDir, "terraform.tfstate"),
-		StateFileRemotePath: req.Source.Storage.Key,
+		StateFileRemotePath: req.Version.StateFileKey,
 	}
 	if err := terraformModel.Validate(); err != nil {
 		log.Fatalf("Failed to validate terraform Model: %s", err)
@@ -64,7 +67,7 @@ func main() {
 		log.Fatalf("Failed to download state file from storage backend: %s", err)
 	}
 	if version.IsZero() {
-		log.Fatalf("StateFile does not exist with key '%s'", req.Source.Storage.Key)
+		log.Fatalf("StateFile does not exist with key '%s'", req.Version.StateFileKey)
 	}
 
 	output, err := client.Output()

@@ -42,11 +42,12 @@ var _ = BeforeSuite(func() {
 	Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
 	bucket = os.Getenv("AWS_BUCKET")
 	Expect(bucket).ToNot(BeEmpty(), "AWS_BUCKET must be set")
+	bucketPath = os.Getenv("AWS_BUCKET_PATH")
+	Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_PATH must be set")
 	vpcID = os.Getenv("AWS_TEST_VPC_ID")
 	Expect(vpcID).ToNot(BeEmpty(), "AWS_TEST_VPC_ID must be set")
 
-	bucketPath = os.Getenv("AWS_BUCKET_PATH") // optional
-	region = os.Getenv("AWS_REGION")          // optional
+	region = os.Getenv("AWS_REGION") // optional
 	if region == "" {
 		region = "us-east-1"
 	}

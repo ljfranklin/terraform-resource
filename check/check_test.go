@@ -21,10 +21,11 @@ import (
 var _ = Describe("Check", func() {
 
 	var (
-		checkInput      models.InRequest
-		bucket          string
-		pathToS3Fixture string
-		awsVerifier     *helpers.AWSVerifier
+		checkInput          models.InRequest
+		bucket              string
+		pathToPrevS3Fixture string
+		pathToCurrS3Fixture string
+		awsVerifier         *helpers.AWSVerifier
 	)
 
 	BeforeEach(func() {
@@ -38,6 +39,7 @@ var _ = Describe("Check", func() {
 		Expect(bucket).ToNot(BeEmpty(), "AWS_BUCKET must be set")
 
 		bucketPath := os.Getenv("AWS_BUCKET_PATH") // optional
+		Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_PATH must be set")
 
 		region := os.Getenv("AWS_REGION") // optional
 		if region == "" {
@@ -49,13 +51,14 @@ var _ = Describe("Check", func() {
 			secretKey,
 			region,
 		)
-		pathToS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture"))
+		pathToPrevS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture-previous"))
+		pathToCurrS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture-current"))
 
 		checkInput = models.InRequest{
 			Source: models.Source{
 				Storage: storage.Model{
 					Bucket:          bucket,
-					Key:             pathToS3Fixture,
+					BucketPath:      bucketPath,
 					AccessKeyID:     accessKey,
 					SecretAccessKey: secretKey,
 				},
@@ -64,7 +67,8 @@ var _ = Describe("Check", func() {
 	})
 
 	AfterEach(func() {
-		awsVerifier.DeleteObjectFromS3(bucket, pathToS3Fixture)
+		awsVerifier.DeleteObjectFromS3(bucket, pathToPrevS3Fixture)
+		awsVerifier.DeleteObjectFromS3(bucket, pathToCurrS3Fixture)
 	})
 
 	Context("when bucket is empty", func() {
@@ -92,17 +96,22 @@ var _ = Describe("Check", func() {
 		})
 	})
 
-	Context("when bucket contains state file", func() {
+	Context("when bucket contains multiple state files", func() {
 		BeforeEach(func() {
-
-			fixture, err := os.Open(getFileLocation("fixtures/s3/terraform.tfstate"))
+			prevFixture, err := os.Open(getFileLocation("fixtures/s3/terraform-previous.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
-			defer fixture.Close()
+			defer prevFixture.Close()
 
-			awsVerifier.UploadObjectToS3(bucket, pathToS3Fixture, fixture)
+			awsVerifier.UploadObjectToS3(bucket, pathToPrevS3Fixture, prevFixture)
+			time.Sleep(5 * time.Second) // ensure last modified is different
+
+			currFixture, err := os.Open(getFileLocation("fixtures/s3/terraform-current.tfstate"))
+			Expect(err).ToNot(HaveOccurred())
+			defer currFixture.Close()
+			awsVerifier.UploadObjectToS3(bucket, pathToCurrS3Fixture, currFixture)
 		})
 
-		It("returns the version of the fixture on S3", func() {
+		It("returns the latest version on S3", func() {
 			command := exec.Command(pathToCheckBinary)
 
 			stdin, err := command.StdinPipe()
@@ -121,53 +130,24 @@ var _ = Describe("Check", func() {
 			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
 			Expect(err).ToNot(HaveOccurred())
 
-			lastModified := awsVerifier.GetLastModifiedFromS3(bucket, pathToS3Fixture)
-			md5 := awsVerifier.GetMD5FromS3(bucket, pathToS3Fixture)
+			lastModified := awsVerifier.GetLastModifiedFromS3(bucket, pathToCurrS3Fixture)
 
 			expectOutput := []storage.Version{
 				storage.Version{
 					LastModified: lastModified,
-					MD5:          md5,
+					StateFileKey: pathToCurrS3Fixture,
 				},
 			}
 			Expect(actualOutput).To(Equal(expectOutput))
 		})
 
 		It("returns an empty version list when current version matches storage version", func() {
-			currentLastModified := awsVerifier.GetLastModifiedFromS3(bucket, pathToS3Fixture)
+			currentLastModified := awsVerifier.GetLastModifiedFromS3(bucket, pathToCurrS3Fixture)
 			checkInput.Version = storage.Version{
 				LastModified: currentLastModified,
+				StateFileKey: pathToCurrS3Fixture,
 			}
 
-			command := exec.Command(pathToCheckBinary)
-
-			stdin, err := command.StdinPipe()
-			Expect(err).ToNot(HaveOccurred())
-
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = json.NewEncoder(stdin).Encode(checkInput)
-			Expect(err).ToNot(HaveOccurred())
-			stdin.Close()
-
-			Eventually(session, 15*time.Second).Should(gexec.Exit(0))
-
-			actualOutput := []storage.Version{}
-			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
-			Expect(err).ToNot(HaveOccurred())
-
-			expectOutput := []storage.Version{}
-			Expect(actualOutput).To(Equal(expectOutput))
-		})
-	})
-
-	Context("when key is omitted from source", func() {
-		BeforeEach(func() {
-			checkInput.Source.Storage.Key = ""
-		})
-
-		It("returns an empty list of versions", func() {
 			command := exec.Command(pathToCheckBinary)
 
 			stdin, err := command.StdinPipe()

@@ -22,3 +22,7 @@ func (n null) Delete(key string) error {
 func (n null) Version(key string) (Version, error) {
 	return Version{}, errors.New("Not Implemented")
 }
+
+func (n null) LatestVersion() (Version, error) {
+	return Version{}, errors.New("Not Implemented")
+}

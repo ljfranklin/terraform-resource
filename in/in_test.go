@@ -24,11 +24,12 @@ import (
 var _ = Describe("In", func() {
 
 	var (
-		awsVerifier     *helpers.AWSVerifier
-		inReq           models.InRequest
-		bucket          string
-		pathToS3Fixture string
-		tmpDir          string
+		awsVerifier         *helpers.AWSVerifier
+		inReq               models.InRequest
+		bucket              string
+		pathToPrevS3Fixture string
+		pathToCurrS3Fixture string
+		tmpDir              string
 	)
 
 	BeforeEach(func() {
@@ -41,7 +42,8 @@ var _ = Describe("In", func() {
 		bucket = os.Getenv("AWS_BUCKET")
 		Expect(bucket).ToNot(BeEmpty(), "AWS_BUCKET must be set")
 
-		bucketPath := os.Getenv("AWS_BUCKET_PATH") // optional
+		bucketPath := os.Getenv("AWS_BUCKET_PATH")
+		Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_PATH must be set")
 
 		region := os.Getenv("AWS_REGION") // optional
 		if region == "" {
@@ -53,13 +55,14 @@ var _ = Describe("In", func() {
 			secretKey,
 			region,
 		)
-		pathToS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture"))
+		pathToPrevS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture-previous"))
+		pathToCurrS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture-current"))
 
 		inReq = models.InRequest{
 			Source: models.Source{
 				Storage: storage.Model{
 					Bucket:          bucket,
-					Key:             pathToS3Fixture,
+					BucketPath:      bucketPath,
 					AccessKeyID:     accessKey,
 					SecretAccessKey: secretKey,
 				},
@@ -75,20 +78,32 @@ var _ = Describe("In", func() {
 		_ = os.RemoveAll(tmpDir)
 	})
 
-	Context("when state file exists in S3", func() {
+	Context("when multiple state files exist on S3", func() {
 		BeforeEach(func() {
-			fixture, err := os.Open(getFileLocation("fixtures/s3/terraform.tfstate"))
+			prevFixture, err := os.Open(getFileLocation("fixtures/s3/terraform-previous.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
-			defer fixture.Close()
+			defer prevFixture.Close()
 
-			awsVerifier.UploadObjectToS3(bucket, pathToS3Fixture, fixture)
+			awsVerifier.UploadObjectToS3(bucket, pathToPrevS3Fixture, prevFixture)
+			time.Sleep(5 * time.Second) // ensure last modified is different
+
+			currFixture, err := os.Open(getFileLocation("fixtures/s3/terraform-current.tfstate"))
+			Expect(err).ToNot(HaveOccurred())
+			defer currFixture.Close()
+			awsVerifier.UploadObjectToS3(bucket, pathToCurrS3Fixture, currFixture)
 		})
 
 		AfterEach(func() {
-			awsVerifier.DeleteObjectFromS3(bucket, pathToS3Fixture)
+			awsVerifier.DeleteObjectFromS3(bucket, pathToPrevS3Fixture)
+			awsVerifier.DeleteObjectFromS3(bucket, pathToCurrS3Fixture)
 		})
 
-		It("fetches state file from S3", func() {
+		It("fetches the state file matching the provided version", func() {
+
+			inReq.Version = storage.Version{
+				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToPrevS3Fixture),
+				StateFileKey: pathToPrevS3Fixture,
+			}
 
 			command := exec.Command(pathToInBinary, tmpDir)
 
@@ -110,7 +125,7 @@ var _ = Describe("In", func() {
 
 			_, err = time.Parse(storage.TimeFormat, actualOutput.Version.LastModified)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(actualOutput.Version.MD5).ToNot(BeEmpty())
+			Expect(actualOutput.Version.StateFileKey).To(Equal(pathToPrevS3Fixture))
 
 			expectedOutputPath := path.Join(tmpDir, "metadata")
 			Expect(expectedOutputPath).To(BeAnExistingFile())
@@ -123,6 +138,7 @@ var _ = Describe("In", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(outputContents["vpc_id"]).ToNot(BeNil())
+			Expect(outputContents["tag_name"]).To(Equal("previous"))
 		})
 	})
 
@@ -134,6 +150,7 @@ var _ = Describe("In", func() {
 				inReq.Params.Action = models.DestroyAction
 				inReq.Version = storage.Version{
 					LastModified: time.Now().UTC().Format(storage.TimeFormat),
+					StateFileKey: pathToCurrS3Fixture,
 				}
 			})
 
@@ -170,6 +187,7 @@ var _ = Describe("In", func() {
 				inReq.Params.Action = ""
 				inReq.Version = storage.Version{
 					LastModified: time.Now().UTC().Format(storage.TimeFormat),
+					StateFileKey: "fake-path-to-state-file",
 				}
 			})
 

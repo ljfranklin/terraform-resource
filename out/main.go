@@ -42,7 +42,10 @@ func main() {
 		log.Fatalf("Failed to parse `terraform.var_file`: %s", err)
 	}
 	terraformModel.StateFileLocalPath = path.Join(tmpDir, "terraform.tfstate")
-	terraformModel.StateFileRemotePath = req.Source.Storage.Key
+	terraformModel.StateFileRemotePath = path.Join(
+		req.Source.Storage.BucketPath,
+		req.Source.Storage.StateFile,
+	)
 
 	if err = terraformModel.Validate(); err != nil {
 		log.Fatalf("Failed to validate terraform Model: %s", err)

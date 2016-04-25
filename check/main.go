@@ -16,16 +16,6 @@ func main() {
 		log.Fatalf("Failed to read InRequest: %s", err)
 	}
 
-	if req.Source.Storage.Key == "" {
-		// checking for new versions only works if `Source.Storage.Key` is specified
-		// return empty version list if `key` is specified as a put param instead
-		resp := []storage.Version{}
-		if err := json.NewEncoder(os.Stdout).Encode(resp); err != nil {
-			log.Fatalf("Failed to write Versions to stdout: %s", err)
-		}
-		return
-	}
-
 	currentVersionTime := time.Time{}
 	if req.Version.IsZero() == false {
 		if err := req.Version.Validate(); err != nil {
@@ -40,9 +30,9 @@ func main() {
 	}
 	storageDriver := storage.BuildDriver(storageModel)
 
-	version, err := storageDriver.Version(req.Source.Storage.Key)
+	version, err := storageDriver.LatestVersion()
 	if err != nil {
-		log.Fatalf("Failed to check storage backend for version: %s", err)
+		log.Fatalf("Failed to check storage backend for latest version: %s", err)
 	}
 
 	resp := []storage.Version{}
