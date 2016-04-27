@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/ljfranklin/terraform-resource/storage"
 )
@@ -164,11 +165,17 @@ func (c Client) UploadStateFile() (storage.Version, error) {
 	return version, nil
 }
 
-func (c Client) DeleteStateFile() error {
+func (c Client) DeleteStateFile() (storage.Version, error) {
 	if err := c.StorageDriver.Delete(c.Model.StateFileRemotePath); err != nil {
-		return fmt.Errorf("Failed to delete state file: %s", err)
+		return storage.Version{}, fmt.Errorf("Failed to delete state file: %s", err)
 	}
-	return nil
+
+	// use current time rather than state file LastModified time
+	version := storage.Version{
+		LastModified: time.Now().UTC().Format(storage.TimeFormat),
+		StateFileKey: c.Model.StateFileRemotePath,
+	}
+	return version, nil
 }
 
 func terraformCmd(args []string) *exec.Cmd {

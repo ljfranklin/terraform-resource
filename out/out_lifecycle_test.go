@@ -131,6 +131,7 @@ var _ = Describe("Out Lifecycle", func() {
 		updatedVersion, err := time.Parse(storage.TimeFormat, updateOutput.Version.LastModified)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(updatedVersion).To(BeTemporally(">", createVersion))
+		Expect(updateOutput.Version.StateFileKey).To(Equal(stateFileKey))
 
 		By("running 'out' to delete the VPC")
 
@@ -150,5 +151,6 @@ var _ = Describe("Out Lifecycle", func() {
 		deletedVersion, err := time.Parse(storage.TimeFormat, deleteOutput.Version.LastModified)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(deletedVersion).To(BeTemporally(">", updatedVersion))
+		Expect(deleteOutput.Version.StateFileKey).To(Equal(stateFileKey))
 	})
 })

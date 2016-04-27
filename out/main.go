@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"time"
 
 	"github.com/ljfranklin/terraform-resource/out/models"
 	"github.com/ljfranklin/terraform-resource/storage"
@@ -131,13 +130,9 @@ func performDestroy(client terraform.Client, storageDriver storage.Storage) (mod
 		return nilResponse, fmt.Errorf("Failed to run terraform destroy.\nError: %s", err)
 	}
 
-	if err := client.DeleteStateFile(); err != nil {
-		return nilResponse, err
-	}
-
-	// use current time rather than state file LastModified time
-	version := storage.Version{
-		LastModified: time.Now().UTC().Format(storage.TimeFormat),
+	version, err := client.DeleteStateFile()
+	if err != nil {
+		return nilResponse, fmt.Errorf("Failed to delete state file: %s", err)
 	}
 
 	resp := models.OutResponse{
