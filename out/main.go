@@ -41,10 +41,19 @@ func main() {
 	if err = terraformModel.ParseVarsFromFile(); err != nil {
 		log.Fatalf("Failed to parse `terraform.var_file`: %s", err)
 	}
+
+	remoteStateFile := req.Source.Storage.StateFile
+	if len(remoteStateFile) == 0 {
+		remoteStateFile = req.Params.StateFile
+	}
+	if len(remoteStateFile) == 0 {
+		log.Fatalf("Must specify either `source.storage.state_file` or `put.params.state_file`")
+	}
+
 	terraformModel.StateFileLocalPath = path.Join(tmpDir, "terraform.tfstate")
 	terraformModel.StateFileRemotePath = path.Join(
 		req.Source.Storage.BucketPath,
-		req.Source.Storage.StateFile,
+		remoteStateFile,
 	)
 
 	if err = terraformModel.Validate(); err != nil {

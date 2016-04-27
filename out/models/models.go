@@ -29,7 +29,8 @@ type Source struct {
 
 type Params struct {
 	Terraform terraform.Model `json:"terraform"`
-	Action    string          `json:"action,omitempty"` // optional
+	Action    string          `json:"action,omitempty"`     // optional
+	StateFile string          `json:"state_file,omitempty"` //optional
 }
 
 const (
