@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 
 	baseModels "github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/out/models"
@@ -37,6 +38,7 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	if len(envName) == 0 {
 		return models.OutResponse{}, fmt.Errorf("Must specify `put.params.env_name`")
 	}
+	envName = strings.Replace(envName, " ", "-", -1)
 
 	terraformModel.StateFileLocalPath = path.Join(tmpDir, "terraform.tfstate")
 	terraformModel.StateFileRemotePath = fmt.Sprintf("%s.tfstate", envName)

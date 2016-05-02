@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path"
 	"runtime"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -244,6 +245,34 @@ var _ = Describe("Out", func() {
 		})
 	})
 
+	It("replaces spaces in env_name with hyphens", func() {
+		spaceName := strings.Replace(envName, "-", " ", -1)
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.Params{
+				EnvName: spaceName,
+				Terraform: terraform.Model{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":  accessKey,
+						"secret_key":  secretKey,
+						"vpc_id":      vpcID,
+						"subnet_cidr": subnetCIDR,
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]interface{}{
+			"vpc_id":      vpcID,
+			"subnet_cidr": subnetCIDR,
+			"tag_name":    "terraform-resource-test", // template default
+		}
+
+		assertOutBehavior(req, expectedMetadata)
+	})
+
 	assertOutBehavior = func(outRequest models.OutRequest, expectedMetadata map[string]interface{}) {
 		var logWriter bytes.Buffer
 		runner := out.Runner{
@@ -254,6 +283,8 @@ var _ = Describe("Out", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		Expect(logWriter.String()).To(ContainSubstring("Apply complete!"))
+
+		Expect(resp.Version.EnvName).To(Equal(envName))
 
 		Expect(resp.Metadata).ToNot(BeEmpty())
 		fields := map[string]interface{}{}
