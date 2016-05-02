@@ -21,8 +21,6 @@ See what's in progress on the [Trello board](https://trello.com/b/s06sLNwc/terra
 
 * `storage.secret_access_key`: *Required.* The AWS secret key used to access the bucket.
 
-* `storage.state_file`: *Optional.* The S3 object key used to store a single state file. See examples below for single vs. multi-environment setups.
-
 ### `terraform`
 
 Terraform configuration options can be specified under `source.terraform` and/or `put.params.terraform`.
@@ -54,7 +52,6 @@ resources:
       storage:
         bucket: mybucket
         bucket_path: terraform-ci/
-        state_file: concourse.tfstate
         access_key_id: {{storage_access_key}}
         secret_access_key: {{storage_secret_key}}
       terraform:
@@ -87,7 +84,7 @@ It then deletes the state file using the configured `storage` driver.
 
 #### Parameters
 
-* `state_file`: *Optional.* The file name used to store the remote state file. Specifying `state_file` under `put.params` instead of `source.storage` allows management of multiple environments as shown below.
+* `env_name`: *Required.* The name of the environment to create or modify. Multiple environments can be managed with a single resource.
 
 * `action`: *Optional.* Used to indicate a destructive `put`. The only recognized value is `destroy`, create / update are the implicit defaults.
 
@@ -106,6 +103,7 @@ Every `put` action creates a `metadata` file as an output containing the [Terraf
 jobs:
   - put: terraform
     params:
+      env_name: e2e
       terraform:
         source: project-src/terraform
   - name: show-outputs
@@ -143,7 +141,6 @@ resources:
     source:
       bucket: mybucket
       bucket_path: terraform-ci/
-      state_file: concourse.tfstate
       access_key_id: {{storage_access_key}}
       secret_access_key: {{storage_secret_key}}
       terraform:
@@ -159,6 +156,7 @@ jobs:
       - get: project-src
       - put: terraform
         params:
+          env_name: e2e
           terraform:
             # local path to terraform templates
             source: project-src/terraform
@@ -168,6 +166,7 @@ jobs:
       - get: project-src
       - put: terraform
         params:
+          env_name: e2e
           terraform:
             source: project-src/terraform
             vars:
@@ -179,6 +178,7 @@ jobs:
       - get: project-src
       - put: terraform
         params:
+          env_name: e2e
           action: destroy
           terraform:
             source: project-src/terraform
@@ -212,7 +212,7 @@ jobs:
       - get: project-src
       - put: terraform
         params:
-          state_file: staging.tfstate
+          env_name: staging
           terraform:
             source: project-src/terraform
             vars:
@@ -223,7 +223,7 @@ jobs:
       - get: project-src
       - put: terraform
         params:
-          state_file: production.tfstate
+          env_name: production
           terraform:
             source: project-src/terraform
             vars:
