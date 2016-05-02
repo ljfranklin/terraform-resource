@@ -1,6 +1,7 @@
-package main_test
+package out_test
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -12,6 +13,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/ljfranklin/terraform-resource/out"
 	"github.com/ljfranklin/terraform-resource/out/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
@@ -48,6 +50,10 @@ var _ = Describe("Out", func() {
 
 		var err error
 		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test")
+		Expect(err).ToNot(HaveOccurred())
+
+		// ensure relative paths resolve correctly
+		err = os.Chdir(workingDir)
 		Expect(err).ToNot(HaveOccurred())
 
 		fixturesDir := path.Join(getProjectRoot(), "fixtures")
@@ -262,12 +268,19 @@ var _ = Describe("Out", func() {
 	})
 
 	assertOutBehavior = func(outRequest models.OutRequest, expectedMetadata map[string]interface{}) {
-		createOutput := models.OutResponse{}
-		runOutCommand(outRequest, &createOutput, workingDir)
+		var logWriter bytes.Buffer
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: &logWriter,
+		}
+		resp, err := runner.Run(outRequest)
+		Expect(err).ToNot(HaveOccurred())
 
-		Expect(createOutput.Metadata).ToNot(BeEmpty())
+		Expect(logWriter.String()).To(ContainSubstring("Apply complete!"))
+
+		Expect(resp.Metadata).ToNot(BeEmpty())
 		fields := map[string]interface{}{}
-		for _, field := range createOutput.Metadata {
+		for _, field := range resp.Metadata {
 			fields[field.Name] = field.Value
 		}
 

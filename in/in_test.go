@@ -1,4 +1,4 @@
-package main_test
+package in_test
 
 import (
 	"crypto/rand"
@@ -6,19 +6,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path"
 	"runtime"
 	"time"
 
+	"github.com/ljfranklin/terraform-resource/in"
 	"github.com/ljfranklin/terraform-resource/in/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
-	"github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("In", func() {
@@ -105,27 +103,15 @@ var _ = Describe("In", func() {
 				StateFileKey: pathToPrevS3Fixture,
 			}
 
-			command := exec.Command(pathToInBinary, tmpDir)
-
-			stdin, err := command.StdinPipe()
+			runner := in.Runner{
+				OutputDir: tmpDir,
+			}
+			resp, err := runner.Run(inReq)
 			Expect(err).ToNot(HaveOccurred())
 
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
 			Expect(err).ToNot(HaveOccurred())
-
-			err = json.NewEncoder(stdin).Encode(inReq)
-			Expect(err).ToNot(HaveOccurred())
-			stdin.Close()
-
-			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
-
-			actualOutput := models.InResponse{}
-			err = json.Unmarshal(session.Out.Contents(), &actualOutput)
-			Expect(err).ToNot(HaveOccurred())
-
-			_, err = time.Parse(storage.TimeFormat, actualOutput.Version.LastModified)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(actualOutput.Version.StateFileKey).To(Equal(pathToPrevS3Fixture))
+			Expect(resp.Version.StateFileKey).To(Equal(pathToPrevS3Fixture))
 
 			expectedOutputPath := path.Join(tmpDir, "metadata")
 			Expect(expectedOutputPath).To(BeAnExistingFile())
@@ -156,25 +142,13 @@ var _ = Describe("In", func() {
 
 			It("returns the deleted version, but does not create the metadata file", func() {
 
-				command := exec.Command(pathToInBinary, tmpDir)
-
-				stdin, err := command.StdinPipe()
+				runner := in.Runner{
+					OutputDir: tmpDir,
+				}
+				resp, err := runner.Run(inReq)
 				Expect(err).ToNot(HaveOccurred())
 
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).ToNot(HaveOccurred())
-
-				err = json.NewEncoder(stdin).Encode(inReq)
-				Expect(err).ToNot(HaveOccurred())
-				stdin.Close()
-
-				Eventually(session).Should(gexec.Exit(0))
-
-				actualOutput := models.InResponse{}
-				err = json.Unmarshal(session.Out.Contents(), &actualOutput)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = time.Parse(storage.TimeFormat, actualOutput.Version.LastModified)
+				_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
 				Expect(err).ToNot(HaveOccurred())
 
 				expectedOutputPath := path.Join(tmpDir, "metadata")
@@ -192,21 +166,13 @@ var _ = Describe("In", func() {
 			})
 
 			It("returns an error", func() {
-				command := exec.Command(pathToInBinary, tmpDir)
+				runner := in.Runner{
+					OutputDir: tmpDir,
+				}
+				_, err := runner.Run(inReq)
+				Expect(err).To(HaveOccurred())
 
-				stdin, err := command.StdinPipe()
-				Expect(err).ToNot(HaveOccurred())
-
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).ToNot(HaveOccurred())
-
-				err = json.NewEncoder(stdin).Encode(inReq)
-				Expect(err).ToNot(HaveOccurred())
-				stdin.Close()
-
-				Eventually(session).Should(gexec.Exit())
-				Expect(session.ExitCode()).ToNot(BeZero())
-				Expect(session.Err).To(gbytes.Say("StateFile does not exist"))
+				Expect(err.Error()).To(ContainSubstring("StateFile does not exist"))
 			})
 		})
 	})

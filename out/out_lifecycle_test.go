@@ -1,4 +1,4 @@
-package main_test
+package out_test
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/ljfranklin/terraform-resource/out"
 	"github.com/ljfranklin/terraform-resource/out/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
@@ -33,6 +34,10 @@ var _ = Describe("Out Lifecycle", func() {
 
 		var err error
 		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test")
+		Expect(err).ToNot(HaveOccurred())
+
+		// ensure relative paths resolve correctly
+		err = os.Chdir(workingDir)
 		Expect(err).ToNot(HaveOccurred())
 
 		fixturesDir := path.Join(getProjectRoot(), "fixtures")
@@ -80,8 +85,12 @@ var _ = Describe("Out Lifecycle", func() {
 
 		By("running 'out' to create an AWS subnet")
 
-		createOutput := models.OutResponse{}
-		runOutCommand(outRequest, &createOutput, workingDir)
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: GinkgoWriter,
+		}
+		createOutput, err := runner.Run(outRequest)
+		Expect(err).ToNot(HaveOccurred())
 
 		Expect(createOutput.Metadata).ToNot(BeEmpty())
 		fields := map[string]interface{}{}
@@ -114,8 +123,8 @@ var _ = Describe("Out Lifecycle", func() {
 		By("running 'out' to update the VPC")
 
 		outRequest.Params.Terraform.Vars["tag_name"] = "terraform-resource-test-updated"
-		updateOutput := models.OutResponse{}
-		runOutCommand(outRequest, &updateOutput, workingDir)
+		updateOutput, err := runner.Run(outRequest)
+		Expect(err).ToNot(HaveOccurred())
 
 		awsVerifier.ExpectSubnetToHaveTags(subnetID, map[string]string{
 			"Name": "terraform-resource-test-updated",
@@ -136,8 +145,8 @@ var _ = Describe("Out Lifecycle", func() {
 		By("running 'out' to delete the VPC")
 
 		outRequest.Params.Action = models.DestroyAction
-		deleteOutput := models.OutResponse{}
-		runOutCommand(outRequest, &deleteOutput, workingDir)
+		deleteOutput, err := runner.Run(outRequest)
+		Expect(err).ToNot(HaveOccurred())
 
 		awsVerifier.ExpectSubnetToNotExist(subnetID)
 

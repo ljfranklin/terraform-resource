@@ -1,10 +1,9 @@
-package main
+package out
 
 import (
-	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 
@@ -13,32 +12,24 @@ import (
 	"github.com/ljfranklin/terraform-resource/terraform"
 )
 
-func main() {
+type Runner struct {
+	SourceDir string
+	LogWriter io.Writer
+}
 
-	if len(os.Args) < 2 {
-		log.Fatalf("Expected path to sources as first arg")
-	}
-	sourceDir := os.Args[1]
-	if err := os.Chdir(sourceDir); err != nil {
-		log.Fatalf("Failed to access source dir '%s': %s", sourceDir, err)
-	}
+func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-out")
 	if err != nil {
-		log.Fatalf("Failed to create tmp dir at '%s'", os.TempDir())
+		return models.OutResponse{}, fmt.Errorf("Failed to create tmp dir at '%s'", os.TempDir())
 	}
 	defer os.RemoveAll(tmpDir)
 
-	req := models.OutRequest{}
-	if err = json.NewDecoder(os.Stdin).Decode(&req); err != nil {
-		log.Fatalf("Failed to read OutRequest: %s", err)
-	}
-
 	terraformModel := req.Source.Terraform.Merge(req.Params.Terraform)
 	if terraformModel.VarFile != "" {
-		terraformModel.VarFile = path.Join(sourceDir, terraformModel.VarFile)
+		terraformModel.VarFile = path.Join(r.SourceDir, terraformModel.VarFile)
 	}
 	if err = terraformModel.ParseVarsFromFile(); err != nil {
-		log.Fatalf("Failed to parse `terraform.var_file`: %s", err)
+		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.var_file`: %s", err)
 	}
 
 	remoteStateFile := req.Source.Storage.StateFile
@@ -46,7 +37,7 @@ func main() {
 		remoteStateFile = req.Params.StateFile
 	}
 	if len(remoteStateFile) == 0 {
-		log.Fatalf("Must specify either `source.storage.state_file` or `put.params.state_file`")
+		return models.OutResponse{}, fmt.Errorf("Must specify either `source.storage.state_file` or `put.params.state_file`")
 	}
 
 	terraformModel.StateFileLocalPath = path.Join(tmpDir, "terraform.tfstate")
@@ -56,24 +47,24 @@ func main() {
 	)
 
 	if err = terraformModel.Validate(); err != nil {
-		log.Fatalf("Failed to validate terraform Model: %s", err)
+		return models.OutResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
 	}
 
 	storageModel := req.Source.Storage
 	if err = storageModel.Validate(); err != nil {
-		log.Fatalf("Failed to validate storage Model: %s", err)
+		return models.OutResponse{}, fmt.Errorf("Failed to validate storage Model: %s", err)
 	}
 	storageDriver := storage.BuildDriver(storageModel)
 
 	client := terraform.Client{
 		Model:         terraformModel,
 		StorageDriver: storageDriver,
-		LogWriter:     os.Stderr,
+		LogWriter:     r.LogWriter,
 	}
 
 	_, err = client.DownloadStateFileIfExists()
 	if err != nil {
-		log.Fatal(err.Error())
+		return models.OutResponse{}, err
 	}
 
 	resp := models.OutResponse{}
@@ -83,12 +74,10 @@ func main() {
 		resp, err = performApply(client, storageDriver)
 	}
 	if err != nil {
-		log.Fatalf("Failed to run terraform with action '%s': %s", req.Params.Action, err)
+		return models.OutResponse{}, fmt.Errorf("Failed to run terraform with action '%s': %s", req.Params.Action, err)
 	}
 
-	if err := json.NewEncoder(os.Stdout).Encode(resp); err != nil {
-		log.Fatalf("Failed to write OutResponse: %s", err)
-	}
+	return resp, nil
 }
 
 func performApply(client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
