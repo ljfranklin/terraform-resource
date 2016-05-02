@@ -21,7 +21,8 @@ var _ = Describe("Out Lifecycle", func() {
 
 	var (
 		subnetCIDR    string
-		stateFileName string
+		envName       string
+		stateFilePath string
 		workingDir    string
 	)
 
@@ -30,7 +31,8 @@ var _ = Describe("Out Lifecycle", func() {
 		rand.Seed(time.Now().UnixNano())
 		subnetCIDR = fmt.Sprintf("10.0.%d.0/24", rand.Intn(256))
 
-		stateFileName = randomString("out-test")
+		envName = randomString("out-test")
+		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
 
 		var err error
 		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test")
@@ -48,7 +50,7 @@ var _ = Describe("Out Lifecycle", func() {
 	AfterEach(func() {
 		_ = os.RemoveAll(workingDir)
 		awsVerifier.DeleteSubnetWithCIDR(subnetCIDR, vpcID)
-		awsVerifier.DeleteObjectFromS3(bucket, path.Join(bucketPath, stateFileName))
+		awsVerifier.DeleteObjectFromS3(bucket, stateFilePath)
 	})
 
 	It("creates, updates, and deletes infrastructure", func() {
@@ -57,12 +59,12 @@ var _ = Describe("Out Lifecycle", func() {
 				Storage: storage.Model{
 					Bucket:          bucket,
 					BucketPath:      bucketPath,
-					StateFile:       stateFileName,
 					AccessKeyID:     accessKey,
 					SecretAccessKey: secretKey,
 				},
 			},
 			Params: models.Params{
+				EnvName: envName,
 				Terraform: terraform.Model{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
@@ -77,10 +79,9 @@ var _ = Describe("Out Lifecycle", func() {
 
 		By("ensuring state file does not already exist")
 
-		stateFileKey := path.Join(bucketPath, stateFileName)
 		awsVerifier.ExpectS3FileToNotExist(
 			outRequest.Source.Storage.Bucket,
-			stateFileKey,
+			stateFilePath,
 		)
 
 		By("running 'out' to create an AWS subnet")
@@ -113,12 +114,12 @@ var _ = Describe("Out Lifecycle", func() {
 
 		awsVerifier.ExpectS3FileToExist(
 			outRequest.Source.Storage.Bucket,
-			stateFileKey,
+			stateFilePath,
 		)
 
 		createVersion, err := time.Parse(storage.TimeFormat, createOutput.Version.LastModified)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(createOutput.Version.StateFileKey).To(Equal(stateFileKey))
+		Expect(createOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
 
 		By("running 'out' to update the VPC")
 
@@ -134,13 +135,13 @@ var _ = Describe("Out Lifecycle", func() {
 
 		awsVerifier.ExpectS3FileToExist(
 			outRequest.Source.Storage.Bucket,
-			stateFileKey,
+			stateFilePath,
 		)
 
 		updatedVersion, err := time.Parse(storage.TimeFormat, updateOutput.Version.LastModified)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(updatedVersion).To(BeTemporally(">", createVersion))
-		Expect(updateOutput.Version.StateFileKey).To(Equal(stateFileKey))
+		Expect(updateOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
 
 		By("running 'out' to delete the VPC")
 
@@ -154,12 +155,12 @@ var _ = Describe("Out Lifecycle", func() {
 
 		awsVerifier.ExpectS3FileToNotExist(
 			outRequest.Source.Storage.Bucket,
-			stateFileKey,
+			stateFilePath,
 		)
 
 		deletedVersion, err := time.Parse(storage.TimeFormat, deleteOutput.Version.LastModified)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(deletedVersion).To(BeTemporally(">", updatedVersion))
-		Expect(deleteOutput.Version.StateFileKey).To(Equal(stateFileKey))
+		Expect(deleteOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
 	})
 })

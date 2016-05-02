@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
 )
@@ -11,8 +12,8 @@ type OutRequest struct {
 }
 
 type OutResponse struct {
-	Version  storage.Version `json:"version"`
-	Metadata Metadata        `json:"metadata"`
+	Version  models.Version `json:"version"`
+	Metadata Metadata       `json:"metadata"`
 }
 
 type Metadata []MetadataField
@@ -28,9 +29,9 @@ type Source struct {
 }
 
 type Params struct {
+	EnvName   string          `json:"env_name"`
 	Terraform terraform.Model `json:"terraform"`
-	Action    string          `json:"action,omitempty"`     // optional
-	StateFile string          `json:"state_file,omitempty"` //optional
+	Action    string          `json:"action,omitempty"` // optional
 }
 
 const (

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 
+	baseModels "github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/out/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
@@ -32,19 +33,13 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.var_file`: %s", err)
 	}
 
-	remoteStateFile := req.Source.Storage.StateFile
-	if len(remoteStateFile) == 0 {
-		remoteStateFile = req.Params.StateFile
-	}
-	if len(remoteStateFile) == 0 {
-		return models.OutResponse{}, fmt.Errorf("Must specify either `source.storage.state_file` or `put.params.state_file`")
+	envName := req.Params.EnvName
+	if len(envName) == 0 {
+		return models.OutResponse{}, fmt.Errorf("Must specify `put.params.env_name`")
 	}
 
 	terraformModel.StateFileLocalPath = path.Join(tmpDir, "terraform.tfstate")
-	terraformModel.StateFileRemotePath = path.Join(
-		req.Source.Storage.BucketPath,
-		remoteStateFile,
-	)
+	terraformModel.StateFileRemotePath = fmt.Sprintf("%s.tfstate", envName)
 
 	if err = terraformModel.Validate(); err != nil {
 		return models.OutResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
@@ -87,10 +82,11 @@ func performApply(client terraform.Client, storageDriver storage.Storage) (model
 		return nilResponse, fmt.Errorf("Failed to run terraform apply.\nError: %s", err)
 	}
 
-	version, err := client.UploadStateFile()
+	storageVersion, err := client.UploadStateFile()
 	if err != nil {
 		return nilResponse, fmt.Errorf("Failed to upload state file: %s", err)
 	}
+	version := baseModels.NewVersion(storageVersion)
 
 	clientOutput, err := client.Output()
 	if err != nil {
@@ -119,10 +115,11 @@ func performDestroy(client terraform.Client, storageDriver storage.Storage) (mod
 		return nilResponse, fmt.Errorf("Failed to run terraform destroy.\nError: %s", err)
 	}
 
-	version, err := client.DeleteStateFile()
+	storageVersion, err := client.DeleteStateFile()
 	if err != nil {
 		return nilResponse, fmt.Errorf("Failed to delete state file: %s", err)
 	}
+	version := baseModels.NewVersion(storageVersion)
 
 	resp := models.OutResponse{
 		Version:  version,

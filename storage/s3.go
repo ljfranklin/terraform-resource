@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"io"
+	"path"
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -50,9 +51,10 @@ func NewS3(m Model) Storage {
 	}
 }
 
-func (s *s3) Download(key string, destination io.Writer) error {
+func (s *s3) Download(filename string, destination io.Writer) error {
 	client := awss3.New(s.session, s.awsConfig)
 
+	key := path.Join(s.bucketPath, filename)
 	params := &awss3.GetObjectInput{
 		Bucket: aws.String(s.bucketName),
 		Key:    aws.String(key),
@@ -68,10 +70,11 @@ func (s *s3) Download(key string, destination io.Writer) error {
 	return nil
 }
 
-func (s *s3) Upload(key string, content io.Reader) error {
+func (s *s3) Upload(filename string, content io.Reader) error {
 
 	uploader := s3manager.NewUploader(s.session)
 
+	key := path.Join(s.bucketPath, filename)
 	_, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(s.bucketName),
 		Key:    aws.String(key),
@@ -83,9 +86,10 @@ func (s *s3) Upload(key string, content io.Reader) error {
 	return nil
 }
 
-func (s *s3) Delete(key string) error {
+func (s *s3) Delete(filename string) error {
 	client := awss3.New(s.session, s.awsConfig)
 
+	key := path.Join(s.bucketPath, filename)
 	params := &awss3.DeleteObjectInput{
 		Bucket: aws.String(s.bucketName),
 		Key:    aws.String(key),
@@ -99,10 +103,10 @@ func (s *s3) Delete(key string) error {
 	return nil
 }
 
-func (s *s3) Version(key string) (Version, error) {
-
+func (s *s3) Version(filename string) (Version, error) {
 	client := awss3.New(s.session, s.awsConfig)
 
+	key := path.Join(s.bucketPath, filename)
 	params := &awss3.HeadObjectInput{
 		Bucket: aws.String(s.bucketName),
 		Key:    aws.String(key),
@@ -117,17 +121,13 @@ func (s *s3) Version(key string) (Version, error) {
 	}
 
 	version := Version{
-		LastModified: resp.LastModified.Format(TimeFormat),
-		StateFileKey: key,
-	}
-	if err = version.Validate(); err != nil {
-		return Version{}, fmt.Errorf("Failed to validate state file version: %s", err)
+		LastModified: *resp.LastModified,
+		StateFile:    filename,
 	}
 	return version, nil
 }
 
 func (s *s3) LatestVersion() (Version, error) {
-
 	client := awss3.New(s.session, s.awsConfig)
 
 	params := &awss3.ListObjectsInput{
@@ -147,12 +147,10 @@ func (s *s3) LatestVersion() (Version, error) {
 	sort.Sort(ByLastModified(fileObjects))
 
 	latest := fileObjects[len(fileObjects)-1]
+	stateFile := path.Base(*latest.Key)
 	version := Version{
-		LastModified: latest.LastModified.Format(TimeFormat),
-		StateFileKey: *latest.Key,
-	}
-	if err = version.Validate(); err != nil {
-		return Version{}, fmt.Errorf("Failed to validate state file version: %s", err)
+		LastModified: *latest.LastModified,
+		StateFile:    stateFile,
 	}
 	return version, nil
 }

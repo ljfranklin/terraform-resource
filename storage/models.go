@@ -19,12 +19,11 @@ type Model struct {
 	AccessKeyID     string `json:"access_key_id"`
 	SecretAccessKey string `json:"secret_access_key"`
 	RegionName      string `json:"region_name,omitempty"` // optional
-	StateFile       string `json:"state_file,omitempty"`  // optional
 }
 
 type Version struct {
-	LastModified string `json:"last_modified"`
-	StateFileKey string `json:"state_file_key"`
+	LastModified time.Time
+	StateFile    string
 }
 
 func (m Model) Validate() error {
@@ -77,37 +76,6 @@ func (m Model) Validate() error {
 	return nil
 }
 
-func (r Version) Validate() error {
-	missingFields := []string{}
-	fieldPrefix := "version"
-	if r.LastModified == "" {
-		missingFields = append(missingFields, fmt.Sprintf("%s.last_modified", fieldPrefix))
-	}
-	if r.StateFileKey == "" {
-		missingFields = append(missingFields, fmt.Sprintf("%s.state_file_key", fieldPrefix))
-	}
-
-	if len(missingFields) > 0 {
-		for i, value := range missingFields {
-			missingFields[i] = fmt.Sprintf("'%s'", value)
-		}
-		return fmt.Errorf("Missing fields: %s", strings.Join(missingFields, ", "))
-	}
-
-	_, err := time.Parse(TimeFormat, r.LastModified)
-	if err != nil {
-		return fmt.Errorf("LastModified field is in invalid format: %s", err)
-	}
-
-	return nil
-}
-
 func (r Version) IsZero() bool {
 	return r == Version{}
-}
-
-func (r Version) LastModifiedTime() time.Time {
-	// assumes Validate has already been called
-	time, _ := time.Parse(TimeFormat, r.LastModified)
-	return time
 }

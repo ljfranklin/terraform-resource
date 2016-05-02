@@ -172,8 +172,8 @@ func (c Client) DeleteStateFile() (storage.Version, error) {
 
 	// use current time rather than state file LastModified time
 	version := storage.Version{
-		LastModified: time.Now().UTC().Format(storage.TimeFormat),
-		StateFileKey: c.Model.StateFileRemotePath,
+		LastModified: time.Now().UTC(),
+		StateFile:    c.Model.StateFileRemotePath,
 	}
 	return version, nil
 }

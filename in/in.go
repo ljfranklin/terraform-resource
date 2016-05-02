@@ -8,6 +8,7 @@ import (
 	"path"
 
 	"github.com/ljfranklin/terraform-resource/in/models"
+	baseModels "github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
 )
@@ -40,9 +41,10 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	}
 	storageDriver := storage.BuildDriver(storageModel)
 
+	stateFilename := fmt.Sprintf("%s.tfstate", req.Version.EnvName)
 	terraformModel := terraform.Model{
 		StateFileLocalPath:  path.Join(tmpDir, "terraform.tfstate"),
-		StateFileRemotePath: req.Version.StateFileKey,
+		StateFileRemotePath: stateFilename,
 	}
 	if err = terraformModel.Validate(); err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
@@ -53,13 +55,14 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		StorageDriver: storageDriver,
 	}
 
-	version, err := client.DownloadStateFileIfExists()
+	storageVersion, err := client.DownloadStateFileIfExists()
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to download state file from storage backend: %s", err)
 	}
-	if version.IsZero() {
-		return models.InResponse{}, fmt.Errorf("StateFile does not exist with key '%s'", req.Version.StateFileKey)
+	if storageVersion.IsZero() {
+		return models.InResponse{}, fmt.Errorf("StateFile does not exist with key '%s'", stateFilename)
 	}
+	version := baseModels.NewVersion(storageVersion)
 
 	output, err := client.Output()
 	if err != nil {

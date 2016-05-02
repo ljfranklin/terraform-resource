@@ -10,6 +10,7 @@ import (
 
 	"github.com/ljfranklin/terraform-resource/check"
 	"github.com/ljfranklin/terraform-resource/in/models"
+	baseModels "github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/test/helpers"
 	. "github.com/onsi/ginkgo"
@@ -21,6 +22,8 @@ var _ = Describe("Check", func() {
 	var (
 		checkInput          models.InRequest
 		bucket              string
+		prevEnvName         string
+		currEnvName         string
 		pathToPrevS3Fixture string
 		pathToCurrS3Fixture string
 		awsVerifier         *helpers.AWSVerifier
@@ -49,8 +52,10 @@ var _ = Describe("Check", func() {
 			secretKey,
 			region,
 		)
-		pathToPrevS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture-previous"))
-		pathToCurrS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture-current"))
+		prevEnvName = randomString("s3-test-fixture-previous")
+		pathToPrevS3Fixture = path.Join(bucketPath, prevEnvName)
+		currEnvName = randomString("s3-test-fixture-current")
+		pathToCurrS3Fixture = path.Join(bucketPath, currEnvName)
 
 		checkInput = models.InRequest{
 			Source: models.Source{
@@ -75,7 +80,7 @@ var _ = Describe("Check", func() {
 			resp, err := runner.Run(checkInput)
 			Expect(err).ToNot(HaveOccurred())
 
-			expectedOutput := []storage.Version{}
+			expectedOutput := []baseModels.Version{}
 			Expect(resp).To(Equal(expectedOutput))
 		})
 	})
@@ -102,10 +107,10 @@ var _ = Describe("Check", func() {
 
 			lastModified := awsVerifier.GetLastModifiedFromS3(bucket, pathToCurrS3Fixture)
 
-			expectOutput := []storage.Version{
-				storage.Version{
+			expectOutput := []baseModels.Version{
+				baseModels.Version{
 					LastModified: lastModified,
-					StateFileKey: pathToCurrS3Fixture,
+					EnvName:      currEnvName,
 				},
 			}
 			Expect(resp).To(Equal(expectOutput))
@@ -113,16 +118,16 @@ var _ = Describe("Check", func() {
 
 		It("returns an empty version list when current version matches storage version", func() {
 			currentLastModified := awsVerifier.GetLastModifiedFromS3(bucket, pathToCurrS3Fixture)
-			checkInput.Version = storage.Version{
+			checkInput.Version = baseModels.Version{
 				LastModified: currentLastModified,
-				StateFileKey: pathToCurrS3Fixture,
+				EnvName:      currEnvName,
 			}
 
 			runner := check.Runner{}
 			resp, err := runner.Run(checkInput)
 			Expect(err).ToNot(HaveOccurred())
 
-			expectOutput := []storage.Version{}
+			expectOutput := []baseModels.Version{}
 			Expect(resp).To(Equal(expectOutput))
 		})
 	})

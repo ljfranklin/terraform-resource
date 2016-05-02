@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ljfranklin/terraform-resource/in/models"
+	inModels "github.com/ljfranklin/terraform-resource/in/models"
+	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 )
 
 type Runner struct{}
 
-func (r Runner) Run(req models.InRequest) ([]storage.Version, error) {
+func (r Runner) Run(req inModels.InRequest) ([]models.Version, error) {
 	currentVersionTime := time.Time{}
 	if req.Version.IsZero() == false {
 		if err := req.Version.Validate(); err != nil {
@@ -25,13 +26,14 @@ func (r Runner) Run(req models.InRequest) ([]storage.Version, error) {
 	}
 	storageDriver := storage.BuildDriver(storageModel)
 
-	version, err := storageDriver.LatestVersion()
+	storageVersion, err := storageDriver.LatestVersion()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to check storage backend for latest version: %s", err)
 	}
 
-	resp := []storage.Version{}
-	if version.IsZero() == false && version.LastModifiedTime().After(currentVersionTime) {
+	resp := []models.Version{}
+	if storageVersion.IsZero() == false && storageVersion.LastModified.After(currentVersionTime) {
+		version := models.NewVersion(storageVersion)
 		resp = append(resp, version)
 	}
 

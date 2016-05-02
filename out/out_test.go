@@ -27,7 +27,8 @@ var _ = Describe("Out", func() {
 
 	var (
 		storageModel      storage.Model
-		stateFileName     string
+		envName           string
+		stateFilePath     string
 		subnetCIDR        string
 		workingDir        string
 		assertOutBehavior func(models.OutRequest, map[string]interface{})
@@ -38,12 +39,12 @@ var _ = Describe("Out", func() {
 		rand.Seed(time.Now().UnixNano())
 		subnetCIDR = fmt.Sprintf("10.0.%d.0/24", rand.Intn(256))
 
-		stateFileName = randomString("out-test")
+		envName = randomString("out-test")
+		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
 
 		storageModel = storage.Model{
 			Bucket:          bucket,
 			BucketPath:      bucketPath,
-			StateFile:       stateFileName,
 			AccessKeyID:     accessKey,
 			SecretAccessKey: secretKey,
 		}
@@ -64,7 +65,7 @@ var _ = Describe("Out", func() {
 	AfterEach(func() {
 		_ = os.RemoveAll(workingDir)
 		awsVerifier.DeleteSubnetWithCIDR(subnetCIDR, vpcID)
-		awsVerifier.DeleteObjectFromS3(bucket, path.Join(bucketPath, stateFileName))
+		awsVerifier.DeleteObjectFromS3(bucket, stateFilePath)
 	})
 
 	It("creates IaaS resources from a local terraform source", func() {
@@ -73,6 +74,7 @@ var _ = Describe("Out", func() {
 				Storage: storageModel,
 			},
 			Params: models.Params{
+				EnvName: envName,
 				Terraform: terraform.Model{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
@@ -99,6 +101,7 @@ var _ = Describe("Out", func() {
 				Storage: storageModel,
 			},
 			Params: models.Params{
+				EnvName: envName,
 				Terraform: terraform.Model{
 					// Note: changes to fixture must be pushed before running this test
 					Source: "github.com/ljfranklin/terraform-resource//fixtures/aws/",
@@ -135,7 +138,9 @@ var _ = Describe("Out", func() {
 					},
 				},
 			},
-			Params: models.Params{},
+			Params: models.Params{
+				EnvName: envName,
+			},
 		}
 		expectedMetadata := map[string]interface{}{
 			"vpc_id":      vpcID,
@@ -160,6 +165,7 @@ var _ = Describe("Out", func() {
 			},
 			// put params take precedence
 			Params: models.Params{
+				EnvName: envName,
 				Terraform: terraform.Model{
 					Vars: map[string]interface{}{
 						"secret_key":  secretKey,
@@ -215,6 +221,7 @@ var _ = Describe("Out", func() {
 				},
 				// put params overrides source
 				Params: models.Params{
+					EnvName: envName,
 					Terraform: terraform.Model{
 						Vars: map[string]interface{}{
 							"secret_key":  secretKey,
@@ -235,36 +242,6 @@ var _ = Describe("Out", func() {
 
 			assertOutBehavior(req, expectedMetadata)
 		})
-	})
-
-	It("creates IaaS resources with a state file specified under `put.params`", func() {
-		storageModel.StateFile = ""
-		req := models.OutRequest{
-			Source: models.Source{
-				Storage: storageModel,
-			},
-			Params: models.Params{
-				StateFile: stateFileName,
-				Terraform: terraform.Model{
-					Source: "fixtures/aws/",
-					Vars: map[string]interface{}{
-						"access_key":  accessKey,
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
-					},
-				},
-			},
-		}
-		expectedMetadata := map[string]interface{}{
-			"vpc_id":      vpcID,
-			"subnet_cidr": subnetCIDR,
-			"tag_name":    "terraform-resource-test", // template default
-		}
-
-		assertOutBehavior(req, expectedMetadata)
-
-		awsVerifier.ExpectS3FileToExist(bucket, path.Join(bucketPath, stateFileName))
 	})
 
 	assertOutBehavior = func(outRequest models.OutRequest, expectedMetadata map[string]interface{}) {

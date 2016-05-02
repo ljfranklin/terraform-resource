@@ -12,6 +12,7 @@ import (
 
 	"github.com/ljfranklin/terraform-resource/in"
 	"github.com/ljfranklin/terraform-resource/in/models"
+	baseModels "github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/test/helpers"
 
@@ -25,6 +26,8 @@ var _ = Describe("In", func() {
 		awsVerifier         *helpers.AWSVerifier
 		inReq               models.InRequest
 		bucket              string
+		prevEnvName         string
+		currEnvName         string
 		pathToPrevS3Fixture string
 		pathToCurrS3Fixture string
 		tmpDir              string
@@ -53,8 +56,10 @@ var _ = Describe("In", func() {
 			secretKey,
 			region,
 		)
-		pathToPrevS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture-previous"))
-		pathToCurrS3Fixture = path.Join(bucketPath, randomString("s3-test-fixture-current"))
+		prevEnvName = randomString("s3-test-fixture-previous")
+		currEnvName = randomString("s3-test-fixture-current")
+		pathToPrevS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", prevEnvName))
+		pathToCurrS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", currEnvName))
 
 		inReq = models.InRequest{
 			Source: models.Source{
@@ -98,9 +103,9 @@ var _ = Describe("In", func() {
 
 		It("fetches the state file matching the provided version", func() {
 
-			inReq.Version = storage.Version{
+			inReq.Version = baseModels.Version{
 				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToPrevS3Fixture),
-				StateFileKey: pathToPrevS3Fixture,
+				EnvName:      prevEnvName,
 			}
 
 			runner := in.Runner{
@@ -111,7 +116,7 @@ var _ = Describe("In", func() {
 
 			_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(resp.Version.StateFileKey).To(Equal(pathToPrevS3Fixture))
+			Expect(resp.Version.EnvName).To(Equal(prevEnvName))
 
 			expectedOutputPath := path.Join(tmpDir, "metadata")
 			Expect(expectedOutputPath).To(BeAnExistingFile())
@@ -134,9 +139,9 @@ var _ = Describe("In", func() {
 
 			BeforeEach(func() {
 				inReq.Params.Action = models.DestroyAction
-				inReq.Version = storage.Version{
+				inReq.Version = baseModels.Version{
 					LastModified: time.Now().UTC().Format(storage.TimeFormat),
-					StateFileKey: pathToCurrS3Fixture,
+					EnvName:      currEnvName,
 				}
 			})
 
@@ -159,9 +164,9 @@ var _ = Describe("In", func() {
 		Context("and it was called as part of update or create", func() {
 			BeforeEach(func() {
 				inReq.Params.Action = ""
-				inReq.Version = storage.Version{
+				inReq.Version = baseModels.Version{
 					LastModified: time.Now().UTC().Format(storage.TimeFormat),
-					StateFileKey: "fake-path-to-state-file",
+					EnvName:      "missing-env-name",
 				}
 			})
 
