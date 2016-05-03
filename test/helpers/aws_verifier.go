@@ -181,16 +181,13 @@ func (a AWSVerifier) ExpectSubnetToHaveTags(subnetID string, expectedTags map[st
 	Expect(*resp.Subnets[0].SubnetId).To(Equal(subnetID))
 
 	tags := resp.Subnets[0].Tags
-	Expect(tags).To(HaveLen(len(expectedTags)))
 
-	formattedTags := []*awsec2.Tag{}
 	for key, value := range expectedTags {
-		formattedTags = append(formattedTags, &awsec2.Tag{
+		Expect(tags).To(ContainElement(&awsec2.Tag{
 			Key:   &key,
 			Value: &value,
-		})
+		}))
 	}
-	Expect(tags).To(ConsistOf(formattedTags))
 }
 
 func (a AWSVerifier) DeleteSubnet(subnetID string) {

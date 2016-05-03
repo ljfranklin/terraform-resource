@@ -39,6 +39,7 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		return models.OutResponse{}, fmt.Errorf("Must specify `put.params.env_name`")
 	}
 	envName = strings.Replace(envName, " ", "-", -1)
+	terraformModel.Vars["env_name"] = envName
 
 	terraformModel.StateFileLocalPath = path.Join(tmpDir, "terraform.tfstate")
 	terraformModel.StateFileRemotePath = fmt.Sprintf("%s.tfstate", envName)

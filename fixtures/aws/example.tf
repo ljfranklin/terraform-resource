@@ -10,5 +10,6 @@ resource "aws_subnet" "test_subnet" {
 
     tags {
         Name = "${var.tag_name}"
+        EnvName = "${var.env_name}"
     }
 }

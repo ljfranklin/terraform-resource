@@ -10,3 +10,6 @@ output "subnet_cidr" {
 output "tag_name" {
     value = "${aws_subnet.test_subnet.tags.Name}"
 }
+output "env_name" {
+    value = "${aws_subnet.test_subnet.tags.EnvName}"
+}

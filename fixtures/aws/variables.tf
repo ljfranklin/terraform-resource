@@ -8,3 +8,4 @@ variable "subnet_cidr" {}
 variable "tag_name" {
     default = "terraform-resource-test"
 }
+variable "env_name" {}

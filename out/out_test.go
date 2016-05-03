@@ -273,6 +273,31 @@ var _ = Describe("Out", func() {
 		assertOutBehavior(req, expectedMetadata)
 	})
 
+	It("automatically sets env_name as an input", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.Params{
+				EnvName: envName,
+				Terraform: terraform.Model{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":  accessKey,
+						"secret_key":  secretKey,
+						"vpc_id":      vpcID,
+						"subnet_cidr": subnetCIDR,
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]interface{}{
+			"env_name": envName,
+		}
+
+		assertOutBehavior(req, expectedMetadata)
+	})
+
 	assertOutBehavior = func(outRequest models.OutRequest, expectedMetadata map[string]interface{}) {
 		var logWriter bytes.Buffer
 		runner := out.Runner{
