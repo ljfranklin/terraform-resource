@@ -36,7 +36,14 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 
 	envName := req.Params.EnvName
 	if len(envName) == 0 {
-		return models.OutResponse{}, fmt.Errorf("Must specify `put.params.env_name`")
+		if len(req.Params.EnvNameFile) == 0 {
+			return models.OutResponse{}, fmt.Errorf("Must specify either `put.params.env_name` or `put.params.env_name_file`")
+		}
+		contents, err := ioutil.ReadFile(req.Params.EnvNameFile)
+		if err != nil {
+			return models.OutResponse{}, fmt.Errorf("Failed to read `env_name_file`: %s", err)
+		}
+		envName = string(contents)
 	}
 	envName = strings.Replace(envName, " ", "-", -1)
 	terraformModel.Vars["env_name"] = envName

@@ -29,9 +29,10 @@ type Source struct {
 }
 
 type Params struct {
-	EnvName   string          `json:"env_name"`
-	Terraform terraform.Model `json:"terraform"`
-	Action    string          `json:"action,omitempty"` // optional
+	EnvName     string          `json:"env_name"`
+	EnvNameFile string          `json:"env_name_file"`
+	Terraform   terraform.Model `json:"terraform"`
+	Action      string          `json:"action,omitempty"` // optional
 }
 
 const (

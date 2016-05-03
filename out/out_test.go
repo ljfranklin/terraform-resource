@@ -298,6 +298,49 @@ var _ = Describe("Out", func() {
 		assertOutBehavior(req, expectedMetadata)
 	})
 
+	Context("when env_name_file is specified", func() {
+		var (
+			envNameFile string
+		)
+
+		BeforeEach(func() {
+			tmpFile, err := ioutil.TempFile(workingDir, "env-file")
+			Expect(err).ToNot(HaveOccurred())
+			_, err = tmpFile.WriteString(envName)
+			Expect(err).ToNot(HaveOccurred())
+			envNameFile = tmpFile.Name()
+		})
+
+		AfterEach(func() {
+			_ = os.RemoveAll(envNameFile)
+		})
+
+		It("Allows env name to be specified via env_name_file", func() {
+			req := models.OutRequest{
+				Source: models.Source{
+					Storage: storageModel,
+				},
+				Params: models.Params{
+					EnvNameFile: envNameFile,
+					Terraform: terraform.Model{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key":  accessKey,
+							"secret_key":  secretKey,
+							"vpc_id":      vpcID,
+							"subnet_cidr": subnetCIDR,
+						},
+					},
+				},
+			}
+			expectedMetadata := map[string]interface{}{
+				"env_name": envName,
+			}
+
+			assertOutBehavior(req, expectedMetadata)
+		})
+	})
+
 	assertOutBehavior = func(outRequest models.OutRequest, expectedMetadata map[string]interface{}) {
 		var logWriter bytes.Buffer
 		runner := out.Runner{
