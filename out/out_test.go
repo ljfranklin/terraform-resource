@@ -14,6 +14,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/ljfranklin/terraform-resource/namer/namerfakes"
 	"github.com/ljfranklin/terraform-resource/out"
 	"github.com/ljfranklin/terraform-resource/out/models"
 	"github.com/ljfranklin/terraform-resource/storage"
@@ -32,6 +33,7 @@ var _ = Describe("Out", func() {
 		stateFilePath     string
 		subnetCIDR        string
 		workingDir        string
+		namer             namerfakes.FakeNamer
 		assertOutBehavior func(models.OutRequest, map[string]interface{})
 	)
 
@@ -341,11 +343,41 @@ var _ = Describe("Out", func() {
 		})
 	})
 
+	It("creates an env with a random name when generate_random_name is true", func() {
+		namer.RandomNameReturns(envName)
+
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.Params{
+				GenerateRandomName: true,
+				Terraform: terraform.Model{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":  accessKey,
+						"secret_key":  secretKey,
+						"vpc_id":      vpcID,
+						"subnet_cidr": subnetCIDR,
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]interface{}{
+			"env_name": envName,
+		}
+
+		assertOutBehavior(req, expectedMetadata)
+
+		Expect(namer.RandomNameCallCount()).To(Equal(1), "Expected RandomName to be called once")
+	})
+
 	assertOutBehavior = func(outRequest models.OutRequest, expectedMetadata map[string]interface{}) {
 		var logWriter bytes.Buffer
 		runner := out.Runner{
 			SourceDir: workingDir,
 			LogWriter: &logWriter,
+			Namer:     &namer,
 		}
 		resp, err := runner.Run(outRequest)
 		Expect(err).ToNot(HaveOccurred())

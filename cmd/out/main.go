@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/ljfranklin/terraform-resource/namer"
 	"github.com/ljfranklin/terraform-resource/out"
 	"github.com/ljfranklin/terraform-resource/out/models"
 )
@@ -26,6 +27,7 @@ func main() {
 	runner := out.Runner{
 		SourceDir: sourceDir,
 		LogWriter: os.Stderr,
+		Namer:     namer.New(),
 	}
 	resp, err := runner.Run(req)
 	if err != nil {

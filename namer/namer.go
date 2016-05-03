@@ -6,6 +6,8 @@ import (
 	"github.com/Pallinder/go-randomdata"
 )
 
+//go:generate counterfeiter . Namer
+
 type Namer interface {
 	RandomName() string
 }

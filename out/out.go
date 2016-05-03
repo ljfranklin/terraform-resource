@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	baseModels "github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/namer"
 	"github.com/ljfranklin/terraform-resource/out/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
@@ -16,6 +17,7 @@ import (
 
 type Runner struct {
 	SourceDir string
+	Namer     namer.Namer
 	LogWriter io.Writer
 }
 
@@ -34,18 +36,10 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.var_file`: %s", err)
 	}
 
-	envName := req.Params.EnvName
-	if len(envName) == 0 {
-		if len(req.Params.EnvNameFile) == 0 {
-			return models.OutResponse{}, fmt.Errorf("Must specify either `put.params.env_name` or `put.params.env_name_file`")
-		}
-		contents, err := ioutil.ReadFile(req.Params.EnvNameFile)
-		if err != nil {
-			return models.OutResponse{}, fmt.Errorf("Failed to read `env_name_file`: %s", err)
-		}
-		envName = string(contents)
+	envName, err := r.buildEnvName(req)
+	if err != nil {
+		return models.OutResponse{}, err
 	}
-	envName = strings.Replace(envName, " ", "-", -1)
 	terraformModel.Vars["env_name"] = envName
 
 	terraformModel.StateFileLocalPath = path.Join(tmpDir, "terraform.tfstate")
@@ -83,6 +77,28 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	}
 
 	return resp, nil
+}
+
+func (r Runner) buildEnvName(req models.OutRequest) (string, error) {
+	envName := ""
+	if len(req.Params.EnvNameFile) > 0 {
+		contents, err := ioutil.ReadFile(req.Params.EnvNameFile)
+		if err != nil {
+			return "", fmt.Errorf("Failed to read `env_name_file`: %s", err)
+		}
+		envName = string(contents)
+	} else if len(req.Params.EnvName) > 0 {
+		envName = req.Params.EnvName
+	} else if req.Params.GenerateRandomName {
+		envName = r.Namer.RandomName()
+	}
+
+	if len(envName) == 0 {
+		return "", fmt.Errorf("Must specify `put.params.env_name`, `put.params.env_name_file`, or `put.params.generate_random_name`")
+	}
+	envName = strings.Replace(envName, " ", "-", -1)
+
+	return envName, nil
 }
 
 func performApply(client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
