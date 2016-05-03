@@ -130,6 +130,12 @@ var _ = Describe("In", func() {
 
 			Expect(outputContents["vpc_id"]).ToNot(BeNil())
 			Expect(outputContents["tag_name"]).To(Equal("previous"))
+
+			expectedNamePath := path.Join(tmpDir, "name")
+			Expect(expectedOutputPath).To(BeAnExistingFile())
+			nameContents, err := ioutil.ReadFile(expectedNamePath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(string(nameContents)).To(Equal(prevEnvName))
 		})
 	})
 

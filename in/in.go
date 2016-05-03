@@ -64,6 +64,14 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	}
 	version := baseModels.NewVersion(storageVersion)
 
+	nameFilepath := path.Join(r.OutputDir, "name")
+	nameFile, err := os.Create(nameFilepath)
+	if err != nil {
+		return models.InResponse{}, fmt.Errorf("Failed to create name file at path '%s': %s", nameFilepath, err)
+	}
+	defer nameFile.Close()
+	nameFile.WriteString(version.EnvName)
+
 	output, err := client.Output()
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to parse terraform output.\nError: %s", err)
