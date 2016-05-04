@@ -1,0 +1,1 @@
+{"env_name":"foam-track","subnet_cidr":"10.0.0.0/24","subnet_id":"subnet-7426492c","tag_name":"terraform-resource-test","vpc_id":"vpc-64f71603"}
