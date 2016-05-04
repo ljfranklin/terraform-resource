@@ -27,7 +27,7 @@ Terraform configuration options can be specified under `source.terraform` and/or
 Options from these two locations will be merged, with fields under `put.params.terraform` taking precedence.
 
 * `terraform.source`: *Required.* The location of the Terraform module to apply.
-These can be local paths, URLs, GitHub repos and more.
+These can be local paths, URLs, GitHub repos, and more.
 See [Terraform Sources](https://www.terraform.io/docs/modules/sources.html) for more examples.
 
 * `terraform.vars`: *Optional.* A collection of Terraform input variables.
@@ -84,9 +84,11 @@ It then deletes the state file using the configured `storage` driver.
 
 #### Parameters
 
-* `env_name`: *Required.* The name of the environment to create or modify. Multiple environments can be managed with a single resource.
+* `env_name`: *Optional.* The name of the environment to create or modify. Multiple environments can be managed with a single resource.
 
-* `action`: *Optional.* Used to indicate a destructive `put`. The only recognized value is `destroy`, create / update are the implicit defaults.
+* `generate_random_name`: *Optional.* Generates a random `env_name` (e.g. "coffee-bee"). Useful for creating lock files.
+
+* `env_name_file`: *Optional.* Reads the `env_name` from a specified file path. Useful for destroying environments from a lock file.
 
 * `terraform`: *Optional.* The same Terraform configuration options described under `source.terraform` can also be specified under `put.params.terraform` with the following addition:
 
@@ -94,10 +96,13 @@ It then deletes the state file using the configured `storage` driver.
   This file can be in YAML or JSON format.
   Terraform variables will be merged from the following locations in increasing order of precedence: `source.terraform.vars`, `put.params.terraform.vars`, and `put.params.terraform.var_file`.
 
+* `action`: *Optional.* Used to indicate a destructive `put`. The only recognized value is `destroy`, create / update are the implicit defaults.
+
+  * **Note:** You must also set `put.get_params.action` to `destroy` to ensure the task succeeds. This is a temporary workaround until Concourse adds support for `delete` as a first-class operation. See [this issue](https://github.com/concourse/concourse/issues/362) for more details.
 
 #### Metadata file
 
-Every `put` action creates a `metadata` file as an output containing the [Terraform Outputs](https://www.terraform.io/intro/getting-started/outputs.html) in JSON format.
+Every `put` action creates `name` and `metadata` files as an output containing the `env_name` and [Terraform Outputs](https://www.terraform.io/intro/getting-started/outputs.html) in JSON format.
 
 ```yaml
 jobs:
@@ -106,126 +111,27 @@ jobs:
       env_name: e2e
       terraform:
         source: project-src/terraform
-  - name: show-outputs
-    plan:
-      - put: terraform
-      - task: show-outputs
-        config:
-          platform: linux
-          inputs:
-            - name: terraform
-          run:
-            path: /bin/sh
-            args:
-              - -c
-              - "cat terraform/metadata"
+  - task: show-outputs
+    config:
+      platform: linux
+      inputs:
+        - name: terraform
+      run:
+        path: /bin/sh
+        args:
+          - -c
+          - |
+              echo "name: $(cat terraform/name)"
+              echo "metadata: $(cat terraform/metadata)"
 ```
 
 The preceding job would show a file similar to the following:
 
-```json
-{
-  "vpc_id": "vpc-123456",
-  "vpc_tag_name": "concourse"
-}
+```
+name: e2e
+metadata: { "vpc_id": "vpc-123456", "vpc_tag_name": "concourse" }
 ```
 
 #### Examples
 
-**Create, Update, and Destroy:**
-
-```yaml
-resources:
-  - name: terraform
-    type: terraform
-    source:
-      bucket: mybucket
-      bucket_path: terraform-ci/
-      access_key_id: {{storage_access_key}}
-      secret_access_key: {{storage_secret_key}}
-      terraform:
-        source: github.com/ljfranklin/terraform-resource//fixtures/aws
-        vars:
-          access_key: {{environment_access_key}}
-          secret_key: {{environment_secret_key}}
-          tag_name: default-resource-tag
-
-jobs:
-  - name: create-infrastructure
-    plan:
-      - get: project-src
-      - put: terraform
-        params:
-          env_name: e2e
-          terraform:
-            # local path to terraform templates
-            source: project-src/terraform
-
-  - name: update-infrastructure
-    plan:
-      - get: project-src
-      - put: terraform
-        params:
-          env_name: e2e
-          terraform:
-            source: project-src/terraform
-            vars:
-              # override default tag variable
-              tag_name: updated-resource-tag
-
-  - name: destroy-infrastructure
-    plan:
-      - get: project-src
-      - put: terraform
-        params:
-          env_name: e2e
-          action: destroy
-          terraform:
-            source: project-src/terraform
-        get_params:
-          action: destroy
-```
-
-**Note:** The strange looking `get_params` is a temporary workaround until Concourse adds support for `delete` as a first-class operation. See [this issue](https://github.com/concourse/concourse/issues/362) for more details.
-
-**Manage multiple environments:**
-
-```yaml
-resources:
-  - name: terraform
-    type: terraform
-    source:
-      # note that `storage.state_file` is omitted
-      bucket: mybucket
-      bucket_path: terraform-ci/
-      access_key_id: {{storage_access_key}}
-      secret_access_key: {{storage_secret_key}}
-      terraform:
-        source: github.com/ljfranklin/terraform-resource//fixtures/aws
-        vars:
-          access_key: {{environment_access_key}}
-          secret_key: {{environment_secret_key}}
-
-jobs:
-  - name: update-staging-env
-    plan:
-      - get: project-src
-      - put: terraform
-        params:
-          env_name: staging
-          terraform:
-            source: project-src/terraform
-            vars:
-              tag_name: staging
-
-  - name: update-production-env
-    plan:
-      - get: project-src
-      - put: terraform
-        params:
-          env_name: production
-          terraform:
-            source: project-src/terraform
-            vars:
-              tag_name: production
-```
+See the [annotated pipeline](ci/pipeline.yml) for usage examples.

@@ -9,6 +9,13 @@ resources:
   type: git
   source:
     uri: https://github.com/ljfranklin/terraform-resource
+- name: locks
+  type: pool
+  source:
+    uri: git@github.com:ljfranklin/terraform-resource.git
+    branch: ci-pool-test
+    pool: aws-ci-pool
+    private_key: {{pool_git_private_key}}
 - name: terraform
   type: terraform
   source:
@@ -17,21 +24,27 @@ resources:
       secret_access_key: {{storage_secret_key}}
       bucket:            {{storage_bucket}}
       bucket_path:       {{storage_bucket}}
-      state_file:        terraform-test.tfstate
+    # options common to all jobs can be specified under source
     terraform:
+      # uses a local terraform source
       source: resource-src/fixtures/aws
       vars:
         access_key:  {{ec2_access_key}}
         secret_key:  {{ec2_secret_key}}
         vpc_id:      {{test_vpc_id}}
-        subnet_cidr: 10.0.0.0/24
 
 jobs:
   - name: create-infrastructure
     plan:
       - get: resource-src
       - put: terraform
-      - task: show-outputs
+        params:
+          env_name: terraform-ci
+          terraform:
+            vars:
+              subnet_cidr: 10.0.0.0/24
+      - &show-outputs
+        task: show-outputs
         config:
           platform: linux
           inputs:
@@ -40,19 +53,26 @@ jobs:
             path: /bin/sh
             args:
               - -c
-              - "cat terraform/metadata"
+              - |
+                  echo "name: $(cat terraform/name)"
+                  echo "metadata: $(cat terraform/metadata)"
 
   - name: update-infrastructure-via-params
     plan:
       - get: resource-src
+      # the terraform.get is generally not useful
+      # it is only used here to trigger the next stage
       - get: terraform
         trigger: true
         passed: [create-infrastructure]
       - put: terraform
         params:
+          env_name: terraform-ci
           terraform:
             vars:
+              subnet_cidr: 10.0.0.0/24
               tag_name: "params-terraform-resource-test"
+      - *show-outputs
 
   - name: update-infrastructure-via-file
     plan:
@@ -69,11 +89,15 @@ jobs:
             path: /bin/sh
             args:
               - -c
-              - "echo 'tag_name: file-terraform-resource-test' > vars/input.yml"
+              - |
+                  echo 'subnet_cidr: 10.0.0.0/24' >> vars/input.yml
+                  echo 'tag_name: file-terraform-resource-test' >> vars/input.yml
       - put: terraform
         params:
+          env_name: terraform-ci
           terraform:
             var_file: vars/input.yml
+      - *show-outputs
 
   - name: destroy-infrastructure
     plan:
@@ -83,6 +107,68 @@ jobs:
         passed: [update-infrastructure-via-file]
       - put: terraform
         params:
+          env_name: terraform-ci
           action: destroy
+          terraform:
+            vars:
+              subnet_cidr: 10.0.0.0/24
         get_params:
           action: destroy
+
+  - name: create-env-and-lock
+    plan:
+      - get: resource-src
+      - put: terraform
+        params:
+          # generate a random env_name for the lock file
+          generate_random_name: true
+          terraform:
+            vars:
+              subnet_cidr: 10.0.1.0/24
+      # create a new lock containing the terraform output
+      - put: locks
+        params:
+          add: terraform/
+
+  - name: lock-env
+    plan:
+      - get: resource-src
+      - get: terraform
+        trigger: true
+        passed: [create-env-and-lock]
+      - put: locks
+        params:
+          acquire: true
+      - task: show-lock
+        config:
+          platform: linux
+          inputs:
+            - name: locks
+          run:
+            path: /bin/sh
+            args:
+              - -c
+              - |
+                  echo "name: $(cat locks/name)"
+                  echo "metadata: $(cat locks/metadata)"
+
+  - name: destroy-env-and-lock
+    plan:
+      - get: resource-src
+      - get: locks
+        trigger: true
+        passed: [lock-env]
+      # destroy the IaaS resources
+      - put: terraform
+        params:
+          env_name_file: locks/name
+          action: destroy
+          terraform:
+            vars:
+              subnet_cidr: 10.0.1.0/24
+        get_params:
+          action: destroy
+      # destroy the lock
+      - put: locks
+        params:
+          remove: locks/
