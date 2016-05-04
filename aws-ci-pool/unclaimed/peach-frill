@@ -1,0 +1,1 @@
+{"env_name":"peach-frill","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-dc0667f6","tag_name":"terraform-resource-test","vpc_id":"vpc-64f71603"}
