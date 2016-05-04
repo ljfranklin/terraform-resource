@@ -120,24 +120,26 @@ func (c Client) Output() (map[string]interface{}, error) {
 	return output, nil
 }
 
-func (c Client) DownloadStateFileIfExists() (storage.Version, error) {
+func (c Client) DoesStateFileExist() (bool, error) {
 	version, err := c.StorageDriver.Version(c.Model.StateFileRemotePath)
 	if err != nil {
-		return storage.Version{}, fmt.Errorf("Failed to check for existing state file from '%s': %s", c.Model.StateFileRemotePath, err)
+		return false, fmt.Errorf("Failed to check for existing state file from '%s': %s", c.Model.StateFileRemotePath, err)
 	}
-	if version.IsZero() == false {
-		stateFile, createErr := os.Create(c.Model.StateFileLocalPath)
-		if createErr != nil {
-			return storage.Version{}, fmt.Errorf("Failed to create state file at '%s': %s", c.Model.StateFileLocalPath, createErr)
-		}
-		defer stateFile.Close()
+	return version.IsZero() == false, nil
+}
 
-		err = c.StorageDriver.Download(c.Model.StateFileRemotePath, stateFile)
-		if err != nil {
-			return storage.Version{}, fmt.Errorf("Failed to download state file: %s", err)
-		}
-		stateFile.Close()
+func (c Client) DownloadStateFile() (storage.Version, error) {
+	stateFile, createErr := os.Create(c.Model.StateFileLocalPath)
+	if createErr != nil {
+		return storage.Version{}, fmt.Errorf("Failed to create state file at '%s': %s", c.Model.StateFileLocalPath, createErr)
 	}
+	defer stateFile.Close()
+
+	version, err := c.StorageDriver.Download(c.Model.StateFileRemotePath, stateFile)
+	if err != nil {
+		return storage.Version{}, err
+	}
+	stateFile.Close()
 
 	return version, nil
 }
@@ -149,7 +151,7 @@ func (c Client) UploadStateFile() (storage.Version, error) {
 	}
 	defer stateFile.Close()
 
-	err = c.StorageDriver.Upload(c.Model.StateFileRemotePath, stateFile)
+	_, err = c.StorageDriver.Upload(c.Model.StateFileRemotePath, stateFile)
 	if err != nil {
 		return storage.Version{}, fmt.Errorf("Failed to upload state file: %s", err)
 	}

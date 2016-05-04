@@ -7,12 +7,12 @@ import (
 
 type null struct{}
 
-func (n null) Download(key string, destination io.Writer) error {
-	return errors.New("Not Implemented")
+func (n null) Download(key string, destination io.Writer) (Version, error) {
+	return Version{}, errors.New("Not Implemented")
 }
 
-func (n null) Upload(key string, content io.Reader) error {
-	return errors.New("Not Implemented")
+func (n null) Upload(key string, content io.Reader) (Version, error) {
+	return Version{}, errors.New("Not Implemented")
 }
 
 func (n null) Delete(key string) error {

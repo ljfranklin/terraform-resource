@@ -55,12 +55,9 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		StorageDriver: storageDriver,
 	}
 
-	storageVersion, err := client.DownloadStateFileIfExists()
+	storageVersion, err := client.DownloadStateFile()
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to download state file from storage backend: %s", err)
-	}
-	if storageVersion.IsZero() {
-		return models.InResponse{}, fmt.Errorf("StateFile does not exist with key '%s'", stateFilename)
 	}
 	version := baseModels.NewVersion(storageVersion)
 

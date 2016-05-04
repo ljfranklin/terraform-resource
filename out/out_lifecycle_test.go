@@ -123,7 +123,13 @@ var _ = Describe("Out Lifecycle", func() {
 
 		By("running 'out' to update the VPC")
 
-		outRequest.Params.Terraform.Vars["tag_name"] = "terraform-resource-test-updated"
+		// omits vpc_id and subnet_cidr to ensure the resource feeds
+		// previous output back in as input
+		outRequest.Params.Terraform.Vars = map[string]interface{}{
+			"access_key": accessKey,
+			"secret_key": secretKey,
+			"tag_name":   "terraform-resource-test-updated",
+		}
 		updateOutput, err := runner.Run(outRequest)
 		Expect(err).ToNot(HaveOccurred())
 

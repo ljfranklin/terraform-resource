@@ -11,8 +11,8 @@ const (
 )
 
 type Storage interface {
-	Download(string, io.Writer) error
-	Upload(string, io.Reader) error
+	Download(string, io.Writer) (Version, error)
+	Upload(string, io.Reader) (Version, error)
 	Delete(string) error
 	Version(string) (Version, error)
 	LatestVersion() (Version, error)

@@ -96,7 +96,7 @@ It then deletes the state file using the configured `storage` driver.
 
   * `terraform.var_file`: *Optional.* A file containing Terraform input variables.
   This file can be in YAML or JSON format.
-  Terraform variables will be merged from the following locations in increasing order of precedence: `source.terraform.vars`, `put.params.terraform.vars`, and `put.params.terraform.var_file`.
+  Terraform variables will be merged from the following locations in increasing order of precedence: `source.terraform.vars`, `put.params.terraform.vars`, and `put.params.terraform.var_file`. If a state file already exists, the outputs will be fed back in as input `vars` to subsequent `puts` with the lowest precedence.
 
 * `action`: *Optional.* Used to indicate a destructive `put`. The only recognized value is `destroy`, create / update are the implicit defaults.
 

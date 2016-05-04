@@ -61,9 +61,20 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		LogWriter:     r.LogWriter,
 	}
 
-	_, err = client.DownloadStateFileIfExists()
+	stateFileExists, err := client.DoesStateFileExist()
 	if err != nil {
 		return models.OutResponse{}, err
+	}
+	if stateFileExists {
+		_, err = client.DownloadStateFile()
+		if err != nil {
+			return models.OutResponse{}, err
+		}
+		outputs, err := client.Output()
+		if err != nil {
+			return models.OutResponse{}, err
+		}
+		client.Model = terraform.Model{Vars: outputs}.Merge(client.Model)
 	}
 
 	resp := models.OutResponse{}

@@ -70,7 +70,7 @@ jobs:
           env_name: terraform-ci
           terraform:
             vars:
-              subnet_cidr: 10.0.0.0/24
+              # update the tag_name for the subnet
               tag_name: "params-terraform-resource-test"
       - *show-outputs
 
@@ -90,7 +90,6 @@ jobs:
             args:
               - -c
               - |
-                  echo 'subnet_cidr: 10.0.0.0/24' >> vars/input.yml
                   echo 'tag_name: file-terraform-resource-test' >> vars/input.yml
       - put: terraform
         params:
@@ -109,9 +108,6 @@ jobs:
         params:
           env_name: terraform-ci
           action: destroy
-          terraform:
-            vars:
-              subnet_cidr: 10.0.0.0/24
         get_params:
           action: destroy
 
@@ -163,9 +159,6 @@ jobs:
         params:
           env_name_file: locks/name
           action: destroy
-          terraform:
-            vars:
-              subnet_cidr: 10.0.1.0/24
         get_params:
           action: destroy
       # destroy the lock

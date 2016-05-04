@@ -46,6 +46,12 @@ func (m Model) Merge(other Model) Model {
 	if other.VarFile != "" {
 		m.VarFile = other.VarFile
 	}
+	if other.StateFileLocalPath != "" {
+		m.StateFileLocalPath = other.StateFileLocalPath
+	}
+	if other.StateFileRemotePath != "" {
+		m.StateFileRemotePath = other.StateFileRemotePath
+	}
 
 	return m
 }

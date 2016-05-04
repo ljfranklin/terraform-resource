@@ -51,7 +51,7 @@ func NewS3(m Model) Storage {
 	}
 }
 
-func (s *s3) Download(filename string, destination io.Writer) error {
+func (s *s3) Download(filename string, destination io.Writer) (Version, error) {
 	client := awss3.New(s.session, s.awsConfig)
 
 	key := path.Join(s.bucketPath, filename)
@@ -62,15 +62,23 @@ func (s *s3) Download(filename string, destination io.Writer) error {
 
 	resp, err := client.GetObject(params)
 	if err != nil {
-		return fmt.Errorf("GetObject request failed.\nError: %s", err.Error())
+		return Version{}, fmt.Errorf("GetObject request failed.\nError: %s", err.Error())
 	}
 	defer resp.Body.Close()
 
 	_, err = io.Copy(destination, resp.Body)
-	return nil
+	if err != nil {
+		return Version{}, fmt.Errorf("Failed to copy download to local file: %s", err)
+	}
+
+	version := Version{
+		LastModified: *resp.LastModified,
+		StateFile:    filename,
+	}
+	return version, nil
 }
 
-func (s *s3) Upload(filename string, content io.Reader) error {
+func (s *s3) Upload(filename string, content io.Reader) (Version, error) {
 
 	uploader := s3manager.NewUploader(s.session)
 
@@ -81,9 +89,14 @@ func (s *s3) Upload(filename string, content io.Reader) error {
 		Body:   content,
 	})
 	if err != nil {
-		return fmt.Errorf("Failed to Upload to S3: %s", err.Error())
+		return Version{}, fmt.Errorf("Failed to Upload to S3: %s", err.Error())
 	}
-	return nil
+
+	version, err := s.Version(filename)
+	if err != nil {
+		return Version{}, err
+	}
+	return version, nil
 }
 
 func (s *s3) Delete(filename string) error {

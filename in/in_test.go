@@ -183,7 +183,7 @@ var _ = Describe("In", func() {
 				_, err := runner.Run(inReq)
 				Expect(err).To(HaveOccurred())
 
-				Expect(err.Error()).To(ContainSubstring("StateFile does not exist"))
+				Expect(err.Error()).To(ContainSubstring("Failed to download state file"))
 			})
 		})
 	})
