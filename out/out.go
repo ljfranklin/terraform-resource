@@ -107,6 +107,7 @@ func (r Runner) buildEnvName(req models.OutRequest) (string, error) {
 	if len(envName) == 0 {
 		return "", fmt.Errorf("Must specify `put.params.env_name`, `put.params.env_name_file`, or `put.params.generate_random_name`")
 	}
+	envName = strings.TrimSpace(envName)
 	envName = strings.Replace(envName, " ", "-", -1)
 
 	return envName, nil
