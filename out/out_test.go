@@ -33,6 +33,8 @@ var _ = Describe("Out", func() {
 		stateFilePath     string
 		subnetCIDR        string
 		workingDir        string
+		fixtureEnvName    string
+		pathToS3Fixture   string
 		namer             namerfakes.FakeNamer
 		assertOutBehavior func(models.OutRequest, map[string]interface{})
 	)
@@ -63,6 +65,9 @@ var _ = Describe("Out", func() {
 		fixturesDir := path.Join(getProjectRoot(), "fixtures")
 		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
 		Expect(err).ToNot(HaveOccurred())
+
+		fixtureEnvName = randomString("s3-test-fixture")
+		pathToS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", fixtureEnvName))
 	})
 
 	AfterEach(func() {
@@ -400,6 +405,54 @@ var _ = Describe("Out", func() {
 		Expect(namer.RandomNameCallCount()).To(Equal(1), "Expected RandomName to be called once")
 	})
 
+	Context("when bucket contains a state file", func() {
+		BeforeEach(func() {
+			currFixture, err := os.Open(getFileLocation("fixtures/s3/terraform-current.tfstate"))
+			Expect(err).ToNot(HaveOccurred())
+			defer currFixture.Close()
+			awsVerifier.UploadObjectToS3(bucket, pathToS3Fixture, currFixture)
+		})
+
+		AfterEach(func() {
+			awsVerifier.DeleteObjectFromS3(bucket, pathToS3Fixture)
+		})
+
+		It("returns an error if random name clashes", func() {
+			// pick a name that always clashes
+			namer.RandomNameReturns(fixtureEnvName)
+
+			req := models.OutRequest{
+				Source: models.Source{
+					Storage: storageModel,
+				},
+				Params: models.Params{
+					GenerateRandomName: true,
+					Terraform: terraform.Model{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key":  accessKey,
+							"secret_key":  secretKey,
+							"vpc_id":      vpcID,
+							"subnet_cidr": subnetCIDR,
+						},
+					},
+				},
+			}
+
+			runner := out.Runner{
+				SourceDir: workingDir,
+				LogWriter: &bytes.Buffer{},
+				Namer:     &namer,
+			}
+			_, err := runner.Run(req)
+
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("random name"))
+			Expect(namer.RandomNameCallCount()).To(Equal(out.NameClashRetries),
+				"Expected RandomName to be called %d times", out.NameClashRetries)
+		})
+	})
+
 	assertOutBehavior = func(outRequest models.OutRequest, expectedMetadata map[string]interface{}) {
 		var logWriter bytes.Buffer
 		runner := out.Runner{
@@ -443,4 +496,9 @@ func randomString(prefix string) string {
 	_, err := rand.Read(b)
 	Expect(err).ToNot(HaveOccurred())
 	return fmt.Sprintf("%s-%x", prefix, b)
+}
+
+func getFileLocation(relativePath string) string {
+	_, filename, _, _ := runtime.Caller(1)
+	return path.Join(path.Dir(filename), "..", relativePath)
 }

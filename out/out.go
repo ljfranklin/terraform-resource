@@ -15,6 +15,10 @@ import (
 	"github.com/ljfranklin/terraform-resource/terraform"
 )
 
+const (
+	NameClashRetries = 10
+)
+
 type Runner struct {
 	SourceDir string
 	Namer     namer.Namer
@@ -28,6 +32,12 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	}
 	defer os.RemoveAll(tmpDir)
 
+	storageModel := req.Source.Storage
+	if err = storageModel.Validate(); err != nil {
+		return models.OutResponse{}, fmt.Errorf("Failed to validate storage Model: %s", err)
+	}
+	storageDriver := storage.BuildDriver(storageModel)
+
 	terraformModel := req.Source.Terraform.Merge(req.Params.Terraform)
 	if terraformModel.VarFile != "" {
 		terraformModel.VarFile = path.Join(r.SourceDir, terraformModel.VarFile)
@@ -36,7 +46,7 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.var_file`: %s", err)
 	}
 
-	envName, err := r.buildEnvName(req)
+	envName, err := r.buildEnvName(req, storageDriver)
 	if err != nil {
 		return models.OutResponse{}, err
 	}
@@ -48,12 +58,6 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	if err = terraformModel.Validate(); err != nil {
 		return models.OutResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
 	}
-
-	storageModel := req.Source.Storage
-	if err = storageModel.Validate(); err != nil {
-		return models.OutResponse{}, fmt.Errorf("Failed to validate storage Model: %s", err)
-	}
-	storageDriver := storage.BuildDriver(storageModel)
 
 	client := terraform.Client{
 		Model:         terraformModel,
@@ -90,7 +94,7 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	return resp, nil
 }
 
-func (r Runner) buildEnvName(req models.OutRequest) (string, error) {
+func (r Runner) buildEnvName(req models.OutRequest, storageDriver storage.Storage) (string, error) {
 	envName := ""
 	if len(req.Params.EnvNameFile) > 0 {
 		contents, err := ioutil.ReadFile(req.Params.EnvNameFile)
@@ -101,7 +105,21 @@ func (r Runner) buildEnvName(req models.OutRequest) (string, error) {
 	} else if len(req.Params.EnvName) > 0 {
 		envName = req.Params.EnvName
 	} else if req.Params.GenerateRandomName {
-		envName = r.Namer.RandomName()
+		randomName := ""
+		for i := 0; i < NameClashRetries; i++ {
+			randomName = r.Namer.RandomName()
+			clash, err := doesEnvNameClash(randomName, storageDriver)
+			if err != nil {
+				return "", err
+			}
+			if clash == false {
+				envName = randomName
+				break
+			}
+		}
+		if len(envName) == 0 {
+			return "", fmt.Errorf("Failed to generate a non-clashing random name after %d attempts", NameClashRetries)
+		}
 	}
 
 	if len(envName) == 0 {
@@ -164,4 +182,13 @@ func performDestroy(client terraform.Client, storageDriver storage.Storage) (mod
 		Metadata: []models.MetadataField{},
 	}
 	return resp, nil
+}
+
+func doesEnvNameClash(envName string, storageDriver storage.Storage) (bool, error) {
+	filename := fmt.Sprintf("%s.tfstate", envName)
+	version, err := storageDriver.Version(filename)
+	if err != nil {
+		return false, err
+	}
+	return version.IsZero() == false, nil
 }
