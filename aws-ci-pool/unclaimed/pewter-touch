@@ -1,0 +1,1 @@
+{"env_name":"pewter-touch","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-2657360c","tag_name":"terraform-resource-test","vpc_id":"vpc-64f71603"}
