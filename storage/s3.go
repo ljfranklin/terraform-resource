@@ -15,8 +15,7 @@ import (
 )
 
 type s3 struct {
-	session    *awsSession.Session
-	awsConfig  *aws.Config
+	client     *awss3.S3
 	bucketName string
 	bucketPath string
 }
@@ -41,26 +40,31 @@ func NewS3(m Model) Storage {
 		S3ForcePathStyle: aws.Bool(true),
 		MaxRetries:       aws.Int(maxRetries),
 	}
+	if len(m.Endpoint) > 0 {
+		awsConfig.Endpoint = aws.String(m.Endpoint)
+	}
 
 	session := awsSession.New(awsConfig)
+	client := awss3.New(session, awsConfig)
+	if m.ShouldUseSigningV2() {
+		Setv2Handlers(client)
+	}
+
 	return &s3{
-		session:    session,
-		awsConfig:  awsConfig,
+		client:     client,
 		bucketName: m.Bucket,
 		bucketPath: m.BucketPath,
 	}
 }
 
 func (s *s3) Download(filename string, destination io.Writer) (Version, error) {
-	client := awss3.New(s.session, s.awsConfig)
-
 	key := path.Join(s.bucketPath, filename)
 	params := &awss3.GetObjectInput{
 		Bucket: aws.String(s.bucketName),
 		Key:    aws.String(key),
 	}
 
-	resp, err := client.GetObject(params)
+	resp, err := s.client.GetObject(params)
 	if err != nil {
 		return Version{}, fmt.Errorf("GetObject request failed.\nError: %s", err.Error())
 	}
@@ -80,7 +84,7 @@ func (s *s3) Download(filename string, destination io.Writer) (Version, error) {
 
 func (s *s3) Upload(filename string, content io.Reader) (Version, error) {
 
-	uploader := s3manager.NewUploader(s.session)
+	uploader := s3manager.NewUploaderWithClient(s.client)
 
 	key := path.Join(s.bucketPath, filename)
 	_, err := uploader.Upload(&s3manager.UploadInput{
@@ -100,15 +104,13 @@ func (s *s3) Upload(filename string, content io.Reader) (Version, error) {
 }
 
 func (s *s3) Delete(filename string) error {
-	client := awss3.New(s.session, s.awsConfig)
-
 	key := path.Join(s.bucketPath, filename)
 	params := &awss3.DeleteObjectInput{
 		Bucket: aws.String(s.bucketName),
 		Key:    aws.String(key),
 	}
 
-	_, err := client.DeleteObject(params)
+	_, err := s.client.DeleteObject(params)
 	if err != nil {
 		return fmt.Errorf("DeleteObject request failed.\nError: %s", err.Error())
 	}
@@ -117,15 +119,13 @@ func (s *s3) Delete(filename string) error {
 }
 
 func (s *s3) Version(filename string) (Version, error) {
-	client := awss3.New(s.session, s.awsConfig)
-
 	key := path.Join(s.bucketPath, filename)
 	params := &awss3.HeadObjectInput{
 		Bucket: aws.String(s.bucketName),
 		Key:    aws.String(key),
 	}
 
-	resp, err := client.HeadObject(params)
+	resp, err := s.client.HeadObject(params)
 	if err != nil {
 		if reqErr, ok := err.(awserr.RequestFailure); ok && reqErr.StatusCode() == 404 {
 			return Version{}, nil // no versions exist
@@ -141,14 +141,12 @@ func (s *s3) Version(filename string) (Version, error) {
 }
 
 func (s *s3) LatestVersion() (Version, error) {
-	client := awss3.New(s.session, s.awsConfig)
-
 	params := &awss3.ListObjectsInput{
 		Bucket: aws.String(s.bucketName),
 		Prefix: aws.String(s.bucketPath),
 	}
 
-	resp, err := client.ListObjects(params)
+	resp, err := s.client.ListObjects(params)
 	if err != nil {
 		return Version{}, fmt.Errorf("ListObjects request failed.\nError: %s", err)
 	}

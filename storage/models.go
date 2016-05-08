@@ -18,7 +18,10 @@ type Model struct {
 	BucketPath      string `json:"bucket_path"`
 	AccessKeyID     string `json:"access_key_id"`
 	SecretAccessKey string `json:"secret_access_key"`
-	RegionName      string `json:"region_name,omitempty"` // optional
+	RegionName      string `json:"region_name,omitempty"`    // optional
+	Endpoint        string `json:"endpoint,omitempty"`       // optional
+	UseSigningV2    bool   `json:"use_signing_v2,omitempty"` // optional
+	UseSigningV4    bool   `json:"use_signing_v4,omitempty"` // optional
 }
 
 type Version struct {
@@ -74,6 +77,19 @@ func (m Model) Validate() error {
 		return fmt.Errorf("Missing fields: %s", strings.Join(missingFields, ", "))
 	}
 	return nil
+}
+
+func (m Model) ShouldUseSigningV2() bool {
+	// Many s3-compatible endpoints do not support v4 signing
+	// Use v4 with AWS, default to v2 if other endpoint is set
+	if m.UseSigningV2 {
+		return true
+	} else if m.UseSigningV4 {
+		return false
+	} else if len(m.Endpoint) > 0 {
+		return true
+	}
+	return false
 }
 
 func (r Version) IsZero() bool {

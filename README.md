@@ -23,6 +23,10 @@ See what's in progress on the [Trello board](https://trello.com/b/s06sLNwc/terra
 
 * `storage.secret_access_key`: *Required.* The AWS secret key used to access the bucket.
 
+* `storage.endpoint`: *Optional.* The endpoint for an s3-compatible blobstore (e.g. Ceph).
+  * **Note:** By default, the resource will use S3 signing version v2 if an endpoint is specified as many non-S3 blobstores do not support v4.
+    Opt into v4 signing by setting `storage.use_signing_v4: true`.
+
 ### `terraform`
 
 Terraform configuration options can be specified under `source.terraform` and/or `put.params.terraform`.

@@ -22,6 +22,7 @@ var _ = Describe("Storage Models", func() {
 					AccessKeyID:     "fake-access-key",
 					SecretAccessKey: "fake-secret-key",
 					RegionName:      "fake-region",
+					Endpoint:        "fake-endpoint",
 				}
 
 				err := model.Validate()
@@ -51,6 +52,44 @@ var _ = Describe("Storage Models", func() {
 				err := model.Validate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("bad-driver"))
+			})
+		})
+
+		Describe("#ShouldUseSigningV2", func() {
+			It("returns false by default", func() {
+				model := storage.Model{
+					Driver: storage.S3Driver,
+				}
+
+				Expect(model.ShouldUseSigningV2()).To(BeFalse())
+			})
+
+			It("returns true if UseSigningV2 is true", func() {
+				model := storage.Model{
+					Driver:       storage.S3Driver,
+					UseSigningV2: true,
+				}
+
+				Expect(model.ShouldUseSigningV2()).To(BeTrue())
+			})
+
+			It("returns true if Endpoint is set", func() {
+				model := storage.Model{
+					Driver:   storage.S3Driver,
+					Endpoint: "fake-endpoint",
+				}
+
+				Expect(model.ShouldUseSigningV2()).To(BeTrue())
+			})
+
+			It("returns false if UseSigningV4 is set", func() {
+				model := storage.Model{
+					Driver:       storage.S3Driver,
+					Endpoint:     "fake-endpoint",
+					UseSigningV4: true,
+				}
+
+				Expect(model.ShouldUseSigningV2()).To(BeFalse())
 			})
 		})
 	})

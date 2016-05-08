@@ -19,6 +19,7 @@ import (
 	"github.com/ljfranklin/terraform-resource/out/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -68,6 +69,8 @@ var _ = Describe("Out", func() {
 
 		fixtureEnvName = randomString("s3-test-fixture")
 		pathToS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", fixtureEnvName))
+
+		namer = namerfakes.FakeNamer{}
 	})
 
 	AfterEach(func() {
@@ -450,6 +453,60 @@ var _ = Describe("Out", func() {
 			Expect(err.Error()).To(ContainSubstring("random name"))
 			Expect(namer.RandomNameCallCount()).To(Equal(out.NameClashRetries),
 				"Expected RandomName to be called %d times", out.NameClashRetries)
+		})
+	})
+
+	Context("when an s3 compatible storage is used", func() {
+		var s3Verifier *helpers.AWSVerifier
+
+		BeforeEach(func() {
+			storageModel = storage.Model{
+				Endpoint:        s3CompatibleEndpoint,
+				Bucket:          s3CompatibleBucket,
+				BucketPath:      bucketPath,
+				AccessKeyID:     s3CompatibleAccessKey,
+				SecretAccessKey: s3CompatibleSecretKey,
+			}
+
+			s3Verifier = helpers.NewAWSVerifier(
+				s3CompatibleAccessKey,
+				s3CompatibleSecretKey,
+				"",
+				s3CompatibleEndpoint,
+			)
+		})
+
+		AfterEach(func() {
+			s3Verifier.DeleteObjectFromS3(s3CompatibleBucket, stateFilePath)
+		})
+
+		It("stores the state file successfully", func() {
+			req := models.OutRequest{
+				Source: models.Source{
+					Storage: storageModel,
+				},
+				Params: models.Params{
+					EnvName: envName,
+					Terraform: terraform.Model{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key":  accessKey,
+							"secret_key":  secretKey,
+							"vpc_id":      vpcID,
+							"subnet_cidr": subnetCIDR,
+						},
+					},
+				},
+			}
+			expectedMetadata := map[string]interface{}{
+				"vpc_id":      vpcID,
+				"subnet_cidr": subnetCIDR,
+				"tag_name":    "terraform-resource-test", // template default
+			}
+
+			assertOutBehavior(req, expectedMetadata)
+
+			s3Verifier.ExpectS3FileToExist(s3CompatibleBucket, stateFilePath)
 		})
 	})
 

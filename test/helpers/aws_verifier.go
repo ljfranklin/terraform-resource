@@ -16,28 +16,34 @@ import (
 )
 
 type AWSVerifier struct {
-	ec2       *awsec2.EC2
-	s3        *awss3.S3
-	accessKey string
-	secretKey string
-	region    string
+	ec2 *awsec2.EC2
+	s3  *awss3.S3
 }
 
-func NewAWSVerifier(accessKey string, secretKey string, region string) *AWSVerifier {
+func NewAWSVerifier(accessKey string, secretKey string, region string, endpoint string) *AWSVerifier {
+	if len(region) == 0 {
+		region = " " // aws sdk complains if region is empty
+	}
 	awsConfig := &aws.Config{
 		Region:           aws.String(region),
 		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
 		S3ForcePathStyle: aws.Bool(true),
 		MaxRetries:       aws.Int(10),
 	}
+	if len(endpoint) > 0 {
+		awsConfig.Endpoint = aws.String(endpoint)
+	}
+
 	ec2 := awsec2.New(awsSession.New(awsConfig))
 	s3 := awss3.New(awsSession.New(awsConfig))
+	if len(endpoint) > 0 {
+		// many s3-compatible endpoints only support v2 signing
+		storage.Setv2Handlers(s3)
+	}
+
 	return &AWSVerifier{
-		ec2:       ec2,
-		s3:        s3,
-		accessKey: accessKey,
-		secretKey: secretKey,
-		region:    region,
+		ec2: ec2,
+		s3:  s3,
 	}
 }
 
@@ -105,14 +111,11 @@ func (a AWSVerifier) UploadObjectToS3(bucketName string, key string, content io.
 }
 
 func (a AWSVerifier) DeleteObjectFromS3(bucketName string, key string) {
-	s3 := storage.NewS3(storage.Model{
-		AccessKeyID:     a.accessKey,
-		SecretAccessKey: a.secretKey,
-		RegionName:      a.region,
-		Bucket:          bucketName,
-	})
-
-	err := s3.Delete(key)
+	deleteInput := &awss3.DeleteObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+	}
+	_, err := a.s3.DeleteObject(deleteInput)
 	Expect(err).ToNot(HaveOccurred())
 }
 
