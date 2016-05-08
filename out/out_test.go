@@ -134,6 +134,59 @@ var _ = Describe("Out", func() {
 		assertOutBehavior(req, expectedMetadata)
 	})
 
+	It("creates IaaS resources from a terraform module", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.Params{
+				EnvName: envName,
+				Terraform: terraform.Model{
+					Source: "fixtures/module/",
+					Vars: map[string]interface{}{
+						"access_key":  accessKey,
+						"secret_key":  secretKey,
+						"vpc_id":      vpcID,
+						"subnet_cidr": subnetCIDR,
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]interface{}{
+			"vpc_id":      vpcID,
+			"subnet_cidr": subnetCIDR,
+			"tag_name":    "terraform-resource-module-test", // module default
+		}
+
+		assertOutBehavior(req, expectedMetadata)
+	})
+
+	It("creates IaaS resources from a local terraform source", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.Params{
+				EnvName: envName,
+				Terraform: terraform.Model{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":  accessKey,
+						"secret_key":  secretKey,
+						"vpc_id":      vpcID,
+						"subnet_cidr": subnetCIDR,
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]interface{}{
+			"vpc_id":      vpcID,
+			"subnet_cidr": subnetCIDR,
+			"tag_name":    "terraform-resource-test", // template default
+		}
+
+		assertOutBehavior(req, expectedMetadata)
+	})
 	It("creates IaaS resources from `source.terraform.vars`", func() {
 		req := models.OutRequest{
 			Source: models.Source{
@@ -518,7 +571,7 @@ var _ = Describe("Out", func() {
 			Namer:     &namer,
 		}
 		resp, err := runner.Run(outRequest)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).ToNot(HaveOccurred(), "Logs: %s", logWriter.String())
 
 		Expect(logWriter.String()).To(ContainSubstring("Apply complete!"))
 

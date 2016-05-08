@@ -36,6 +36,15 @@ func (c Client) Apply() error {
 		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", initErr, initOutput)
 	}
 
+	getCmd := terraformCmd([]string{
+		"get",
+		"-update",
+		tmpDir,
+	})
+	if getOutput, getErr := getCmd.CombinedOutput(); getErr != nil {
+		return fmt.Errorf("terraform get command failed.\nError: %s\nOutput: %s", getErr, getOutput)
+	}
+
 	applyArgs := []string{
 		"apply",
 		"-backup='-'",  // no need to backup state file
@@ -72,6 +81,15 @@ func (c Client) Destroy() error {
 	})
 	if initOutput, initErr := initCmd.CombinedOutput(); initErr != nil {
 		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", initErr, initOutput)
+	}
+
+	getCmd := terraformCmd([]string{
+		"get",
+		"-update",
+		tmpDir,
+	})
+	if getOutput, getErr := getCmd.CombinedOutput(); getErr != nil {
+		return fmt.Errorf("terraform get command failed.\nError: %s\nOutput: %s", getErr, getOutput)
 	}
 
 	destroyArgs := []string{
