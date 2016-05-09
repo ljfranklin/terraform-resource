@@ -1,0 +1,1 @@
+{"env_name":"wild-hyena","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-fb0568d1","tag_name":"terraform-resource-test","vpc_id":"vpc-64f71603"}
