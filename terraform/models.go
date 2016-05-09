@@ -10,10 +10,11 @@ import (
 
 type Model struct {
 	Source              string                 `json:"source"`
-	Vars                map[string]interface{} `json:"vars,omitempty"`     // optional
-	VarFile             string                 `json:"var_file,omitempty"` // optional
-	StateFileLocalPath  string                 `json:"-"`                  // not specified pipeline
-	StateFileRemotePath string                 `json:"-"`                  // not specified pipeline
+	Vars                map[string]interface{} `json:"vars,omitempty"`              // optional
+	VarFile             string                 `json:"var_file,omitempty"`          // optional
+	DeleteOnFailure     bool                   `json:"delete_on_failure,omitempty"` // optional
+	StateFileLocalPath  string                 `json:"-"`                           // not specified pipeline
+	StateFileRemotePath string                 `json:"-"`                           // not specified pipeline
 }
 
 func (m Model) Validate() error {
@@ -51,6 +52,9 @@ func (m Model) Merge(other Model) Model {
 	}
 	if other.StateFileRemotePath != "" {
 		m.StateFileRemotePath = other.StateFileRemotePath
+	}
+	if other.DeleteOnFailure {
+		m.DeleteOnFailure = true
 	}
 
 	return m

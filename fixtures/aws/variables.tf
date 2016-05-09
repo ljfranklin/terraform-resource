@@ -5,6 +5,10 @@ variable "region" {
 }
 variable "vpc_id" {}
 variable "subnet_cidr" {}
+variable "acl_action" {
+    # used to verify `destroy_on_failure`
+    default = "allow"
+}
 variable "tag_name" {
     default = "terraform-resource-test"
 }

@@ -13,3 +13,30 @@ resource "aws_subnet" "test_subnet" {
         EnvName = "${var.env_name}"
     }
 }
+
+resource "aws_network_acl" "test_acl" {
+    vpc_id = "${var.vpc_id}"
+
+    egress {
+        action = "${var.acl_action}"
+        from_port = 0
+        to_port = 65535
+        protocol = "tcp"
+        cidr_block = "${aws_subnet.test_subnet.cidr_block}"
+        rule_no = 1
+    }
+
+    ingress {
+        action = "${var.acl_action}"
+        from_port = 0
+        to_port = 65535
+        protocol = "tcp"
+        cidr_block = "${aws_subnet.test_subnet.cidr_block}"
+        rule_no = 1
+    }
+
+    tags {
+        Name = "${var.tag_name}"
+        EnvName = "${var.env_name}"
+    }
+}

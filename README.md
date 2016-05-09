@@ -36,6 +36,8 @@ Options from these two locations will be merged, with fields under `put.params.t
 These can be local paths, URLs, GitHub repos, and more.
 See [Terraform Sources](https://www.terraform.io/docs/modules/sources.html) for more examples.
 
+* `terraform.destroy_on_failure`: *Optional. Default `false`.* If true, the resource will run `terraform destroy` if `terraform apply` returns an error.
+
 * `terraform.vars`: *Optional.* A collection of Terraform input variables.
 These are typically used to specify credentials or override default module values.
 See [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html) for more details.

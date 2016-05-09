@@ -201,6 +201,44 @@ func (a AWSVerifier) DeleteSubnet(subnetID string) {
 	Expect(err).ToNot(HaveOccurred())
 }
 
+func (a AWSVerifier) ExpectSubnetWithCIDRToExist(cidr string, vpcID string) {
+	subnetParams := &awsec2.DescribeSubnetsInput{
+		Filters: []*awsec2.Filter{
+			&awsec2.Filter{
+				Name:   aws.String("cidrBlock"),
+				Values: []*string{aws.String(cidr)},
+			},
+			&awsec2.Filter{
+				Name:   aws.String("vpc-id"),
+				Values: []*string{aws.String(vpcID)},
+			},
+		},
+	}
+	resp, err := a.ec2.DescribeSubnets(subnetParams)
+	Expect(err).ToNot(HaveOccurred())
+
+	Expect(len(resp.Subnets)).To(Equal(1), "Unexpected number of subnets with CIDR")
+}
+
+func (a AWSVerifier) ExpectSubnetWithCIDRToNotExist(cidr string, vpcID string) {
+	subnetParams := &awsec2.DescribeSubnetsInput{
+		Filters: []*awsec2.Filter{
+			&awsec2.Filter{
+				Name:   aws.String("cidrBlock"),
+				Values: []*string{aws.String(cidr)},
+			},
+			&awsec2.Filter{
+				Name:   aws.String("vpc-id"),
+				Values: []*string{aws.String(vpcID)},
+			},
+		},
+	}
+	resp, err := a.ec2.DescribeSubnets(subnetParams)
+	Expect(err).ToNot(HaveOccurred())
+
+	Expect(len(resp.Subnets)).To(BeZero(), "Expected subnet with CIDR %s to not exist", cidr)
+}
+
 func (a AWSVerifier) DeleteSubnetWithCIDR(cidr string, vpcID string) {
 	subnetParams := &awsec2.DescribeSubnetsInput{
 		Filters: []*awsec2.Filter{

@@ -118,6 +118,7 @@ jobs:
         params:
           # generate a random env_name for the lock file
           generate_random_name: true
+          delete_on_failure: true
           terraform:
             vars:
               subnet_cidr: 10.0.1.0/24

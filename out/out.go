@@ -86,6 +86,12 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		resp, err = performDestroy(client, storageDriver)
 	} else {
 		resp, err = performApply(client, storageDriver)
+		if err != nil && terraformModel.DeleteOnFailure {
+			_, destroyErr := performDestroy(client, storageDriver)
+			if destroyErr != nil {
+				err = fmt.Errorf("Apply Error: %s\nDestroyError: %s", err, destroyErr)
+			}
+		}
 	}
 	if err != nil {
 		return models.OutResponse{}, fmt.Errorf("Failed to run terraform with action '%s': %s", req.Params.Action, err)

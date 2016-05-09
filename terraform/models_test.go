@@ -84,6 +84,23 @@ var _ = Describe("Terraform Models", func() {
 			Expect(model.Vars).To(Equal(fileVars))
 		})
 
+		It("merges non-var fields", func() {
+			baseModel := terraform.Model{
+				Source: "base-source",
+			}
+			mergeModel := terraform.Model{
+				StateFileLocalPath:  "fake-local-path",
+				StateFileRemotePath: "fake-remote-path",
+				DeleteOnFailure:     true,
+			}
+
+			finalModel := baseModel.Merge(mergeModel)
+			Expect(finalModel.Source).To(Equal("base-source"))
+			Expect(finalModel.StateFileLocalPath).To(Equal("fake-local-path"))
+			Expect(finalModel.StateFileRemotePath).To(Equal("fake-remote-path"))
+			Expect(finalModel.DeleteOnFailure).To(BeTrue())
+		})
+
 		It("returns original vars and vars from Merged model", func() {
 			baseModel := terraform.Model{
 				Source:  "base-source",

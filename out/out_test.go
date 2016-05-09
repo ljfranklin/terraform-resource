@@ -483,6 +483,58 @@ var _ = Describe("Out", func() {
 		})
 	})
 
+	Context("given an invalid terraform var", func() {
+		var req models.OutRequest
+		BeforeEach(func() {
+			req = models.OutRequest{
+				Source: models.Source{
+					Storage: storageModel,
+				},
+				Params: models.Params{
+					EnvName: envName,
+					Terraform: terraform.Model{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key":  accessKey,
+							"secret_key":  secretKey,
+							"vpc_id":      vpcID,
+							"subnet_cidr": subnetCIDR,
+							"acl_action":  "invalid-action",
+						},
+					},
+				},
+			}
+		})
+
+		It("does not delete partially created resources by default", func() {
+			var logWriter bytes.Buffer
+			runner := out.Runner{
+				SourceDir: workingDir,
+				LogWriter: &logWriter,
+			}
+			_, err := runner.Run(req)
+
+			Expect(err).To(HaveOccurred())
+			Expect(logWriter.String()).To(ContainSubstring("invalid-action"))
+			awsVerifier.ExpectSubnetWithCIDRToExist(subnetCIDR, vpcID)
+		})
+
+		It("deletes all resources on failure if delete_on_failure is true", func() {
+			req.Params.Terraform.DeleteOnFailure = true
+
+			var logWriter bytes.Buffer
+			runner := out.Runner{
+				SourceDir: workingDir,
+				LogWriter: &logWriter,
+			}
+			_, err := runner.Run(req)
+
+			Expect(err).To(HaveOccurred())
+			Expect(logWriter.String()).To(ContainSubstring("invalid-action"))
+			awsVerifier.ExpectSubnetWithCIDRToNotExist(subnetCIDR, vpcID)
+		})
+	})
+
 	Context("when an s3 compatible storage is used", func() {
 		var s3Verifier *helpers.AWSVerifier
 
