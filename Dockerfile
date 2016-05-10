@@ -6,7 +6,7 @@ RUN apt-get -y update && \
     apt-get clean
 
 # install terraform
-RUN wget -O /tmp/terraform.zip https://releases.hashicorp.com/terraform/0.6.14/terraform_0.6.14_linux_amd64.zip && \
+RUN wget -O /tmp/terraform.zip https://releases.hashicorp.com/terraform/0.6.16/terraform_0.6.16_linux_amd64.zip && \
     unzip /tmp/terraform.zip -d /usr/local/bin/ && \
     rm /tmp/terraform.zip
 
