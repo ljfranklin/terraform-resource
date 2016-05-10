@@ -42,6 +42,19 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	storageDriver := storage.BuildDriver(storageModel)
 
 	stateFilename := fmt.Sprintf("%s.tfstate", req.Version.EnvName)
+	storageVersion, err := storageDriver.Version(stateFilename)
+	if err != nil {
+		return models.InResponse{}, fmt.Errorf("Failed to check for existing state file: %s", err)
+	}
+	if storageVersion.IsZero() {
+		return models.InResponse{}, fmt.Errorf(
+			"State file does not exist with key '%s'."+
+				"\nIf you intended to run the `destroy` action, add `put.get_params.action: destroy`."+
+				"\nThis is a temporary requirement until Concourse supports a `delete` step.",
+			stateFilename,
+		)
+	}
+
 	terraformModel := terraform.Model{
 		StateFileLocalPath:  path.Join(tmpDir, "terraform.tfstate"),
 		StateFileRemotePath: stateFilename,
@@ -55,7 +68,7 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		StorageDriver: storageDriver,
 	}
 
-	storageVersion, err := client.DownloadStateFile()
+	storageVersion, err = client.DownloadStateFile()
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to download state file from storage backend: %s", err)
 	}

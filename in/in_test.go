@@ -55,6 +55,7 @@ var _ = Describe("In", func() {
 			accessKey,
 			secretKey,
 			region,
+			"",
 		)
 		prevEnvName = randomString("s3-test-fixture-previous")
 		currEnvName = randomString("s3-test-fixture-current")
@@ -183,7 +184,8 @@ var _ = Describe("In", func() {
 				_, err := runner.Run(inReq)
 				Expect(err).To(HaveOccurred())
 
-				Expect(err.Error()).To(ContainSubstring("Failed to download state file"))
+				Expect(err.Error()).To(ContainSubstring("missing-env-name"))
+				Expect(err.Error()).To(ContainSubstring("get_params"))
 			})
 		})
 	})
