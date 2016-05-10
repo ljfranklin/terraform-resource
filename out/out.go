@@ -1,6 +1,7 @@
 package out
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -44,6 +45,9 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	}
 	if err = terraformModel.ParseVarsFromFile(); err != nil {
 		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.var_file`: %s", err)
+	}
+	if len(terraformModel.Source) == 0 {
+		return models.OutResponse{}, errors.New("Missing required field `terraform.source`")
 	}
 
 	envName, err := r.buildEnvName(req, storageDriver)
