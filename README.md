@@ -98,6 +98,8 @@ It then deletes the state file using the configured `storage` driver.
 
 * `env_name_file`: *Optional.* Reads the `env_name` from a specified file path. Useful for destroying environments from a lock file.
 
+* `delete_on_failure`: *Optional. Default false.* If true, runs `terraform destroy` if the `terraform apply` returns an error.
+
 * `terraform`: *Optional.* The same Terraform configuration options described under `source.terraform` can also be specified under `put.params.terraform` with the following addition:
 
   * `terraform.var_file`: *Optional.* A file containing Terraform input variables.
