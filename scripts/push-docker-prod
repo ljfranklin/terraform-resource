@@ -1,7 +1,14 @@
 #!/bin/bash
 
+image_name=ljfranklin/terraform-resource
+
+read -p "Are you sure you want to update ${image_name}? [Y/n]" response
+echo
+if [[ ! "${response}" =~ ^([Yy]|yes)$ ]]; then
+  exit 1
+fi
+
 release_dir="$( cd "$( dirname "$0" )" && cd .. && pwd )"
 
-image_name=ljfranklin/terraform-resource
 docker build -t "${image_name}" "${release_dir}"
 docker push "${image_name}"
