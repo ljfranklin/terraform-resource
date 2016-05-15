@@ -1,4 +1,4 @@
-package terraform
+package models
 
 import (
 	"fmt"
@@ -8,8 +8,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Model struct {
-	Source              string                 `json:"source"`
+type Terraform struct {
+	Source              string                 `json:"terraform_source"`
 	Vars                map[string]interface{} `json:"vars,omitempty"`              // optional
 	VarFile             string                 `json:"var_file,omitempty"`          // optional
 	DeleteOnFailure     bool                   `json:"delete_on_failure,omitempty"` // optional
@@ -17,7 +17,7 @@ type Model struct {
 	StateFileRemotePath string                 `json:"-"`                           // not specified pipeline
 }
 
-func (m Model) Validate() error {
+func (m Terraform) Validate() error {
 	missingFields := []string{}
 	if m.StateFileLocalPath == "" {
 		missingFields = append(missingFields, "state_file_local_path")
@@ -32,7 +32,7 @@ func (m Model) Validate() error {
 	return nil
 }
 
-func (m Model) Merge(other Model) Model {
+func (m Terraform) Merge(other Terraform) Terraform {
 	mergedVars := map[string]interface{}{}
 	for key, value := range m.Vars {
 		mergedVars[key] = value
@@ -60,7 +60,7 @@ func (m Model) Merge(other Model) Model {
 	return m
 }
 
-func (m *Model) ParseVarsFromFile() error {
+func (m *Terraform) ParseVarsFromFile() error {
 	terraformVars := map[string]interface{}{}
 	for key, value := range m.Vars {
 		terraformVars[key] = value

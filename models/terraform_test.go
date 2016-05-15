@@ -1,4 +1,4 @@
-package terraform_test
+package models_test
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/ljfranklin/terraform-resource/terraform"
+	"github.com/ljfranklin/terraform-resource/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -30,7 +30,7 @@ var _ = Describe("Terraform Models", func() {
 	Describe("#Validate", func() {
 
 		It("returns nil if all fields are provided", func() {
-			model := terraform.Model{
+			model := models.Terraform{
 				Source:              "fake-source",
 				StateFileLocalPath:  "fake-local-path",
 				StateFileRemotePath: "fake-remote-path",
@@ -49,7 +49,7 @@ var _ = Describe("Terraform Models", func() {
 				"state_file_remote_path",
 			}
 
-			model := terraform.Model{}
+			model := models.Terraform{}
 
 			err := model.Validate()
 			Expect(err).To(HaveOccurred())
@@ -74,7 +74,7 @@ var _ = Describe("Terraform Models", func() {
 			err = ioutil.WriteFile(varFile, fileContents, 0600)
 			Expect(err).ToNot(HaveOccurred())
 
-			model := terraform.Model{
+			model := models.Terraform{
 				VarFile: varFile,
 			}
 
@@ -85,10 +85,10 @@ var _ = Describe("Terraform Models", func() {
 		})
 
 		It("merges non-var fields", func() {
-			baseModel := terraform.Model{
+			baseModel := models.Terraform{
 				Source: "base-source",
 			}
-			mergeModel := terraform.Model{
+			mergeModel := models.Terraform{
 				StateFileLocalPath:  "fake-local-path",
 				StateFileRemotePath: "fake-remote-path",
 				DeleteOnFailure:     true,
@@ -102,7 +102,7 @@ var _ = Describe("Terraform Models", func() {
 		})
 
 		It("returns original vars and vars from Merged model", func() {
-			baseModel := terraform.Model{
+			baseModel := models.Terraform{
 				Source:  "base-source",
 				VarFile: "base-file",
 				Vars: map[string]interface{}{
@@ -110,7 +110,7 @@ var _ = Describe("Terraform Models", func() {
 					"override-key": "base-override",
 				},
 			}
-			mergeModel := terraform.Model{
+			mergeModel := models.Terraform{
 				VarFile: "merge-file",
 				Vars: map[string]interface{}{
 					"merge-key":    "merge-value",
@@ -142,7 +142,7 @@ var _ = Describe("Terraform Models", func() {
 			err = ioutil.WriteFile(varFile, fileContents, 0600)
 			Expect(err).ToNot(HaveOccurred())
 
-			model := terraform.Model{
+			model := models.Terraform{
 				Source:  "base-source",
 				VarFile: varFile,
 				Vars: map[string]interface{}{

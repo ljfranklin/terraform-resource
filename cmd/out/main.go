@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/namer"
 	"github.com/ljfranklin/terraform-resource/out"
-	"github.com/ljfranklin/terraform-resource/out/models"
 )
 
 func main() {

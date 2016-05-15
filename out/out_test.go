@@ -18,7 +18,6 @@ import (
 	"github.com/ljfranklin/terraform-resource/namer/namerfakes"
 	"github.com/ljfranklin/terraform-resource/out"
 	"github.com/ljfranklin/terraform-resource/storage"
-	"github.com/ljfranklin/terraform-resource/terraform"
 	"github.com/ljfranklin/terraform-resource/test/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -86,7 +85,7 @@ var _ = Describe("Out", func() {
 			},
 			Params: models.OutParams{
 				EnvName: envName,
-				Terraform: terraform.Model{
+				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key":  accessKey,
@@ -113,7 +112,7 @@ var _ = Describe("Out", func() {
 			},
 			Params: models.OutParams{
 				EnvName: envName,
-				Terraform: terraform.Model{
+				Terraform: models.Terraform{
 					// Note: changes to fixture must be pushed before running this test
 					Source: "github.com/ljfranklin/terraform-resource//fixtures/aws/",
 					Vars: map[string]interface{}{
@@ -141,7 +140,7 @@ var _ = Describe("Out", func() {
 			},
 			Params: models.OutParams{
 				EnvName: envName,
-				Terraform: terraform.Model{
+				Terraform: models.Terraform{
 					Source: "fixtures/module/",
 					Vars: map[string]interface{}{
 						"access_key":  accessKey,
@@ -165,7 +164,7 @@ var _ = Describe("Out", func() {
 		req := models.OutRequest{
 			Source: models.Source{
 				Storage: storageModel,
-				Terraform: terraform.Model{
+				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key":  accessKey,
@@ -193,7 +192,7 @@ var _ = Describe("Out", func() {
 		req := models.OutRequest{
 			Source: models.Source{
 				Storage: storageModel,
-				Terraform: terraform.Model{
+				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key": accessKey,
@@ -204,7 +203,7 @@ var _ = Describe("Out", func() {
 			// put params take precedence
 			Params: models.OutParams{
 				EnvName: envName,
-				Terraform: terraform.Model{
+				Terraform: models.Terraform{
 					Vars: map[string]interface{}{
 						"secret_key":  secretKey,
 						"vpc_id":      vpcID,
@@ -248,7 +247,7 @@ var _ = Describe("Out", func() {
 			req := models.OutRequest{
 				Source: models.Source{
 					Storage: storageModel,
-					Terraform: terraform.Model{
+					Terraform: models.Terraform{
 						Source: "fixtures/aws/",
 						Vars: map[string]interface{}{
 							"access_key": accessKey,
@@ -260,7 +259,7 @@ var _ = Describe("Out", func() {
 				// put params overrides source
 				Params: models.OutParams{
 					EnvName: envName,
-					Terraform: terraform.Model{
+					Terraform: models.Terraform{
 						Vars: map[string]interface{}{
 							"secret_key":  secretKey,
 							"subnet_cidr": subnetCIDR,
@@ -290,7 +289,7 @@ var _ = Describe("Out", func() {
 			},
 			Params: models.OutParams{
 				EnvName: spaceName,
-				Terraform: terraform.Model{
+				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key":  accessKey,
@@ -318,7 +317,7 @@ var _ = Describe("Out", func() {
 			},
 			Params: models.OutParams{
 				EnvName: spaceName,
-				Terraform: terraform.Model{
+				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key":  accessKey,
@@ -345,7 +344,7 @@ var _ = Describe("Out", func() {
 			},
 			Params: models.OutParams{
 				EnvName: envName,
-				Terraform: terraform.Model{
+				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key":  accessKey,
@@ -387,7 +386,7 @@ var _ = Describe("Out", func() {
 				},
 				Params: models.OutParams{
 					EnvNameFile: envNameFile,
-					Terraform: terraform.Model{
+					Terraform: models.Terraform{
 						Source: "fixtures/aws/",
 						Vars: map[string]interface{}{
 							"access_key":  accessKey,
@@ -415,7 +414,7 @@ var _ = Describe("Out", func() {
 			},
 			Params: models.OutParams{
 				GenerateRandomName: true,
-				Terraform: terraform.Model{
+				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key":  accessKey,
@@ -457,7 +456,7 @@ var _ = Describe("Out", func() {
 				},
 				Params: models.OutParams{
 					GenerateRandomName: true,
-					Terraform: terraform.Model{
+					Terraform: models.Terraform{
 						Source: "fixtures/aws/",
 						Vars: map[string]interface{}{
 							"access_key":  accessKey,
@@ -492,7 +491,7 @@ var _ = Describe("Out", func() {
 				},
 				Params: models.OutParams{
 					EnvName: envName,
-					Terraform: terraform.Model{
+					Terraform: models.Terraform{
 						Source: "fixtures/aws/",
 						Vars: map[string]interface{}{
 							"access_key":  accessKey,
@@ -566,7 +565,7 @@ var _ = Describe("Out", func() {
 				},
 				Params: models.OutParams{
 					EnvName: envName,
-					Terraform: terraform.Model{
+					Terraform: models.Terraform{
 						Source: "fixtures/aws/",
 						Vars: map[string]interface{}{
 							"access_key":  accessKey,

@@ -9,11 +9,7 @@ See what's in progress on the [Trello board](https://trello.com/b/s06sLNwc/terra
 
 ## Source Configuration
 
-### `storage`
-
 * `storage.driver`: *Optional. Default `s3`.* The driver used to store the Terraform state file. Currently `s3` is the only supported driver.
-
-#### `s3` Driver
 
 * `storage.bucket`: *Required.* The S3 bucket used to store the state files.
 
@@ -27,18 +23,13 @@ See what's in progress on the [Trello board](https://trello.com/b/s06sLNwc/terra
   * **Note:** By default, the resource will use S3 signing version v2 if an endpoint is specified as many non-S3 blobstores do not support v4.
     Opt into v4 signing by setting `storage.use_signing_v4: true`.
 
-### `terraform`
-
-Terraform configuration options can be specified under `source.terraform` and/or `put.params.terraform`.
-Options from these two locations will be merged, with fields under `put.params.terraform` taking precedence.
-
-* `terraform.source`: *Required.* The location of the Terraform module to apply.
+* `terraform_source`: *Required.* The location of the Terraform module to apply.
 These can be local paths, URLs, GitHub repos, and more.
 See [Terraform Sources](https://www.terraform.io/docs/modules/sources.html) for more examples.
 
-* `terraform.destroy_on_failure`: *Optional. Default `false`.* If true, the resource will run `terraform destroy` if `terraform apply` returns an error.
+* `delete_on_failure`: *Optional. Default `false`.* If true, the resource will run `terraform destroy` if `terraform apply` returns an error.
 
-* `terraform.vars`: *Optional.* A collection of Terraform input variables.
+* `vars`: *Optional.* A collection of Terraform input variables.
 These are typically used to specify credentials or override default module values.
 See [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html) for more details.
 
@@ -62,13 +53,12 @@ resources:
         bucket_path: terraform-ci/
         access_key_id: {{storage_access_key}}
         secret_access_key: {{storage_secret_key}}
-      terraform:
-        # the '//' indicates a sub-directory in a git repo
-        source: github.com/ljfranklin/terraform-resource//fixtures/aws
-        vars:
-          access_key: {{environment_access_key}}
-          secret_key: {{environment_secret_key}}
-          tag_name: concourse
+      # the '//' indicates a sub-directory in a git repo
+      terraform_source: github.com/ljfranklin/terraform-resource//fixtures/aws
+      vars:
+        access_key: {{environment_access_key}}
+        secret_key: {{environment_secret_key}}
+        tag_name: concourse
 ```
 
 ## Behavior
@@ -92,20 +82,22 @@ It then deletes the state file using the configured `storage` driver.
 
 #### Parameters
 
+* `terraform_source`: *Required if absent under `source`.* See description under `source.terraform_source`.
+
+* `delete_on_failure`: *Optional. Default `false`.* See description under `source.delete_on_failure`.
+
+* `vars`: *Optional.* A collection of Terraform input variables. See description under `source.vars`.
+
+* `var_file`: *Optional.* A file containing Terraform input variables. This file can be in YAML or JSON format.
+
+Terraform variables will be merged from the following locations in increasing order of precedence: `source.vars`, `put.params.vars`, and `put.params.var_file`. If a state file already exists, the outputs will be fed back in as input `vars` to subsequent `puts` with the lowest precedence.
+Finally, `env_name` is automatically passed as an input `var`.
+
 * `env_name`: *Optional.* The name of the environment to create or modify. Multiple environments can be managed with a single resource.
 
 * `generate_random_name`: *Optional.* Generates a random `env_name` (e.g. "coffee-bee"). Useful for creating lock files.
 
 * `env_name_file`: *Optional.* Reads the `env_name` from a specified file path. Useful for destroying environments from a lock file.
-
-* `delete_on_failure`: *Optional. Default false.* If true, runs `terraform destroy` if the `terraform apply` returns an error.
-
-* `terraform`: *Optional.* The same Terraform configuration options described under `source.terraform` can also be specified under `put.params.terraform` with the following addition:
-
-  * `terraform.var_file`: *Optional.* A file containing Terraform input variables.
-  This file can be in YAML or JSON format.
-  Terraform variables will be merged from the following locations in increasing order of precedence: `source.terraform.vars`, `put.params.terraform.vars`, and `put.params.terraform.var_file`. If a state file already exists, the outputs will be fed back in as input `vars` to subsequent `puts` with the lowest precedence.
-  Finally, `env_name` is automatically passed as an input `var`.
 
 * `action`: *Optional.* Used to indicate a destructive `put`. The only recognized value is `destroy`, create / update are the implicit defaults.
 
@@ -120,8 +112,7 @@ jobs:
   - put: terraform
     params:
       env_name: e2e
-      terraform:
-        source: project-src/terraform
+      terraform_source: project-src/terraform
   - task: show-outputs
     config:
       platform: linux

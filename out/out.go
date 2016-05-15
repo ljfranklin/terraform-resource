@@ -81,7 +81,7 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		if err != nil {
 			return models.OutResponse{}, err
 		}
-		client.Model = terraform.Model{Vars: outputs}.Merge(client.Model)
+		client.Model = models.Terraform{Vars: outputs}.Merge(client.Model)
 	}
 
 	resp := models.OutResponse{}

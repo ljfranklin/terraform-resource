@@ -54,7 +54,7 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		)
 	}
 
-	terraformModel := terraform.Model{
+	terraformModel := models.Terraform{
 		StateFileLocalPath:  path.Join(tmpDir, "terraform.tfstate"),
 		StateFileRemotePath: stateFilename,
 	}

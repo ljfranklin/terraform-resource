@@ -12,7 +12,6 @@ import (
 	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/out"
 	"github.com/ljfranklin/terraform-resource/storage"
-	"github.com/ljfranklin/terraform-resource/terraform"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -65,7 +64,7 @@ var _ = Describe("Out Lifecycle", func() {
 			},
 			Params: models.OutParams{
 				EnvName: envName,
-				Terraform: terraform.Model{
+				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key":  accessKey,

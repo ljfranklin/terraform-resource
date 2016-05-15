@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/ljfranklin/terraform-resource/check"
-	"github.com/ljfranklin/terraform-resource/in/models"
+	"github.com/ljfranklin/terraform-resource/models"
 )
 
 func main() {

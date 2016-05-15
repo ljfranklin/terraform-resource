@@ -11,11 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 )
 
 type Client struct {
-	Model         Model
+	Model         models.Terraform
 	StorageDriver storage.Storage
 	LogWriter     io.Writer
 }
