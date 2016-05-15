@@ -14,9 +14,9 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/namer/namerfakes"
 	"github.com/ljfranklin/terraform-resource/out"
-	"github.com/ljfranklin/terraform-resource/out/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
 	"github.com/ljfranklin/terraform-resource/test/helpers"
@@ -84,7 +84,7 @@ var _ = Describe("Out", func() {
 			Source: models.Source{
 				Storage: storageModel,
 			},
-			Params: models.Params{
+			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: terraform.Model{
 					Source: "fixtures/aws/",
@@ -111,7 +111,7 @@ var _ = Describe("Out", func() {
 			Source: models.Source{
 				Storage: storageModel,
 			},
-			Params: models.Params{
+			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: terraform.Model{
 					// Note: changes to fixture must be pushed before running this test
@@ -139,7 +139,7 @@ var _ = Describe("Out", func() {
 			Source: models.Source{
 				Storage: storageModel,
 			},
-			Params: models.Params{
+			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: terraform.Model{
 					Source: "fixtures/module/",
@@ -176,7 +176,7 @@ var _ = Describe("Out", func() {
 					},
 				},
 			},
-			Params: models.Params{
+			Params: models.OutParams{
 				EnvName: envName,
 			},
 		}
@@ -202,7 +202,7 @@ var _ = Describe("Out", func() {
 				},
 			},
 			// put params take precedence
-			Params: models.Params{
+			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: terraform.Model{
 					Vars: map[string]interface{}{
@@ -258,7 +258,7 @@ var _ = Describe("Out", func() {
 					},
 				},
 				// put params overrides source
-				Params: models.Params{
+				Params: models.OutParams{
 					EnvName: envName,
 					Terraform: terraform.Model{
 						Vars: map[string]interface{}{
@@ -288,7 +288,7 @@ var _ = Describe("Out", func() {
 			Source: models.Source{
 				Storage: storageModel,
 			},
-			Params: models.Params{
+			Params: models.OutParams{
 				EnvName: spaceName,
 				Terraform: terraform.Model{
 					Source: "fixtures/aws/",
@@ -316,7 +316,7 @@ var _ = Describe("Out", func() {
 			Source: models.Source{
 				Storage: storageModel,
 			},
-			Params: models.Params{
+			Params: models.OutParams{
 				EnvName: spaceName,
 				Terraform: terraform.Model{
 					Source: "fixtures/aws/",
@@ -343,7 +343,7 @@ var _ = Describe("Out", func() {
 			Source: models.Source{
 				Storage: storageModel,
 			},
-			Params: models.Params{
+			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: terraform.Model{
 					Source: "fixtures/aws/",
@@ -385,7 +385,7 @@ var _ = Describe("Out", func() {
 				Source: models.Source{
 					Storage: storageModel,
 				},
-				Params: models.Params{
+				Params: models.OutParams{
 					EnvNameFile: envNameFile,
 					Terraform: terraform.Model{
 						Source: "fixtures/aws/",
@@ -413,7 +413,7 @@ var _ = Describe("Out", func() {
 			Source: models.Source{
 				Storage: storageModel,
 			},
-			Params: models.Params{
+			Params: models.OutParams{
 				GenerateRandomName: true,
 				Terraform: terraform.Model{
 					Source: "fixtures/aws/",
@@ -455,7 +455,7 @@ var _ = Describe("Out", func() {
 				Source: models.Source{
 					Storage: storageModel,
 				},
-				Params: models.Params{
+				Params: models.OutParams{
 					GenerateRandomName: true,
 					Terraform: terraform.Model{
 						Source: "fixtures/aws/",
@@ -490,7 +490,7 @@ var _ = Describe("Out", func() {
 				Source: models.Source{
 					Storage: storageModel,
 				},
-				Params: models.Params{
+				Params: models.OutParams{
 					EnvName: envName,
 					Terraform: terraform.Model{
 						Source: "fixtures/aws/",
@@ -564,7 +564,7 @@ var _ = Describe("Out", func() {
 				Source: models.Source{
 					Storage: storageModel,
 				},
-				Params: models.Params{
+				Params: models.OutParams{
 					EnvName: envName,
 					Terraform: terraform.Model{
 						Source: "fixtures/aws/",

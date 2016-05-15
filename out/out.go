@@ -9,9 +9,8 @@ import (
 	"path"
 	"strings"
 
-	baseModels "github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/namer"
-	"github.com/ljfranklin/terraform-resource/out/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
 )
@@ -152,7 +151,7 @@ func performApply(client terraform.Client, storageDriver storage.Storage) (model
 	if err != nil {
 		return nilResponse, fmt.Errorf("Failed to upload state file: %s", err)
 	}
-	version := baseModels.NewVersion(storageVersion)
+	version := models.NewVersion(storageVersion)
 
 	clientOutput, err := client.Output()
 	if err != nil {
@@ -185,7 +184,7 @@ func performDestroy(client terraform.Client, storageDriver storage.Storage) (mod
 	if err != nil {
 		return nilResponse, fmt.Errorf("Failed to delete state file: %s", err)
 	}
-	version := baseModels.NewVersion(storageVersion)
+	version := models.NewVersion(storageVersion)
 
 	resp := models.OutResponse{
 		Version:  version,

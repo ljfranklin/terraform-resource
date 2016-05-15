@@ -9,8 +9,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/out"
-	"github.com/ljfranklin/terraform-resource/out/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
 	. "github.com/onsi/ginkgo"
@@ -63,7 +63,7 @@ var _ = Describe("Out Lifecycle", func() {
 					SecretAccessKey: secretKey,
 				},
 			},
-			Params: models.Params{
+			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: terraform.Model{
 					Source: "fixtures/aws/",

@@ -11,8 +11,7 @@ import (
 	"time"
 
 	"github.com/ljfranklin/terraform-resource/in"
-	"github.com/ljfranklin/terraform-resource/in/models"
-	baseModels "github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/test/helpers"
 
@@ -104,7 +103,7 @@ var _ = Describe("In", func() {
 
 		It("fetches the state file matching the provided version", func() {
 
-			inReq.Version = baseModels.Version{
+			inReq.Version = models.Version{
 				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToPrevS3Fixture),
 				EnvName:      prevEnvName,
 			}
@@ -146,7 +145,7 @@ var _ = Describe("In", func() {
 
 			BeforeEach(func() {
 				inReq.Params.Action = models.DestroyAction
-				inReq.Version = baseModels.Version{
+				inReq.Version = models.Version{
 					LastModified: time.Now().UTC().Format(storage.TimeFormat),
 					EnvName:      currEnvName,
 				}
@@ -171,7 +170,7 @@ var _ = Describe("In", func() {
 		Context("and it was called as part of update or create", func() {
 			BeforeEach(func() {
 				inReq.Params.Action = ""
-				inReq.Version = baseModels.Version{
+				inReq.Version = models.Version{
 					LastModified: time.Now().UTC().Format(storage.TimeFormat),
 					EnvName:      "missing-env-name",
 				}

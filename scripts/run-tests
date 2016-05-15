@@ -1,0 +1,12 @@
+#!/bin/bash
+
+release_dir="$( cd "$( dirname "$0" )" && cd .. && pwd )"
+
+pushd "${release_dir}" > /dev/null
+  ginkgo \
+    -r \
+    -skipPackage vendor/ \
+    -randomizeAllSpecs \
+    -randomizeSuites \
+    "$@"
+popd > /dev/null

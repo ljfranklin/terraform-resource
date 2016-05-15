@@ -9,8 +9,7 @@ import (
 	"time"
 
 	"github.com/ljfranklin/terraform-resource/check"
-	"github.com/ljfranklin/terraform-resource/in/models"
-	baseModels "github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/test/helpers"
 	. "github.com/onsi/ginkgo"
@@ -51,6 +50,7 @@ var _ = Describe("Check", func() {
 			accessKey,
 			secretKey,
 			region,
+			"",
 		)
 		prevEnvName = randomString("s3-test-fixture-previous")
 		pathToPrevS3Fixture = path.Join(bucketPath, prevEnvName)
@@ -80,7 +80,7 @@ var _ = Describe("Check", func() {
 			resp, err := runner.Run(checkInput)
 			Expect(err).ToNot(HaveOccurred())
 
-			expectedOutput := []baseModels.Version{}
+			expectedOutput := []models.Version{}
 			Expect(resp).To(Equal(expectedOutput))
 		})
 	})
@@ -107,8 +107,8 @@ var _ = Describe("Check", func() {
 
 			lastModified := awsVerifier.GetLastModifiedFromS3(bucket, pathToCurrS3Fixture)
 
-			expectOutput := []baseModels.Version{
-				baseModels.Version{
+			expectOutput := []models.Version{
+				models.Version{
 					LastModified: lastModified,
 					EnvName:      currEnvName,
 				},
@@ -118,7 +118,7 @@ var _ = Describe("Check", func() {
 
 		It("returns an empty version list when current version matches storage version", func() {
 			currentLastModified := awsVerifier.GetLastModifiedFromS3(bucket, pathToCurrS3Fixture)
-			checkInput.Version = baseModels.Version{
+			checkInput.Version = models.Version{
 				LastModified: currentLastModified,
 				EnvName:      currEnvName,
 			}
@@ -127,7 +127,7 @@ var _ = Describe("Check", func() {
 			resp, err := runner.Run(checkInput)
 			Expect(err).ToNot(HaveOccurred())
 
-			expectOutput := []baseModels.Version{}
+			expectOutput := []models.Version{}
 			Expect(resp).To(Equal(expectOutput))
 		})
 	})

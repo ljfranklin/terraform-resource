@@ -7,8 +7,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/ljfranklin/terraform-resource/in/models"
-	baseModels "github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 	"github.com/ljfranklin/terraform-resource/terraform"
 )
@@ -72,7 +71,7 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to download state file from storage backend: %s", err)
 	}
-	version := baseModels.NewVersion(storageVersion)
+	version := models.NewVersion(storageVersion)
 
 	nameFilepath := path.Join(r.OutputDir, "name")
 	nameFile, err := os.Create(nameFilepath)

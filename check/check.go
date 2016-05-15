@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	inModels "github.com/ljfranklin/terraform-resource/in/models"
 	"github.com/ljfranklin/terraform-resource/models"
 	"github.com/ljfranklin/terraform-resource/storage"
 )
 
 type Runner struct{}
 
-func (r Runner) Run(req inModels.InRequest) ([]models.Version, error) {
+func (r Runner) Run(req models.InRequest) ([]models.Version, error) {
 	currentVersionTime := time.Time{}
 	if req.Version.IsZero() == false {
 		if err := req.Version.Validate(); err != nil {
