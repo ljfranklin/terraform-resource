@@ -20,8 +20,9 @@ See what's in progress on the [Trello board](https://trello.com/b/s06sLNwc/terra
 * `storage.secret_access_key`: *Required.* The AWS secret key used to access the bucket.
 
 * `storage.endpoint`: *Optional.* The endpoint for an s3-compatible blobstore (e.g. Ceph).
-  * **Note:** By default, the resource will use S3 signing version v2 if an endpoint is specified as many non-S3 blobstores do not support v4.
-    Opt into v4 signing by setting `storage.use_signing_v4: true`.
+
+  > **Note:** By default, the resource will use S3 signing version v2 if an endpoint is specified as many non-S3 blobstores do not support v4.
+Opt into v4 signing by setting `storage.use_signing_v4: true`.
 
 * `terraform_source`: *Required.* The location of the Terraform module to apply.
 These can be local paths, URLs, GitHub repos, and more.
@@ -33,9 +34,9 @@ See [Terraform Sources](https://www.terraform.io/docs/modules/sources.html) for 
 These are typically used to specify credentials or override default module values.
 See [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html) for more details.
 
-### Example
+#### Source Example
 
-**Note:** Declaring custom resources under `resource_types` requires Concourse 1.0 or newer.
+> **Note:** Declaring custom resources under `resource_types` requires Concourse 1.0 or newer.
 
 ```yaml
 resource_types:
@@ -69,18 +70,18 @@ This ensures the output always reflects the current state of the IaaS and allows
 Depending on the context, the `put` step will perform one of three actions:
 
 **Create:**
-If the state file does not exist, `put` will create all the IaaS resources specified by `terraform.source`.
+If the state file does not exist, `put` will create all the IaaS resources specified by `terraform_source`.
 It then uploads the resulting state file using the configured `storage` driver.
 
 **Update:**
-If the state file already exists, `put` will update the IaaS resources to match the desired state specified in `terraform.source`.
+If the state file already exists, `put` will update the IaaS resources to match the desired state specified in `terraform_source`.
 It then uploads the updated state file.
 
 **Destroy:**
 If the `destroy` action is specified, `put` will destroy all IaaS resources specified in the state file.
 It then deletes the state file using the configured `storage` driver.
 
-#### Parameters
+#### Put Parameters
 
 * `terraform_source`: *Required if absent under `source`.* See description under `source.terraform_source`.
 
@@ -90,7 +91,7 @@ It then deletes the state file using the configured `storage` driver.
 
 * `var_file`: *Optional.* A file containing Terraform input variables. This file can be in YAML or JSON format.
 
-Terraform variables will be merged from the following locations in increasing order of precedence: `source.vars`, `put.params.vars`, and `put.params.var_file`. If a state file already exists, the outputs will be fed back in as input `vars` to subsequent `puts` with the lowest precedence.
+  > Terraform variables will be merged from the following locations in increasing order of precedence: `source.vars`, `put.params.vars`, and `put.params.var_file`. If a state file already exists, the outputs will be fed back in as input `vars` to subsequent `puts` with the lowest precedence.
 Finally, `env_name` is automatically passed as an input `var`.
 
 * `env_name`: *Optional.* The name of the environment to create or modify. Multiple environments can be managed with a single resource.
@@ -101,7 +102,43 @@ Finally, `env_name` is automatically passed as an input `var`.
 
 * `action`: *Optional.* Used to indicate a destructive `put`. The only recognized value is `destroy`, create / update are the implicit defaults.
 
-  * **Note:** You must also set `put.get_params.action` to `destroy` to ensure the task succeeds. This is a temporary workaround until Concourse adds support for `delete` as a first-class operation. See [this issue](https://github.com/concourse/concourse/issues/362) for more details.
+  > **Note:** You must also set `put.get_params.action` to `destroy` to ensure the task succeeds. This is a temporary workaround until Concourse adds support for `delete` as a first-class operation. See [this issue](https://github.com/concourse/concourse/issues/362) for more details.
+
+#### Put Example
+
+```yaml
+  - name: create-env-and-lock
+    plan:
+      # apply the terraform template with a random env_name
+      - put: terraform
+        params:
+          generate_random_name: true
+          delete_on_failure: true
+          vars:
+            subnet_cidr: 10.0.1.0/24
+      # create a new pool-resource lock containing the terraform output
+      - put: locks
+        params:
+          add: terraform/
+
+  - name: destroy-env-and-lock
+    plan:
+      # acquire a lock
+      - put: locks
+        params:
+          acquire: true
+      # destroy the IaaS resources
+      - put: terraform
+        params:
+          env_name_file: locks/name
+          action: destroy
+        get_params:
+          action: destroy
+      # destroy the lock
+      - put: locks
+        params:
+          remove: locks/
+```
 
 #### Metadata file
 
@@ -136,4 +173,4 @@ metadata: { "vpc_id": "vpc-123456", "vpc_tag_name": "concourse" }
 
 #### Examples
 
-See the [annotated pipeline](ci/pipeline.yml) for usage examples.
+See the [annotated pipeline](ci/pipeline.yml) for additional examples.
