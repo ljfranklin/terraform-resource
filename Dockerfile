@@ -11,9 +11,8 @@ RUN wget -O /tmp/terraform.zip https://releases.hashicorp.com/terraform/0.6.16/t
     rm /tmp/terraform.zip
 
 # build resource
-COPY . /go/src/github.com/ljfranklin/terraform-resource
-WORKDIR /go/src/github.com/ljfranklin/terraform-resource
-
-RUN go build -o /opt/resource/check ./cmd/check/ && \
-    go build -o /opt/resource/in ./cmd/in/ && \
-    go build -o /opt/resource/out ./cmd/out/
+COPY ./src/ /go/src/
+WORKDIR /go
+RUN go build -o /opt/resource/check terraform-resource/cmd/check && \
+    go build -o /opt/resource/in terraform-resource/cmd/in && \
+    go build -o /opt/resource/out terraform-resource/cmd/out

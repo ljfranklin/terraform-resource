@@ -1,8 +1,13 @@
 #!/bin/bash
 
-release_dir="$( cd "$( dirname "$0" )" && cd .. && pwd )"
+set -eux -o pipefail
 
-pushd "${release_dir}" > /dev/null
+release_dir="$( cd "$( dirname "$0" )" && cd .. && pwd )"
+src_dir="$( cd "${release_dir}/src/terraform-resource/" && pwd )"
+
+source "${release_dir}/.envrc"
+
+pushd "${src_dir}" > /dev/null
   ginkgo \
     -r \
     -skipPackage vendor/ \

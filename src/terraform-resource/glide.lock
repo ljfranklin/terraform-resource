@@ -1,0 +1,57 @@
+hash: e92e87518411a2390400aefe02d56c6b23f32171e8baf9b5bf22472850223e40
+updated: 2016-05-15T18:09:14.661108416-07:00
+imports:
+- name: github.com/aws/aws-sdk-go
+  version: 7bad22e9cff8295edef29844b4daa55ecfb057b9
+  subpackages:
+  - aws
+  - aws/awserr
+  - aws/corehandlers
+  - aws/credentials
+  - aws/request
+  - aws/session
+  - service/s3
+  - service/s3/s3manager
+  - service/ec2
+  - aws/awsutil
+  - aws/client/metadata
+  - aws/client
+  - aws/defaults
+  - private/endpoints
+  - private/protocol
+  - private/protocol/restxml
+  - private/signer/v4
+  - private/waiter
+  - service/s3/s3iface
+  - private/protocol/ec2query
+  - aws/credentials/ec2rolecreds
+  - aws/ec2metadata
+  - private/protocol/query
+  - private/protocol/rest
+  - private/protocol/xml/xmlutil
+  - private/protocol/query/queryutil
+- name: github.com/go-ini/ini
+  version: 12f418cc7edc5a618a51407b7ac1f1f512139df3
+- name: github.com/jmespath/go-jmespath
+  version: 0b12d6b521d83fc7f755e7cfc1b1fbdd35a01a74
+- name: github.com/onsi/ginkgo
+  version: 5437a97bf824dec14e58d68c56ee36e772670c2e
+- name: github.com/onsi/gomega
+  version: 815512bce8c889153a13104c9d9b2416153c1e02
+  subpackages:
+  - internal/assertion
+  - internal/asyncassertion
+  - internal/testingtsupport
+  - matchers
+  - types
+  - internal/oraclematcher
+  - format
+  - matchers/support/goraph/bipartitegraph
+  - matchers/support/goraph/edge
+  - matchers/support/goraph/node
+  - matchers/support/goraph/util
+- name: github.com/Pallinder/go-randomdata
+  version: 008e3d032f6b5b7713d56d8e5e1af1fba2a3b848
+- name: gopkg.in/yaml.v2
+  version: a83829b6f1293c91addabc89d0571c246397bbf4
+devImports: []

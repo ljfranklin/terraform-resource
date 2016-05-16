@@ -1,4 +1,5 @@
-# opting to ignore vendor as aws-sdk-go is ~50MB
-vendor/
 tmp/
 .terraform
+bin/
+pkg/
+src/terraform-resource/vendor/

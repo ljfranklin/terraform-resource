@@ -10,6 +10,13 @@ resources:
   type: git
   source:
     uri: https://github.com/ljfranklin/terraform-resource
+- name: terraform-test-image
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource-test
+    email: {{docker_email}}
+    username: {{docker_username}}
+    password: {{docker_password}}
 - name: locks
   type: pool
   source:
@@ -33,9 +40,28 @@ resources:
       vpc_id:      {{test_vpc_id}}
 
 jobs:
+  - name: test-unit
+    plan:
+      - get: resource-src
+        trigger: true
+      - task: test-unit
+        file: resource-src/ci/tasks/test-unit.yml
+
+  - name: push-test-image
+    plan:
+      - get: resource-src
+        # trigger: true
+        passed: [test-unit]
+      - put: terraform-test-image
+        params:
+          build: resource-src/
+          cache: true
+
   - name: create-infrastructure
     plan:
       - get: resource-src
+        trigger: true
+        passed: [push-test-image]
       - put: terraform
         params:
           env_name: terraform-ci
@@ -58,9 +84,6 @@ jobs:
   - name: update-infrastructure-via-params
     plan:
       - get: resource-src
-      # the terraform.get is generally not useful
-      # it is only used here to trigger the next stage
-      - get: terraform
         trigger: true
         passed: [create-infrastructure]
       - put: terraform
@@ -74,7 +97,6 @@ jobs:
   - name: update-infrastructure-via-file
     plan:
       - get: resource-src
-      - get: terraform
         trigger: true
         passed: [update-infrastructure-via-params]
       - task: make-var-file
@@ -97,7 +119,6 @@ jobs:
   - name: destroy-infrastructure
     plan:
       - get: resource-src
-      - get: terraform
         trigger: true
         passed: [update-infrastructure-via-file]
       - put: terraform
@@ -110,6 +131,8 @@ jobs:
   - name: create-env-and-lock
     plan:
       - get: resource-src
+        trigger: true
+        passed: [push-test-image]
       - put: terraform
         params:
           # generate a random env_name for the lock file
@@ -125,7 +148,6 @@ jobs:
   - name: lock-env
     plan:
       - get: resource-src
-      - get: terraform
         trigger: true
         passed: [create-env-and-lock]
       - put: locks
@@ -147,8 +169,9 @@ jobs:
   - name: destroy-env-and-lock
     plan:
       - get: resource-src
-      - get: locks
         trigger: true
+        passed: [lock-env]
+      - get: locks
         passed: [lock-env]
       # destroy the IaaS resources
       - put: terraform

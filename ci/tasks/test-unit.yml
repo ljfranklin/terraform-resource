@@ -1,0 +1,13 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource-ci
+
+inputs:
+- name: resource-src
+
+run:
+  path: resource-src/scripts/run-tests
