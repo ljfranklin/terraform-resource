@@ -8,6 +8,7 @@ src_dir="$( cd "${release_dir}/src/terraform-resource/" && pwd )"
 source "${release_dir}/.envrc"
 
 pushd "${src_dir}" > /dev/null
+  glide install
   ginkgo \
     -r \
     -skipPackage vendor/ \
