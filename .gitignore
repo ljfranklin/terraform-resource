@@ -2,4 +2,3 @@ tmp/
 .terraform
 bin/
 pkg/
-src/terraform-resource/vendor/
