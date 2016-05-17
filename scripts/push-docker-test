@@ -1,9 +1,0 @@
-#!/bin/bash
-
-set -eux -o pipefail
-
-release_dir="$( cd "$( dirname "$0" )" && cd .. && pwd )"
-
-image_name=ljfranklin/terraform-resource-test
-docker build -t "${image_name}" "${release_dir}"
-docker push "${image_name}"
