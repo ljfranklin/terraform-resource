@@ -61,7 +61,7 @@ jobs:
   - name: push-test-image
     plan:
       - get: resource-src
-        # trigger: true
+        trigger: true
         passed: [test-unit]
       - put: terraform-test-image
         params:

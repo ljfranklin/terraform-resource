@@ -2,8 +2,8 @@
 
 set -eux -o pipefail
 
-release_dir="$( cd "$( dirname "$0" )" && cd ../.. && pwd )"
+docker_dir="$( cd "$( dirname "$0" )" && pwd )"
 
 image_name=ljfranklin/terraform-resource-ci
-docker build -t "${image_name}" "${release_dir}"
+docker build -t "${image_name}" "${docker_dir}"
 docker push "${image_name}"
