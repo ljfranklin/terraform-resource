@@ -10,6 +10,7 @@ resources:
   type: git
   source:
     uri: https://github.com/ljfranklin/terraform-resource
+    branch: gopath-update
 - name: terraform-test-image
   type: docker-image
   source:
@@ -46,6 +47,16 @@ jobs:
         trigger: true
       - task: test-unit
         file: resource-src/ci/tasks/test-unit.yml
+        params:
+          AWS_ACCESS_KEY:           {{ec2_access_key}}
+          AWS_SECRET_KEY:           {{ec2_secret_key}}
+          AWS_BUCKET:               {{storage_bucket}}
+          AWS_BUCKET_PATH:          terraform-test-unit
+          AWS_TEST_VPC_ID:          {{test_vpc_id}}
+          S3_COMPATIBLE_BUCKET:     {{s3_compatible_bucket}}
+          S3_COMPATIBLE_ENDPOINT:   {{s3_compatible_endpoint}}
+          S3_COMPATIBLE_ACCESS_KEY: {{s3_compatible_access_key}}
+          S3_COMPATIBLE_SECRET_KEY: {{s3_compatible_secret_key}}
 
   - name: push-test-image
     plan:
