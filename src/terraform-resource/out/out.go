@@ -67,37 +67,40 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		StorageDriver: storageDriver,
 		LogWriter:     r.LogWriter,
 	}
-
-	stateFileExists, err := client.DoesStateFileExist()
-	if err != nil {
-		return models.OutResponse{}, err
+	stateFile := terraform.StateFile{
+		LocalPath:     terraformModel.StateFileLocalPath,
+		RemotePath:    terraformModel.StateFileRemotePath,
+		StorageDriver: storageDriver,
 	}
-	if stateFileExists {
-		_, err = client.DownloadStateFile()
-		if err != nil {
-			return models.OutResponse{}, err
-		}
-		outputs, err := client.Output()
-		if err != nil {
-			return models.OutResponse{}, err
-		}
-		client.Model = models.Terraform{Vars: outputs}.Merge(client.Model)
+	action := terraform.Action{
+		Client:          client,
+		StateFile:       stateFile,
+		DeleteOnFailure: terraformModel.DeleteOnFailure,
 	}
 
-	resp := models.OutResponse{}
+	var result terraform.Result
+	var actionErr error
 	if req.Params.Action == models.DestroyAction {
-		resp, err = performDestroy(client, storageDriver)
+		result, actionErr = action.Destroy()
 	} else {
-		resp, err = performApply(client, storageDriver)
-		if err != nil && terraformModel.DeleteOnFailure {
-			_, destroyErr := performDestroy(client, storageDriver)
-			if destroyErr != nil {
-				err = fmt.Errorf("Apply Error: %s\nDestroyError: %s", err, destroyErr)
-			}
-		}
+		result, actionErr = action.Apply()
 	}
-	if err != nil {
-		return models.OutResponse{}, fmt.Errorf("Failed to run terraform with action '%s': %s", req.Params.Action, err)
+	if actionErr != nil {
+		return models.OutResponse{}, fmt.Errorf("Failed to run terraform with action '%s': %s", req.Params.Action, actionErr)
+	}
+
+	version := models.NewVersion(result.Version)
+
+	metadata := []models.MetadataField{}
+	for key, value := range result.Output {
+		metadata = append(metadata, models.MetadataField{
+			Name:  key,
+			Value: value,
+		})
+	}
+	resp := models.OutResponse{
+		Version:  version,
+		Metadata: metadata,
 	}
 
 	return resp, nil
@@ -138,59 +141,6 @@ func (r Runner) buildEnvName(req models.OutRequest, storageDriver storage.Storag
 	envName = strings.Replace(envName, " ", "-", -1)
 
 	return envName, nil
-}
-
-func performApply(client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
-	var nilResponse models.OutResponse
-
-	if err := client.Apply(); err != nil {
-		return nilResponse, fmt.Errorf("Failed to run terraform apply.\nError: %s", err)
-	}
-
-	storageVersion, err := client.UploadStateFile()
-	if err != nil {
-		return nilResponse, fmt.Errorf("Failed to upload state file: %s", err)
-	}
-	version := models.NewVersion(storageVersion)
-
-	clientOutput, err := client.Output()
-	if err != nil {
-		return nilResponse, fmt.Errorf("Failed to terraform output.\nError: %s", err)
-	}
-
-	metadata := []models.MetadataField{}
-	for key, value := range clientOutput {
-		metadata = append(metadata, models.MetadataField{
-			Name:  key,
-			Value: value,
-		})
-	}
-
-	resp := models.OutResponse{
-		Version:  version,
-		Metadata: metadata,
-	}
-	return resp, nil
-}
-
-func performDestroy(client terraform.Client, storageDriver storage.Storage) (models.OutResponse, error) {
-	var nilResponse models.OutResponse
-
-	if err := client.Destroy(); err != nil {
-		return nilResponse, fmt.Errorf("Failed to run terraform destroy.\nError: %s", err)
-	}
-
-	storageVersion, err := client.DeleteStateFile()
-	if err != nil {
-		return nilResponse, fmt.Errorf("Failed to delete state file: %s", err)
-	}
-	version := models.NewVersion(storageVersion)
-
-	resp := models.OutResponse{
-		Version:  version,
-		Metadata: []models.MetadataField{},
-	}
-	return resp, nil
 }
 
 func doesEnvNameClash(envName string, storageDriver storage.Storage) (bool, error) {

@@ -15,7 +15,7 @@ type Storage interface {
 	Upload(string, io.Reader) (Version, error)
 	Delete(string) error
 	Version(string) (Version, error)
-	LatestVersion() (Version, error)
+	LatestVersion(string) (Version, error)
 }
 
 func BuildDriver(m Model) Storage {

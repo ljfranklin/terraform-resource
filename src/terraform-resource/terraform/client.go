@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"terraform-resource/models"
 	"terraform-resource/storage"
@@ -137,66 +136,6 @@ func (c Client) Output() (map[string]interface{}, error) {
 	}
 
 	return output, nil
-}
-
-func (c Client) DoesStateFileExist() (bool, error) {
-	version, err := c.StorageDriver.Version(c.Model.StateFileRemotePath)
-	if err != nil {
-		return false, fmt.Errorf("Failed to check for existing state file from '%s': %s", c.Model.StateFileRemotePath, err)
-	}
-	return version.IsZero() == false, nil
-}
-
-func (c Client) DownloadStateFile() (storage.Version, error) {
-	stateFile, createErr := os.Create(c.Model.StateFileLocalPath)
-	if createErr != nil {
-		return storage.Version{}, fmt.Errorf("Failed to create state file at '%s': %s", c.Model.StateFileLocalPath, createErr)
-	}
-	defer stateFile.Close()
-
-	version, err := c.StorageDriver.Download(c.Model.StateFileRemotePath, stateFile)
-	if err != nil {
-		return storage.Version{}, err
-	}
-	stateFile.Close()
-
-	return version, nil
-}
-
-func (c Client) UploadStateFile() (storage.Version, error) {
-	stateFile, err := os.Open(c.Model.StateFileLocalPath)
-	if err != nil {
-		return storage.Version{}, fmt.Errorf("Failed to open state file at '%s'", c.Model.StateFileLocalPath)
-	}
-	defer stateFile.Close()
-
-	_, err = c.StorageDriver.Upload(c.Model.StateFileRemotePath, stateFile)
-	if err != nil {
-		return storage.Version{}, fmt.Errorf("Failed to upload state file: %s", err)
-	}
-
-	version, err := c.StorageDriver.Version(c.Model.StateFileRemotePath)
-	if err != nil {
-		return storage.Version{}, fmt.Errorf("Failed to retrieve version from '%s': %s", c.Model.StateFileRemotePath, err)
-	}
-	if version.IsZero() {
-		return storage.Version{}, fmt.Errorf("Couldn't find state file at: %s", c.Model.StateFileRemotePath)
-	}
-
-	return version, nil
-}
-
-func (c Client) DeleteStateFile() (storage.Version, error) {
-	if err := c.StorageDriver.Delete(c.Model.StateFileRemotePath); err != nil {
-		return storage.Version{}, fmt.Errorf("Failed to delete state file: %s", err)
-	}
-
-	// use current time rather than state file LastModified time
-	version := storage.Version{
-		LastModified: time.Now().UTC(),
-		StateFile:    c.Model.StateFileRemotePath,
-	}
-	return version, nil
 }
 
 func terraformCmd(args []string) *exec.Cmd {

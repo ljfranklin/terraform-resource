@@ -52,10 +52,10 @@ var _ = Describe("Check", func() {
 			region,
 			"",
 		)
-		prevEnvName = randomString("s3-test-fixture-previous")
-		pathToPrevS3Fixture = path.Join(bucketPath, prevEnvName)
-		currEnvName = randomString("s3-test-fixture-current")
-		pathToCurrS3Fixture = path.Join(bucketPath, currEnvName)
+		prevEnvName = randomString("s3-test-fixture-previous.tfstate")
+		currEnvName = randomString("s3-test-fixture-current.tfstate")
+		pathToPrevS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", prevEnvName))
+		pathToCurrS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", currEnvName))
 
 		checkInput = models.InRequest{
 			Source: models.Source{
@@ -123,6 +123,32 @@ var _ = Describe("Check", func() {
 				EnvName:      currEnvName,
 			}
 
+			runner := check.Runner{}
+			resp, err := runner.Run(checkInput)
+			Expect(err).ToNot(HaveOccurred())
+
+			expectOutput := []models.Version{}
+			Expect(resp).To(Equal(expectOutput))
+		})
+	})
+
+	Context("when bucket contains a tainted state file", func() {
+		var pathToTaintedFixture string
+
+		BeforeEach(func() {
+			prevFixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-previous.tfstate"))
+			Expect(err).ToNot(HaveOccurred())
+			defer prevFixture.Close()
+
+			pathToTaintedFixture = fmt.Sprintf("%s.tainted", pathToPrevS3Fixture)
+			awsVerifier.UploadObjectToS3(bucket, pathToTaintedFixture, prevFixture)
+		})
+
+		AfterEach(func() {
+			awsVerifier.DeleteObjectFromS3(bucket, pathToTaintedFixture)
+		})
+
+		It("returns an empty version list", func() {
 			runner := check.Runner{}
 			resp, err := runner.Run(checkInput)
 			Expect(err).ToNot(HaveOccurred())

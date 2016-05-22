@@ -66,8 +66,13 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		Model:         terraformModel,
 		StorageDriver: storageDriver,
 	}
+	stateFile := terraform.StateFile{
+		LocalPath:     terraformModel.StateFileLocalPath,
+		RemotePath:    terraformModel.StateFileRemotePath,
+		StorageDriver: storageDriver,
+	}
 
-	storageVersion, err = client.DownloadStateFile()
+	storageVersion, err = stateFile.Download()
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to download state file from storage backend: %s", err)
 	}

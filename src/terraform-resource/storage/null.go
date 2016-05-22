@@ -23,6 +23,6 @@ func (n null) Version(key string) (Version, error) {
 	return Version{}, errors.New("Not Implemented")
 }
 
-func (n null) LatestVersion() (Version, error) {
+func (n null) LatestVersion(filterRegex string) (Version, error) {
 	return Version{}, errors.New("Not Implemented")
 }

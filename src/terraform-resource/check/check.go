@@ -6,6 +6,7 @@ import (
 
 	"terraform-resource/models"
 	"terraform-resource/storage"
+	"terraform-resource/terraform"
 )
 
 type Runner struct{}
@@ -25,7 +26,11 @@ func (r Runner) Run(req models.InRequest) ([]models.Version, error) {
 	}
 	storageDriver := storage.BuildDriver(storageModel)
 
-	storageVersion, err := storageDriver.LatestVersion()
+	stateFile := terraform.StateFile{
+		StorageDriver: storageDriver,
+	}
+
+	storageVersion, err := stateFile.LatestVersion()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to check storage backend for latest version: %s", err)
 	}

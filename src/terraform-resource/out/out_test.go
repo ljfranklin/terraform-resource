@@ -516,6 +516,11 @@ var _ = Describe("Out", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(logWriter.String()).To(ContainSubstring("invalid-action"))
 			awsVerifier.ExpectSubnetWithCIDRToExist(subnetCIDR, vpcID)
+
+			originalStateFilePath := stateFilePath
+			stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate.tainted", envName))
+			awsVerifier.ExpectS3FileToNotExist(bucket, originalStateFilePath)
+			awsVerifier.ExpectS3FileToExist(bucket, stateFilePath)
 		})
 
 		It("deletes all resources on failure if delete_on_failure is true", func() {
@@ -531,6 +536,11 @@ var _ = Describe("Out", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(logWriter.String()).To(ContainSubstring("invalid-action"))
 			awsVerifier.ExpectSubnetWithCIDRToNotExist(subnetCIDR, vpcID)
+
+			originalStateFilePath := stateFilePath
+			stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate.tainted", envName))
+			awsVerifier.ExpectS3FileToNotExist(bucket, originalStateFilePath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, stateFilePath)
 		})
 	})
 

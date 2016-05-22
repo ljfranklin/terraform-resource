@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"path"
+	"regexp"
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -140,7 +141,9 @@ func (s *s3) Version(filename string) (Version, error) {
 	return version, nil
 }
 
-func (s *s3) LatestVersion() (Version, error) {
+func (s *s3) LatestVersion(filterRegex string) (Version, error) {
+	regex := regexp.MustCompile(filterRegex)
+
 	params := &awss3.ListObjectsInput{
 		Bucket: aws.String(s.bucketName),
 		Prefix: aws.String(s.bucketPath),
@@ -151,13 +154,18 @@ func (s *s3) LatestVersion() (Version, error) {
 		return Version{}, fmt.Errorf("ListObjects request failed.\nError: %s", err)
 	}
 
-	fileObjects := resp.Contents
-	if len(fileObjects) == 0 {
+	filteredObjects := resp.Contents[:0]
+	for _, file := range resp.Contents {
+		if regex.MatchString(*file.Key) {
+			filteredObjects = append(filteredObjects, file)
+		}
+	}
+	sort.Sort(ByLastModified(filteredObjects))
+	if len(filteredObjects) == 0 {
 		return Version{}, nil // no versions exist
 	}
-	sort.Sort(ByLastModified(fileObjects))
 
-	latest := fileObjects[len(fileObjects)-1]
+	latest := filteredObjects[len(filteredObjects)-1]
 	stateFile := path.Base(*latest.Key)
 	version := Version{
 		LastModified: *latest.LastModified,
