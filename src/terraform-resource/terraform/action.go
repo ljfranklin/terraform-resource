@@ -170,7 +170,7 @@ func (a *Action) uploadTaintedStatefile() error {
 		return errors.New(errMsg)
 	}
 
-	a.Logger.Success(fmt.Sprintf("Uploaded State File for manual cleanup: %s", a.StateFile.RemotePath))
+	a.Logger.Success(fmt.Sprintf("IMPORTANT - Uploaded State File for manual cleanup to '%s'", a.StateFile.RemotePath))
 
 	return nil
 }
