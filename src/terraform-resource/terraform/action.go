@@ -3,6 +3,7 @@ package terraform
 import (
 	"errors"
 	"fmt"
+	"terraform-resource/logger"
 	"terraform-resource/models"
 	"terraform-resource/storage"
 )
@@ -10,6 +11,7 @@ import (
 type Action struct {
 	Client          Client
 	StateFile       StateFile
+	Logger          logger.Logger
 	DeleteOnFailure bool
 }
 
@@ -26,13 +28,17 @@ func (a Action) Apply() (Result, error) {
 
 	result, err := a.attemptApply()
 	if err != nil {
+		a.Logger.Error("Failed To Run Terraform Apply!")
 		err = fmt.Errorf("Apply Error: %s", err)
 	}
 
 	alreadyDeleted := false
 	if err != nil && a.DeleteOnFailure {
+		a.Logger.Warn("Cleaning Up Partially Created Resources...")
+
 		_, destroyErr := a.attemptDestroy()
 		if destroyErr != nil {
+			a.Logger.Error("Failed To Run Terraform Destroy!")
 			err = fmt.Errorf("%s\nDestroy Error: %s", err, destroyErr)
 		} else {
 			alreadyDeleted = true
@@ -46,10 +52,17 @@ func (a Action) Apply() (Result, error) {
 		}
 	}
 
+	if err == nil {
+		a.Logger.Success("Successfully Ran Terraform Apply!")
+	}
+
 	return result, err
 }
 
 func (a Action) attemptApply() (Result, error) {
+	a.Logger.InfoSection("Terraform Apply")
+	defer a.Logger.EndSection()
+
 	if err := a.Client.Apply(); err != nil {
 		return Result{}, fmt.Errorf("Failed to run terraform apply.\nError: %s", err)
 	}
@@ -78,16 +91,24 @@ func (a Action) Destroy() (Result, error) {
 	result, err := a.attemptDestroy()
 
 	if err != nil {
+		a.Logger.Error("Failed To Run Terraform Destroy!")
 		uploadErr := a.uploadTaintedStatefile()
 		if uploadErr != nil {
 			err = fmt.Errorf("Destroy Error: %s\nUpload Error: %s", err, uploadErr)
 		}
 	}
 
+	if err == nil {
+		a.Logger.Success("Successfully Ran Terraform Destroy!")
+	}
+
 	return result, err
 }
 
 func (a Action) attemptDestroy() (Result, error) {
+	a.Logger.WarnSection("Terraform Destroy")
+	defer a.Logger.EndSection()
+
 	if err := a.Client.Destroy(); err != nil {
 		return Result{}, fmt.Errorf("Failed to run terraform destroy.\nError: %s", err)
 	}
@@ -148,5 +169,8 @@ func (a *Action) uploadTaintedStatefile() error {
 	if len(errMsg) > 0 {
 		return errors.New(errMsg)
 	}
+
+	a.Logger.Success(fmt.Sprintf("Uploaded State File for manual cleanup: %s", a.StateFile.RemotePath))
+
 	return nil
 }
