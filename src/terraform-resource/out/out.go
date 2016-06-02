@@ -9,6 +9,7 @@ import (
 	"path"
 	"strings"
 
+	"terraform-resource/logger"
 	"terraform-resource/models"
 	"terraform-resource/namer"
 	"terraform-resource/storage"
@@ -76,6 +77,9 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		Client:          client,
 		StateFile:       stateFile,
 		DeleteOnFailure: terraformModel.DeleteOnFailure,
+		Logger: logger.Logger{
+			Sink: r.LogWriter,
+		},
 	}
 
 	var result terraform.Result
