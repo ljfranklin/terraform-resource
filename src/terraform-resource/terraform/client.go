@@ -139,5 +139,5 @@ func (c Client) Output() (map[string]interface{}, error) {
 }
 
 func terraformCmd(args []string) *exec.Cmd {
-	return exec.Command("/bin/bash", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
+	return exec.Command("/bin/sh", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
 }
