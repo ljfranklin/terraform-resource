@@ -175,7 +175,7 @@ resources:
   type: git
   source:
     uri: https://github.com/ljfranklin/terraform-resource
-    branch: gopath-update
+    branch: master
 - name: terraform-test-image
   type: docker-image
   source:
