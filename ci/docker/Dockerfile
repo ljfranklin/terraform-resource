@@ -1,7 +1,7 @@
 FROM golang:1.6-alpine
 
 RUN apk update && \
-   apk add ca-certificates unzip wget git
+   apk add ca-certificates unzip wget git bash
 
 # install go deps
 RUN go get github.com/onsi/ginkgo/ginkgo
