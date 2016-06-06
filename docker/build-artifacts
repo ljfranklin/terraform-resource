@@ -21,3 +21,5 @@ rm /tmp/terraform.zip
 go build -o "${output_dir}/check" terraform-resource/cmd/check
 go build -o "${output_dir}/in" terraform-resource/cmd/in
 go build -o "${output_dir}/out" terraform-resource/cmd/out
+
+cp "${release_dir}/docker/Dockerfile" "${output_dir}/"
