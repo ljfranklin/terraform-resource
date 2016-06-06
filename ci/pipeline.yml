@@ -22,7 +22,7 @@ jobs:
         trigger: true
         passed: [test-unit]
       - task: build-artifacts
-        file: resource-src/docker/build-artifacts.yml
+        file: resource-src/ci/tasks/build-artifacts.yml
         params:
           TERRAFORM_VERSION: 0.6.16
       - put: terraform-test-image
