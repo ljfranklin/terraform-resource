@@ -21,9 +21,13 @@ jobs:
       - get: resource-src
         trigger: true
         passed: [test-unit]
+      - task: build-artifacts
+        file: resource-src/docker/build-artifacts
+        params:
+          TERRAFORM_VERSION: 0.6.16
       - put: terraform-test-image
         params:
-          build: resource-src/
+          build: build-artifacts/docker/
           cache: true
 
   - name: create-infrastructure
