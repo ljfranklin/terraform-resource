@@ -27,7 +27,7 @@ jobs:
           TERRAFORM_VERSION: 0.6.16
       - put: terraform-test-image
         params:
-          build: build-artifacts/docker/
+          build: resource-src/docker/
           cache: true
 
   - name: create-infrastructure

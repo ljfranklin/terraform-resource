@@ -1,5 +1,7 @@
 FROM alpine:latest
 
+ENV SRC_DIR=../../build-artifacts
+
 # Terraform 0.6.16 is dynamically linked and requires glibc, should be fixed in 0.6.17
 # Issue: https://github.com/hashicorp/terraform/issues/6998
 RUN apk update && \
@@ -9,7 +11,5 @@ RUN apk update && \
     apk add /tmp/glibc.apk && \
     rm -rf /tmp/glibc.apk
 
-WORKDIR ../../build-artifacts
-
-COPY terraform/* /usr/local/bin/
-COPY check in out /opt/resource/
+COPY ${SRC_DIR}/terraform/* /usr/local/bin/
+COPY ${SRC_DIR}/{check,in,out} /opt/resource/
