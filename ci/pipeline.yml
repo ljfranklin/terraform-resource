@@ -164,15 +164,16 @@ jobs:
         passed: [destroy-env-and-lock, destroy-infrastructure]
       - put: terraform-prod-image
         params:
-          pull_repository: ljfranklin/terraform-resource-edge
+          pull_repository: ljfranklin/terraform-resource:test
           cache: true
 
 resource_types:
 - name: terraform
   type: docker-image
   source:
-    # use `repository: ljfranklin/terraform-resource` for the stable release
-    repository: ljfranklin/terraform-resource-edge
+    # use tag `latest` for stable release
+    repository: ljfranklin/terraform-resource
+    tag: test
 
 resources:
 - name: resource-src
@@ -183,7 +184,8 @@ resources:
 - name: terraform-test-image
   type: docker-image
   source:
-    repository: ljfranklin/terraform-resource-edge
+    repository: ljfranklin/terraform-resource
+    tag: test
     email: {{docker_email}}
     username: {{docker_username}}
     password: {{docker_password}}
@@ -191,6 +193,7 @@ resources:
   type: docker-image
   source:
     repository: ljfranklin/terraform-resource
+    tag: latest
     email: {{docker_email}}
     username: {{docker_username}}
     password: {{docker_password}}
