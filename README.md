@@ -173,4 +173,10 @@ metadata: { "vpc_id": "vpc-123456", "vpc_tag_name": "concourse" }
 
 #### Examples
 
-See the [annotated pipeline](ci/pipeline.yml) for additional examples.
+**Templates:**
+- BOSH Director on [AWS with a single subnet](examples/aws/bosh-single-subnet.tf)
+
+**Tasks:**
+- [Generate director manifest](examples/tasks/director-manifest-aws.erb) from JSON file
+
+See the [Concourse pipeline](ci/pipeline.yml) for additional examples.
