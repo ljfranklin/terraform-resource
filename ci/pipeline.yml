@@ -164,7 +164,8 @@ jobs:
         passed: [destroy-env-and-lock, destroy-infrastructure]
       - put: terraform-prod-image
         params:
-          pull_repository: ljfranklin/terraform-resource:test
+          pull_repository: ljfranklin/terraform-resource
+          pull_tag: test
           cache: true
 
 resource_types:
