@@ -90,7 +90,7 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		result, actionErr = action.Apply()
 	}
 	if actionErr != nil {
-		return models.OutResponse{}, fmt.Errorf("Failed to run terraform with action '%s': %s", req.Params.Action, actionErr)
+		return models.OutResponse{}, actionErr
 	}
 
 	version := models.NewVersion(result.Version)

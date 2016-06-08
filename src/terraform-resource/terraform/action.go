@@ -64,17 +64,17 @@ func (a Action) attemptApply() (Result, error) {
 	defer a.Logger.EndSection()
 
 	if err := a.Client.Apply(); err != nil {
-		return Result{}, fmt.Errorf("Failed to run terraform apply.\nError: %s", err)
+		return Result{}, err
 	}
 
 	storageVersion, err := a.StateFile.Upload()
 	if err != nil {
-		return Result{}, fmt.Errorf("Failed to upload state file: %s", err)
+		return Result{}, err
 	}
 
 	clientOutput, err := a.Client.Output()
 	if err != nil {
-		return Result{}, fmt.Errorf("Failed to terraform output.\nError: %s", err)
+		return Result{}, err
 	}
 	return Result{
 		Output:  clientOutput,
@@ -110,12 +110,12 @@ func (a Action) attemptDestroy() (Result, error) {
 	defer a.Logger.EndSection()
 
 	if err := a.Client.Destroy(); err != nil {
-		return Result{}, fmt.Errorf("Failed to run terraform destroy.\nError: %s", err)
+		return Result{}, err
 	}
 
 	storageVersion, err := a.StateFile.Delete()
 	if err != nil {
-		return Result{}, fmt.Errorf("Failed to delete state file: %s", err)
+		return Result{}, err
 	}
 	return Result{
 		Output:  map[string]interface{}{},
