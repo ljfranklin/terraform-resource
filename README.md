@@ -1,9 +1,7 @@
 ## Terraform Concourse Resource
 
-**Warning:** This is still in pre-alpha mode, so features will change without notice. The initial stable release should be out soon!
-
 A Concourse resource that allows jobs to modify IaaS resources via Terraform.
-Useful for creating reproducible testing and production environments. No more snowflakes!
+Useful for creating a pool of reproducible environments. No more snowflakes!
 
 See what's in progress on the [Trello board](https://trello.com/b/s06sLNwc/terraform-resource).
 
