@@ -498,6 +498,7 @@ var _ = Describe("Out", func() {
 							"secret_key":  secretKey,
 							"vpc_id":      vpcID,
 							"subnet_cidr": subnetCIDR,
+							"acl_count":   1,
 							"acl_action":  "invalid-action",
 						},
 					},
@@ -521,6 +522,14 @@ var _ = Describe("Out", func() {
 			stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate.tainted", envName))
 			awsVerifier.ExpectS3FileToNotExist(bucket, originalStateFilePath)
 			awsVerifier.ExpectS3FileToExist(bucket, stateFilePath)
+
+			// cleanup
+			req.Params.Action = models.DestroyAction
+			_, err = runner.Run(req)
+			Expect(err).ToNot(HaveOccurred())
+			awsVerifier.ExpectSubnetWithCIDRToNotExist(subnetCIDR, vpcID)
+			awsVerifier.ExpectS3FileToNotExist(bucket, originalStateFilePath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, stateFilePath)
 		})
 
 		It("deletes all resources on failure if delete_on_failure is true", func() {

@@ -16,6 +16,7 @@ resource "aws_subnet" "test_subnet" {
 
 resource "aws_network_acl" "test_acl" {
     vpc_id = "${var.vpc_id}"
+    count = "${var.acl_count}"
 
     egress {
         action = "${var.acl_action}"
