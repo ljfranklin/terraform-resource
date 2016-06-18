@@ -1,6 +1,6 @@
 ## Terraform Concourse Resource
 
-A Concourse resource that allows jobs to modify IaaS resources via [Terraform](https://www.terraform.io/).
+A [Concourse](http://concourse.ci/) resource that allows jobs to modify IaaS resources via [Terraform](https://www.terraform.io/).
 Useful for creating a pool of reproducible environments. No more snowflakes!
 
 See what's in progress on the [Trello board](https://trello.com/b/s06sLNwc/terraform-resource).
