@@ -5,6 +5,8 @@ Useful for creating a pool of reproducible environments. No more snowflakes!
 
 See what's in progress on the [Trello board](https://trello.com/b/s06sLNwc/terraform-resource).
 
+![Docker Pulls](https://img.shields.io/docker/pulls/ljfranklin/terraform-resource.svg)
+
 ## Source Configuration
 
 * `storage.driver`: *Optional. Default `s3`.* The driver used to store the Terraform state file. Currently `s3` is the only supported driver.
