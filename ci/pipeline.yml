@@ -47,7 +47,8 @@ jobs:
           image_resource: &test-image
             type: docker-image
             source:
-              repository: ljfranklin/terraform-resource-test
+              repository: ljfranklin/terraform-resource
+              tag: test
           inputs:
             - name: terraform
           run:
