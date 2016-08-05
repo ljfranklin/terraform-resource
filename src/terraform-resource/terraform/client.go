@@ -52,7 +52,7 @@ func (c Client) Apply() error {
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
 	for key, val := range c.Model.Vars {
-		applyArgs = append(applyArgs, "-var", fmt.Sprintf("'%s=%v'", key, val))
+		applyArgs = append(applyArgs, "-var", fmt.Sprintf("'%s=%#v'", key, val))
 	}
 	applyArgs = append(applyArgs, tmpDir)
 
@@ -99,7 +99,7 @@ func (c Client) Destroy() error {
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
 	for key, val := range c.Model.Vars {
-		destroyArgs = append(destroyArgs, "-var", fmt.Sprintf("'%s=%v'", key, val))
+		destroyArgs = append(destroyArgs, "-var", fmt.Sprintf("'%s=%#v'", key, val))
 	}
 	destroyArgs = append(destroyArgs, tmpDir)
 
