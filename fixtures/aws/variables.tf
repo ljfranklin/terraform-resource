@@ -12,7 +12,7 @@ variable "env_name" {}
 
 # used to verify `destroy_on_failure`
 variable "acl_count" {
-    default = 0
+    default = "0"
 }
 variable "acl_action" {
     default = "allow"

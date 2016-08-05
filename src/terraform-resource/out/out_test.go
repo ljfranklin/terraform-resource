@@ -498,7 +498,7 @@ var _ = Describe("Out", func() {
 							"secret_key":  secretKey,
 							"vpc_id":      vpcID,
 							"subnet_cidr": subnetCIDR,
-							"acl_count":   1,
+							"acl_count":   "1",
 							"acl_action":  "invalid-action",
 						},
 					},
