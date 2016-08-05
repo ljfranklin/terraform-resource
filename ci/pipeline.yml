@@ -24,7 +24,7 @@ jobs:
       - task: build-artifacts
         file: resource-src/ci/tasks/build-artifacts.yml
         params:
-          TERRAFORM_VERSION: 0.6.16
+          TERRAFORM_VERSION: 0.7.0
       - put: terraform-test-image
         params:
           build: build-artifacts/
