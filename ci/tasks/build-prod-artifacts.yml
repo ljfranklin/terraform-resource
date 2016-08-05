@@ -1,0 +1,19 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource-ci
+
+inputs:
+- name: resource-src
+
+outputs:
+- name: build-artifacts
+
+run:
+  path: resource-src/docker-prod/build-artifacts
+
+params:
+  TERRAFORM_VERSION: ""

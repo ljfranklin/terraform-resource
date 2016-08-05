@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -eux -o pipefail
+
+docker_dir="$( cd "$( dirname "$0" )" && pwd )"
+release_dir="$( cd "${docker_dir}" && cd .. && pwd )"
+workspace_dir="$( cd "${release_dir}" && cd .. && pwd )"
+
+source "${release_dir}/.envrc"
+
+: ${TERRAFORM_VERSION:?}
+
+# outputs
+output_dir="${workspace_dir}/build-artifacts"
+
+mkdir -p "${output_dir}/terraform"
+wget -O /tmp/terraform.zip https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+unzip /tmp/terraform.zip -d "${output_dir}/terraform"
+rm /tmp/terraform.zip
+
+cp "${docker_dir}/Dockerfile" "${output_dir}/"

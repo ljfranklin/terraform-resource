@@ -13,7 +13,7 @@ outputs:
 - name: build-artifacts
 
 run:
-  path: resource-src/docker/build-artifacts
+  path: resource-src/docker-dev/build-artifacts
 
 params:
   TERRAFORM_VERSION: ""

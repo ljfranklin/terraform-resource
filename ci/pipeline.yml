@@ -1,8 +1,22 @@
 jobs:
+  - name: push-dev-image
+    plan:
+      - get: resource-src
+        trigger: true
+      - task: build-artifacts
+        file: resource-src/ci/tasks/build-dev-artifacts.yml
+        params:
+          TERRAFORM_VERSION: &terraform-version 0.7.0
+      - put: terraform-dev-image
+        params:
+          build: build-artifacts/
+          cache: true
+
   - name: test-unit
     plan:
       - get: resource-src
         trigger: true
+        passed: [push-dev-image]
       - task: test-unit
         file: resource-src/ci/tasks/test-unit.yml
         params:
@@ -22,9 +36,9 @@ jobs:
         trigger: true
         passed: [test-unit]
       - task: build-artifacts
-        file: resource-src/ci/tasks/build-artifacts.yml
+        file: resource-src/ci/tasks/build-prod-artifacts.yml
         params:
-          TERRAFORM_VERSION: 0.7.0
+          TERRAFORM_VERSION: *terraform-version
       - put: terraform-test-image
         params:
           build: build-artifacts/
@@ -189,6 +203,14 @@ resources:
   source:
     uri: https://github.com/ljfranklin/terraform-resource
     branch: master
+- name: terraform-dev-image
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+    tag: dev
+    email: {{docker_email}}
+    username: {{docker_username}}
+    password: {{docker_password}}
 - name: terraform-test-image
   type: docker-image
   source:
