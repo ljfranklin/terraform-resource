@@ -44,6 +44,10 @@ jobs:
         task: show-outputs
         config:
           platform: linux
+          image_resource: &test-image
+            type: docker-image
+            source:
+              repository: ljfranklin/terraform-resource-test
           inputs:
             - name: terraform
           run:
@@ -75,6 +79,7 @@ jobs:
       - task: make-var-file
         config:
           platform: linux
+          image_resource: *test-image
           outputs:
              - name: vars
           run:
@@ -129,6 +134,7 @@ jobs:
       - task: show-lock
         config:
           platform: linux
+          image_resource: *test-image
           inputs:
             - name: locks
           run:
