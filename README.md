@@ -19,6 +19,8 @@ See what's in progress on the [Trello board](https://trello.com/b/s06sLNwc/terra
 
 * `storage.secret_access_key`: *Required.* The AWS secret key used to access the bucket.
 
+* `storage.region_name`: *Optional.* The AWS region where the bucket is located.
+
 * `storage.endpoint`: *Optional.* The endpoint for an s3-compatible blobstore (e.g. Ceph).
 
   > **Note:** By default, the resource will use S3 signing version v2 if an endpoint is specified as many non-S3 blobstores do not support v4.
