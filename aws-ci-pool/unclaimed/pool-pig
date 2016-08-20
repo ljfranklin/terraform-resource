@@ -1,0 +1,1 @@
+{"env_name":"pool-pig","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-28e02161","tag_hash":{"EnvName":"pool-pig","Name":"terraform-resource-test"},"tag_list":["pool-pig","terraform-resource-test"],"tag_name":"terraform-resource-test","vpc_id":"vpc-f085e797"}
