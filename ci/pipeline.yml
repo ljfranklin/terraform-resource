@@ -6,7 +6,7 @@ jobs:
       - task: build-artifacts
         file: resource-src/ci/tasks/build-dev-artifacts.yml
         params:
-          TERRAFORM_VERSION: &terraform-version 0.7.0
+          TERRAFORM_VERSION: &terraform-version 0.7.1
       - put: terraform-dev-image
         params:
           build: build-artifacts/
