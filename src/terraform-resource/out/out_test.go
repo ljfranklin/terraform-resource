@@ -281,6 +281,39 @@ var _ = Describe("Out", func() {
 		})
 	})
 
+	It("allows hashes and lists in metadata", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":  accessKey,
+						"secret_key":  secretKey,
+						"vpc_id":      vpcID,
+						"subnet_cidr": subnetCIDR,
+						"tag_name":    "terraform-resource-test-tags",
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]interface{}{
+			"tag_hash": map[string]interface{}{
+				"EnvName": envName,
+				"Name":    "terraform-resource-test-tags",
+			},
+			"tag_list": []interface{}{
+				envName,
+				"terraform-resource-test-tags",
+			},
+		}
+
+		assertOutBehavior(req, expectedMetadata)
+	})
+
 	It("replaces spaces in env_name with hyphens", func() {
 		spaceName := strings.Replace(envName, "-", " ", -1)
 		req := models.OutRequest{

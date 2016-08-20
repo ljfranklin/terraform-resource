@@ -1,13 +1,13 @@
 package terraform
 
 import (
-	"bufio"
-	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"reflect"
 	"strings"
 
 	"terraform-resource/models"
@@ -51,9 +51,7 @@ func (c Client) Apply() error {
 		"-input=false", // do not prompt for inputs
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
-	for key, val := range c.Model.Vars {
-		applyArgs = append(applyArgs, "-var", fmt.Sprintf("'%s=%#v'", key, val))
-	}
+	applyArgs = append(applyArgs, c.varFlags()...)
 	applyArgs = append(applyArgs, tmpDir)
 
 	applyCmd := terraformCmd(applyArgs)
@@ -98,9 +96,7 @@ func (c Client) Destroy() error {
 		"-force",      // do not prompt for confirmation
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
-	for key, val := range c.Model.Vars {
-		destroyArgs = append(destroyArgs, "-var", fmt.Sprintf("'%s=%#v'", key, val))
-	}
+	destroyArgs = append(destroyArgs, c.varFlags()...)
 	destroyArgs = append(destroyArgs, tmpDir)
 
 	destroyCmd := terraformCmd(destroyArgs)
@@ -117,6 +113,7 @@ func (c Client) Destroy() error {
 func (c Client) Output() (map[string]interface{}, error) {
 	outputCmd := terraformCmd([]string{
 		"output",
+		"-json",
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	})
 	rawOutput, err := outputCmd.CombinedOutput()
@@ -124,15 +121,14 @@ func (c Client) Output() (map[string]interface{}, error) {
 		return nil, fmt.Errorf("Failed to retrieve output.\nError: %s\nOutput: %s", err, rawOutput)
 	}
 
-	output := map[string]interface{}{}
-	scanner := bufio.NewScanner(bytes.NewReader(rawOutput))
-	for scanner.Scan() {
-		thisLine := strings.Split(scanner.Text(), " = ")
-		key, value := thisLine[0], thisLine[1]
-		output[key] = value
+	tfOutput := map[string]map[string]interface{}{}
+	if err = json.Unmarshal(rawOutput, &tfOutput); err != nil {
+		return nil, fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawOutput)
 	}
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("Failed to parse output.\nError: %s\nOutput: %s", err, rawOutput)
+
+	output := map[string]interface{}{}
+	for key, value := range tfOutput {
+		output[key] = value["value"]
 	}
 
 	return output, nil
@@ -140,4 +136,33 @@ func (c Client) Output() (map[string]interface{}, error) {
 
 func terraformCmd(args []string) *exec.Cmd {
 	return exec.Command("/bin/sh", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
+}
+
+func (c Client) varFlags() []string {
+	args := []string{}
+	for key, val := range c.Model.Vars {
+		args = append(args, "-var", fmt.Sprintf("'%s=%s'", key, formatVar(val)))
+	}
+	return args
+}
+
+func formatVar(value interface{}) string {
+	valType := reflect.TypeOf(value)
+	switch valType.Kind() {
+	case reflect.Slice:
+		valSlice, _ := value.([]interface{})
+		sliceVars := []string{}
+		for _, v := range valSlice {
+			sliceVars = append(sliceVars, formatVar(v))
+		}
+		return fmt.Sprintf("[%s]", strings.Join(sliceVars, ","))
+	case reflect.Map:
+		valMap, _ := value.(map[string]interface{})
+		mapVars := []string{}
+		for k, v := range valMap {
+			mapVars = append(mapVars, fmt.Sprintf("%s=%s", k, formatVar(v)))
+		}
+		return fmt.Sprintf("{%s}", strings.Join(mapVars, ","))
+	}
+	return fmt.Sprintf("%#v", value)
 }

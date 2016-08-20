@@ -129,6 +129,14 @@ var _ = Describe("In", func() {
 
 			Expect(outputContents["vpc_id"]).ToNot(BeNil())
 			Expect(outputContents["tag_name"]).To(Equal("previous"))
+			Expect(outputContents["tag_hash"]).To(Equal(map[string]interface{}{
+				"EnvName": "terraform-resource-test",
+				"Name":    "previous",
+			}))
+			Expect(outputContents["tag_list"]).To(Equal([]interface{}{
+				"terraform-resource-test",
+				"previous",
+			}))
 
 			expectedNamePath := path.Join(tmpDir, "name")
 			Expect(expectedOutputPath).To(BeAnExistingFile())
