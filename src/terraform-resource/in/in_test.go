@@ -115,6 +115,7 @@ var _ = Describe("In", func() {
 
 			_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
 			Expect(err).ToNot(HaveOccurred())
+
 			Expect(resp.Version.EnvName).To(Equal(prevEnvName))
 
 			expectedOutputPath := path.Join(tmpDir, "metadata")

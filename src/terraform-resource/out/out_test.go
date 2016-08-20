@@ -36,7 +36,7 @@ var _ = Describe("Out", func() {
 		fixtureEnvName    string
 		pathToS3Fixture   string
 		namer             namerfakes.FakeNamer
-		assertOutBehavior func(models.OutRequest, map[string]interface{})
+		assertOutBehavior func(models.OutRequest, map[string]string)
 	)
 
 	BeforeEach(func() {
@@ -96,7 +96,7 @@ var _ = Describe("Out", func() {
 				},
 			},
 		}
-		expectedMetadata := map[string]interface{}{
+		expectedMetadata := map[string]string{
 			"vpc_id":      vpcID,
 			"subnet_cidr": subnetCIDR,
 			"tag_name":    "terraform-resource-test", // template default
@@ -124,7 +124,7 @@ var _ = Describe("Out", func() {
 				},
 			},
 		}
-		expectedMetadata := map[string]interface{}{
+		expectedMetadata := map[string]string{
 			"vpc_id":      vpcID,
 			"subnet_cidr": subnetCIDR,
 			"tag_name":    "terraform-resource-test", // template default
@@ -151,7 +151,7 @@ var _ = Describe("Out", func() {
 				},
 			},
 		}
-		expectedMetadata := map[string]interface{}{
+		expectedMetadata := map[string]string{
 			"vpc_id":      vpcID,
 			"subnet_cidr": subnetCIDR,
 			"tag_name":    "terraform-resource-module-test", // module default
@@ -179,7 +179,7 @@ var _ = Describe("Out", func() {
 				EnvName: envName,
 			},
 		}
-		expectedMetadata := map[string]interface{}{
+		expectedMetadata := map[string]string{
 			"vpc_id":      vpcID,
 			"subnet_cidr": subnetCIDR,
 			"tag_name":    "terraform-resource-source-test",
@@ -213,7 +213,7 @@ var _ = Describe("Out", func() {
 				},
 			},
 		}
-		expectedMetadata := map[string]interface{}{
+		expectedMetadata := map[string]string{
 			"vpc_id":      vpcID,
 			"subnet_cidr": subnetCIDR,
 			"tag_name":    "terraform-resource-options-test",
@@ -271,7 +271,7 @@ var _ = Describe("Out", func() {
 					},
 				},
 			}
-			expectedMetadata := map[string]interface{}{
+			expectedMetadata := map[string]string{
 				"vpc_id":      vpcID,
 				"subnet_cidr": subnetCIDR,
 				"tag_name":    "terraform-resource-file-test",
@@ -300,15 +300,9 @@ var _ = Describe("Out", func() {
 				},
 			},
 		}
-		expectedMetadata := map[string]interface{}{
-			"tag_hash": map[string]interface{}{
-				"EnvName": envName,
-				"Name":    "terraform-resource-test-tags",
-			},
-			"tag_list": []interface{}{
-				envName,
-				"terraform-resource-test-tags",
-			},
+		expectedMetadata := map[string]string{
+			"tag_hash": fmt.Sprintf(`{"EnvName":"%s","Name":"terraform-resource-test-tags"}`, envName),
+			"tag_list": fmt.Sprintf(`["%s","terraform-resource-test-tags"]`, envName),
 		}
 
 		assertOutBehavior(req, expectedMetadata)
@@ -333,7 +327,7 @@ var _ = Describe("Out", func() {
 				},
 			},
 		}
-		expectedMetadata := map[string]interface{}{
+		expectedMetadata := map[string]string{
 			"vpc_id":      vpcID,
 			"subnet_cidr": subnetCIDR,
 			"tag_name":    "terraform-resource-test", // template default
@@ -361,7 +355,7 @@ var _ = Describe("Out", func() {
 				},
 			},
 		}
-		expectedMetadata := map[string]interface{}{
+		expectedMetadata := map[string]string{
 			"vpc_id":      vpcID,
 			"subnet_cidr": subnetCIDR,
 			"tag_name":    "terraform-resource-test", // template default
@@ -388,7 +382,7 @@ var _ = Describe("Out", func() {
 				},
 			},
 		}
-		expectedMetadata := map[string]interface{}{
+		expectedMetadata := map[string]string{
 			"env_name": envName,
 		}
 
@@ -430,7 +424,7 @@ var _ = Describe("Out", func() {
 					},
 				},
 			}
-			expectedMetadata := map[string]interface{}{
+			expectedMetadata := map[string]string{
 				"env_name": envName,
 			}
 
@@ -458,7 +452,7 @@ var _ = Describe("Out", func() {
 				},
 			},
 		}
-		expectedMetadata := map[string]interface{}{
+		expectedMetadata := map[string]string{
 			"env_name": envName,
 		}
 
@@ -628,7 +622,7 @@ var _ = Describe("Out", func() {
 					},
 				},
 			}
-			expectedMetadata := map[string]interface{}{
+			expectedMetadata := map[string]string{
 				"vpc_id":      vpcID,
 				"subnet_cidr": subnetCIDR,
 				"tag_name":    "terraform-resource-test", // template default
@@ -640,7 +634,7 @@ var _ = Describe("Out", func() {
 		})
 	})
 
-	assertOutBehavior = func(outRequest models.OutRequest, expectedMetadata map[string]interface{}) {
+	assertOutBehavior = func(outRequest models.OutRequest, expectedMetadata map[string]string) {
 		var logWriter bytes.Buffer
 		runner := out.Runner{
 			SourceDir: workingDir,

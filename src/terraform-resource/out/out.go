@@ -1,6 +1,7 @@
 package out
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -97,9 +98,13 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 
 	metadata := []models.MetadataField{}
 	for key, value := range result.Output {
+		jsonValue, err := json.Marshal(value)
+		if err != nil {
+			jsonValue = []byte(fmt.Sprintf("Unable to parse output value for key '%s': %s", key, err))
+		}
 		metadata = append(metadata, models.MetadataField{
 			Name:  key,
-			Value: value,
+			Value: strings.Trim(string(jsonValue), "\""),
 		})
 	}
 	resp := models.OutResponse{

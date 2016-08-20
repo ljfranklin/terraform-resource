@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 
 	"terraform-resource/models"
 	"terraform-resource/storage"
@@ -102,9 +103,13 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 
 	metadata := []models.MetadataField{}
 	for key, value := range output {
+		jsonValue, err := json.Marshal(value)
+		if err != nil {
+			jsonValue = []byte(fmt.Sprintf("Unable to parse output value for key '%s': %s", key, err))
+		}
 		metadata = append(metadata, models.MetadataField{
 			Name:  key,
-			Value: value,
+			Value: strings.Trim(string(jsonValue), "\""),
 		})
 	}
 
