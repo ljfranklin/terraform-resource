@@ -1,0 +1,1 @@
+{"env_name":"sun-elk","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-7cbaac56","tag_name":"terraform-resource-test","vpc_id":"vpc-f085e797"}
