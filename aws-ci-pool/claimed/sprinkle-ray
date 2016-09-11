@@ -1,1 +1,0 @@
-{"env_name":"sprinkle-ray","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-5bc81712","tag_hash":{"EnvName":"sprinkle-ray","Name":"terraform-resource-test"},"tag_list":["sprinkle-ray","terraform-resource-test"],"tag_name":"terraform-resource-test","vpc_id":"vpc-f085e797"}
