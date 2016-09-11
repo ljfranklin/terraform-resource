@@ -1,1 +1,0 @@
-{"env_name":"atom-unicorn","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-8d56baa0","tag_hash":{"EnvName":"atom-unicorn","Name":"terraform-resource-test"},"tag_list":["atom-unicorn","terraform-resource-test"],"tag_name":"terraform-resource-test","vpc_id":"vpc-f085e797"}
