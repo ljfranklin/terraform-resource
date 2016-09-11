@@ -1,0 +1,1 @@
+{"env_name":"cyan-venom","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-ca5fb3e7","tag_hash":{"EnvName":"cyan-venom","Name":"terraform-resource-test"},"tag_list":["cyan-venom","terraform-resource-test"],"tag_name":"terraform-resource-test","vpc_id":"vpc-f085e797"}
