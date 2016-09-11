@@ -28,6 +28,7 @@ var (
 	vpcID                 string
 	bucketPath            string
 	region                string
+	kmsKeyID              string
 )
 
 var _ = BeforeSuite(func() {
@@ -51,7 +52,8 @@ var _ = BeforeSuite(func() {
 	s3CompatibleEndpoint = os.Getenv("S3_COMPATIBLE_ENDPOINT")
 	Expect(s3CompatibleEndpoint).ToNot(BeEmpty(), "S3_COMPATIBLE_ENDPOINT must be set")
 
-	region = os.Getenv("AWS_REGION") // optional
+	kmsKeyID = os.Getenv("S3_KMS_KEY_ID") // optional
+	region = os.Getenv("AWS_REGION")      // optional
 	if region == "" {
 		region = "us-east-1"
 	}

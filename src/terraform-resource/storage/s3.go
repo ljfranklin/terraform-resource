@@ -16,9 +16,8 @@ import (
 )
 
 type s3 struct {
-	client     *awss3.S3
-	bucketName string
-	bucketPath string
+	client *awss3.S3
+	model  Model
 }
 
 const (
@@ -52,16 +51,15 @@ func NewS3(m Model) Storage {
 	}
 
 	return &s3{
-		client:     client,
-		bucketName: m.Bucket,
-		bucketPath: m.BucketPath,
+		client: client,
+		model:  m,
 	}
 }
 
 func (s *s3) Download(filename string, destination io.Writer) (Version, error) {
-	key := path.Join(s.bucketPath, filename)
+	key := path.Join(s.model.BucketPath, filename)
 	params := &awss3.GetObjectInput{
-		Bucket: aws.String(s.bucketName),
+		Bucket: aws.String(s.model.Bucket),
 		Key:    aws.String(key),
 	}
 
@@ -87,12 +85,21 @@ func (s *s3) Upload(filename string, content io.Reader) (Version, error) {
 
 	uploader := s3manager.NewUploaderWithClient(s.client)
 
-	key := path.Join(s.bucketPath, filename)
-	_, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(s.bucketName),
+	key := path.Join(s.model.BucketPath, filename)
+	uploadInput := &s3manager.UploadInput{
+		Bucket: aws.String(s.model.Bucket),
 		Key:    aws.String(key),
 		Body:   content,
-	})
+	}
+	if s.model.ServerSideEncryption != "" {
+		uploadInput.ServerSideEncryption = aws.String(s.model.ServerSideEncryption)
+	}
+	if s.model.SSEKMSKeyId != "" {
+		uploadInput.ServerSideEncryption = aws.String("aws:kms")
+		uploadInput.SSEKMSKeyId = aws.String(s.model.SSEKMSKeyId)
+	}
+
+	_, err := uploader.Upload(uploadInput)
 	if err != nil {
 		return Version{}, fmt.Errorf("Failed to Upload to S3: %s", err.Error())
 	}
@@ -105,9 +112,9 @@ func (s *s3) Upload(filename string, content io.Reader) (Version, error) {
 }
 
 func (s *s3) Delete(filename string) error {
-	key := path.Join(s.bucketPath, filename)
+	key := path.Join(s.model.BucketPath, filename)
 	params := &awss3.DeleteObjectInput{
-		Bucket: aws.String(s.bucketName),
+		Bucket: aws.String(s.model.Bucket),
 		Key:    aws.String(key),
 	}
 
@@ -120,9 +127,9 @@ func (s *s3) Delete(filename string) error {
 }
 
 func (s *s3) Version(filename string) (Version, error) {
-	key := path.Join(s.bucketPath, filename)
+	key := path.Join(s.model.BucketPath, filename)
 	params := &awss3.HeadObjectInput{
-		Bucket: aws.String(s.bucketName),
+		Bucket: aws.String(s.model.Bucket),
 		Key:    aws.String(key),
 	}
 
@@ -145,8 +152,8 @@ func (s *s3) LatestVersion(filterRegex string) (Version, error) {
 	regex := regexp.MustCompile(filterRegex)
 
 	params := &awss3.ListObjectsInput{
-		Bucket: aws.String(s.bucketName),
-		Prefix: aws.String(s.bucketPath),
+		Bucket: aws.String(s.model.Bucket),
+		Prefix: aws.String(s.model.BucketPath),
 	}
 
 	resp, err := s.client.ListObjects(params)

@@ -14,14 +14,16 @@ type Model struct {
 	Driver string `json:"driver"`
 
 	// S3 driver
-	Bucket          string `json:"bucket"`
-	BucketPath      string `json:"bucket_path"`
-	AccessKeyID     string `json:"access_key_id"`
-	SecretAccessKey string `json:"secret_access_key"`
-	RegionName      string `json:"region_name,omitempty"`    // optional
-	Endpoint        string `json:"endpoint,omitempty"`       // optional
-	UseSigningV2    bool   `json:"use_signing_v2,omitempty"` // optional
-	UseSigningV4    bool   `json:"use_signing_v4,omitempty"` // optional
+	Bucket               string `json:"bucket"`
+	BucketPath           string `json:"bucket_path"`
+	AccessKeyID          string `json:"access_key_id"`
+	SecretAccessKey      string `json:"secret_access_key"`
+	RegionName           string `json:"region_name,omitempty"`            // optional
+	Endpoint             string `json:"endpoint,omitempty"`               // optional
+	UseSigningV2         bool   `json:"use_signing_v2,omitempty"`         // optional
+	UseSigningV4         bool   `json:"use_signing_v4,omitempty"`         // optional
+	ServerSideEncryption string `json:"server_side_encryption,omitempty"` //optional
+	SSEKMSKeyId          string `json:"sse_kms_key_id,omitempty"`         //optional
 }
 
 type Version struct {

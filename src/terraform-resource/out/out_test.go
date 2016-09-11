@@ -461,6 +461,70 @@ var _ = Describe("Out", func() {
 		Expect(namer.RandomNameCallCount()).To(Equal(1), "Expected RandomName to be called once")
 	})
 
+	It("encrypts the state file when server_side_encryption is given", func() {
+		storageModel.ServerSideEncryption = "AES256"
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":  accessKey,
+						"secret_key":  secretKey,
+						"vpc_id":      vpcID,
+						"subnet_cidr": subnetCIDR,
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]string{
+			"vpc_id":      vpcID,
+			"subnet_cidr": subnetCIDR,
+			"tag_name":    "terraform-resource-test", // template default
+		}
+
+		assertOutBehavior(req, expectedMetadata)
+
+		awsVerifier.ExpectS3ServerSideEncryption(bucket, stateFilePath, "AES256")
+	})
+
+	It("encrypts the state file with a key ID when sse_kms_key_id is given", func() {
+		if kmsKeyID == "" {
+			Skip("S3_KMS_KEY_ID is not set, skipping sse_kms_key_id test...")
+		}
+
+		storageModel.SSEKMSKeyId = kmsKeyID
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":  accessKey,
+						"secret_key":  secretKey,
+						"vpc_id":      vpcID,
+						"subnet_cidr": subnetCIDR,
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]string{
+			"vpc_id":      vpcID,
+			"subnet_cidr": subnetCIDR,
+			"tag_name":    "terraform-resource-test", // template default
+		}
+
+		assertOutBehavior(req, expectedMetadata)
+
+		awsVerifier.ExpectS3ServerSideEncryption(bucket, stateFilePath, "aws:kms", kmsKeyID)
+	})
+
 	Context("when bucket contains a state file", func() {
 		BeforeEach(func() {
 			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-current.tfstate"))

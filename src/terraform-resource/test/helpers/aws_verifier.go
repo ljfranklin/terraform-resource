@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 
+	"terraform-resource/storage"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -11,7 +13,6 @@ import (
 	awsec2 "github.com/aws/aws-sdk-go/service/ec2"
 	awss3 "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"terraform-resource/storage"
 	. "github.com/onsi/gomega"
 )
 
@@ -76,6 +77,24 @@ func (a AWSVerifier) ExpectS3FileToNotExist(bucketName string, key string) {
 	reqErr, ok := err.(awserr.RequestFailure)
 	Expect(ok).To(BeTrue(), "Invalid AWS error type: %s", err)
 	Expect(reqErr.StatusCode()).To(Equal(404))
+}
+
+func (a AWSVerifier) ExpectS3ServerSideEncryption(bucketName string, key string, expectedAlgo string, expectedKMSKeyID ...string) {
+	params := &awss3.HeadObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+	}
+
+	headResp, err := a.s3.HeadObject(params)
+	Expect(err).ToNot(HaveOccurred())
+
+	Expect(headResp.ServerSideEncryption).ToNot(BeNil(), "Expected ServerSideEncryption to be set, but it was not")
+	Expect(*headResp.ServerSideEncryption).To(Equal(expectedAlgo))
+
+	if len(expectedKMSKeyID) > 0 {
+		Expect(headResp.SSEKMSKeyId).ToNot(BeNil(), "Expected SSEKMSKeyId to be set, but it was not")
+		Expect(*headResp.SSEKMSKeyId).To(Equal(expectedKMSKeyID[0]))
+	}
 }
 
 func (a AWSVerifier) GetLastModifiedFromS3(bucketName string, key string) string {

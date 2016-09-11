@@ -21,6 +21,10 @@ See what's in progress on the [Trello board](https://trello.com/b/s06sLNwc/terra
 
 * `storage.region_name`: *Optional.* The AWS region where the bucket is located.
 
+* `storage.server_side_encryption`: *Optional.* An encryption algorithm to use when storing objects in S3, e.g. "AES256".
+
+* `storage.sse_kms_key_id` *Optional.* The ID of the AWS KMS master encryption key used for the object.
+
 * `storage.endpoint`: *Optional.* The endpoint for an s3-compatible blobstore (e.g. Ceph).
 
   > **Note:** By default, the resource will use S3 signing version v2 if an endpoint is specified as many non-S3 blobstores do not support v4.
