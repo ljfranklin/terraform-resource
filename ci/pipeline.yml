@@ -126,7 +126,7 @@ jobs:
       - get: resource-src
         trigger: true
         passed: [push-test-image]
-      - put: terraform
+      - put: terraform-github
         params:
           # generate a random env_name for the lock file
           generate_random_name: true
@@ -136,7 +136,7 @@ jobs:
       # create a new lock containing the terraform output
       - put: locks
         params:
-          add: terraform/
+          add: terraform-github/
 
   - name: lock-env
     plan:
@@ -168,7 +168,7 @@ jobs:
       - get: locks
         passed: [lock-env]
       # destroy the IaaS resources
-      - put: terraform
+      - put: terraform-github
         params:
           env_name_file: locks/name
           action: destroy
@@ -236,7 +236,7 @@ resources:
     private_key: {{pool_git_private_key}}
 - name: terraform
   type: terraform
-  source:
+  source: &terraform-source
     # options common to all jobs can be specified under source
     storage:
       access_key_id:     {{storage_access_key}}
@@ -248,3 +248,8 @@ resources:
       access_key:  {{ec2_access_key}}
       secret_key:  {{ec2_secret_key}}
       vpc_id:      {{test_vpc_id}}
+- name: terraform-github
+  type: terraform
+  source:
+    <<: *terraform-source
+    terraform_source: github.com/ljfranklin/terraform-resource//fixtures/aws
