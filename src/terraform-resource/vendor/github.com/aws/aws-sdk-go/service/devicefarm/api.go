@@ -12,7 +12,28 @@ import (
 
 const opCreateDevicePool = "CreateDevicePool"
 
-// CreateDevicePoolRequest generates a request for the CreateDevicePool operation.
+// CreateDevicePoolRequest generates a "aws/request.Request" representing the
+// client's request for the CreateDevicePool operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateDevicePool method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateDevicePoolRequest method.
+//    req, resp := client.CreateDevicePoolRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) CreateDevicePoolRequest(input *CreateDevicePoolInput) (req *request.Request, output *CreateDevicePoolOutput) {
 	op := &request.Operation{
 		Name:       opCreateDevicePool,
@@ -39,7 +60,28 @@ func (c *DeviceFarm) CreateDevicePool(input *CreateDevicePoolInput) (*CreateDevi
 
 const opCreateProject = "CreateProject"
 
-// CreateProjectRequest generates a request for the CreateProject operation.
+// CreateProjectRequest generates a "aws/request.Request" representing the
+// client's request for the CreateProject operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateProject method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateProjectRequest method.
+//    req, resp := client.CreateProjectRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) CreateProjectRequest(input *CreateProjectInput) (req *request.Request, output *CreateProjectOutput) {
 	op := &request.Operation{
 		Name:       opCreateProject,
@@ -64,9 +106,78 @@ func (c *DeviceFarm) CreateProject(input *CreateProjectInput) (*CreateProjectOut
 	return out, err
 }
 
+const opCreateRemoteAccessSession = "CreateRemoteAccessSession"
+
+// CreateRemoteAccessSessionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateRemoteAccessSession operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateRemoteAccessSession method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateRemoteAccessSessionRequest method.
+//    req, resp := client.CreateRemoteAccessSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *DeviceFarm) CreateRemoteAccessSessionRequest(input *CreateRemoteAccessSessionInput) (req *request.Request, output *CreateRemoteAccessSessionOutput) {
+	op := &request.Operation{
+		Name:       opCreateRemoteAccessSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateRemoteAccessSessionInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &CreateRemoteAccessSessionOutput{}
+	req.Data = output
+	return
+}
+
+// Specifies and starts a remote access session.
+func (c *DeviceFarm) CreateRemoteAccessSession(input *CreateRemoteAccessSessionInput) (*CreateRemoteAccessSessionOutput, error) {
+	req, out := c.CreateRemoteAccessSessionRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opCreateUpload = "CreateUpload"
 
-// CreateUploadRequest generates a request for the CreateUpload operation.
+// CreateUploadRequest generates a "aws/request.Request" representing the
+// client's request for the CreateUpload operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateUpload method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateUploadRequest method.
+//    req, resp := client.CreateUploadRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) CreateUploadRequest(input *CreateUploadInput) (req *request.Request, output *CreateUploadOutput) {
 	op := &request.Operation{
 		Name:       opCreateUpload,
@@ -93,7 +204,28 @@ func (c *DeviceFarm) CreateUpload(input *CreateUploadInput) (*CreateUploadOutput
 
 const opDeleteDevicePool = "DeleteDevicePool"
 
-// DeleteDevicePoolRequest generates a request for the DeleteDevicePool operation.
+// DeleteDevicePoolRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteDevicePool operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteDevicePool method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteDevicePoolRequest method.
+//    req, resp := client.DeleteDevicePoolRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) DeleteDevicePoolRequest(input *DeleteDevicePoolInput) (req *request.Request, output *DeleteDevicePoolOutput) {
 	op := &request.Operation{
 		Name:       opDeleteDevicePool,
@@ -121,7 +253,28 @@ func (c *DeviceFarm) DeleteDevicePool(input *DeleteDevicePoolInput) (*DeleteDevi
 
 const opDeleteProject = "DeleteProject"
 
-// DeleteProjectRequest generates a request for the DeleteProject operation.
+// DeleteProjectRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteProject operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteProject method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteProjectRequest method.
+//    req, resp := client.DeleteProjectRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) DeleteProjectRequest(input *DeleteProjectInput) (req *request.Request, output *DeleteProjectOutput) {
 	op := &request.Operation{
 		Name:       opDeleteProject,
@@ -148,9 +301,78 @@ func (c *DeviceFarm) DeleteProject(input *DeleteProjectInput) (*DeleteProjectOut
 	return out, err
 }
 
+const opDeleteRemoteAccessSession = "DeleteRemoteAccessSession"
+
+// DeleteRemoteAccessSessionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteRemoteAccessSession operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteRemoteAccessSession method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteRemoteAccessSessionRequest method.
+//    req, resp := client.DeleteRemoteAccessSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *DeviceFarm) DeleteRemoteAccessSessionRequest(input *DeleteRemoteAccessSessionInput) (req *request.Request, output *DeleteRemoteAccessSessionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteRemoteAccessSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteRemoteAccessSessionInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &DeleteRemoteAccessSessionOutput{}
+	req.Data = output
+	return
+}
+
+// Deletes a completed remote access session and its results.
+func (c *DeviceFarm) DeleteRemoteAccessSession(input *DeleteRemoteAccessSessionInput) (*DeleteRemoteAccessSessionOutput, error) {
+	req, out := c.DeleteRemoteAccessSessionRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opDeleteRun = "DeleteRun"
 
-// DeleteRunRequest generates a request for the DeleteRun operation.
+// DeleteRunRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteRun operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteRun method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteRunRequest method.
+//    req, resp := client.DeleteRunRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) DeleteRunRequest(input *DeleteRunInput) (req *request.Request, output *DeleteRunOutput) {
 	op := &request.Operation{
 		Name:       opDeleteRun,
@@ -179,7 +401,28 @@ func (c *DeviceFarm) DeleteRun(input *DeleteRunInput) (*DeleteRunOutput, error) 
 
 const opDeleteUpload = "DeleteUpload"
 
-// DeleteUploadRequest generates a request for the DeleteUpload operation.
+// DeleteUploadRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteUpload operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteUpload method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteUploadRequest method.
+//    req, resp := client.DeleteUploadRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) DeleteUploadRequest(input *DeleteUploadInput) (req *request.Request, output *DeleteUploadOutput) {
 	op := &request.Operation{
 		Name:       opDeleteUpload,
@@ -206,7 +449,28 @@ func (c *DeviceFarm) DeleteUpload(input *DeleteUploadInput) (*DeleteUploadOutput
 
 const opGetAccountSettings = "GetAccountSettings"
 
-// GetAccountSettingsRequest generates a request for the GetAccountSettings operation.
+// GetAccountSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the GetAccountSettings operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetAccountSettings method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetAccountSettingsRequest method.
+//    req, resp := client.GetAccountSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) GetAccountSettingsRequest(input *GetAccountSettingsInput) (req *request.Request, output *GetAccountSettingsOutput) {
 	op := &request.Operation{
 		Name:       opGetAccountSettings,
@@ -234,7 +498,28 @@ func (c *DeviceFarm) GetAccountSettings(input *GetAccountSettingsInput) (*GetAcc
 
 const opGetDevice = "GetDevice"
 
-// GetDeviceRequest generates a request for the GetDevice operation.
+// GetDeviceRequest generates a "aws/request.Request" representing the
+// client's request for the GetDevice operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetDevice method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetDeviceRequest method.
+//    req, resp := client.GetDeviceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) GetDeviceRequest(input *GetDeviceInput) (req *request.Request, output *GetDeviceOutput) {
 	op := &request.Operation{
 		Name:       opGetDevice,
@@ -261,7 +546,28 @@ func (c *DeviceFarm) GetDevice(input *GetDeviceInput) (*GetDeviceOutput, error) 
 
 const opGetDevicePool = "GetDevicePool"
 
-// GetDevicePoolRequest generates a request for the GetDevicePool operation.
+// GetDevicePoolRequest generates a "aws/request.Request" representing the
+// client's request for the GetDevicePool operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetDevicePool method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetDevicePoolRequest method.
+//    req, resp := client.GetDevicePoolRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) GetDevicePoolRequest(input *GetDevicePoolInput) (req *request.Request, output *GetDevicePoolOutput) {
 	op := &request.Operation{
 		Name:       opGetDevicePool,
@@ -288,7 +594,28 @@ func (c *DeviceFarm) GetDevicePool(input *GetDevicePoolInput) (*GetDevicePoolOut
 
 const opGetDevicePoolCompatibility = "GetDevicePoolCompatibility"
 
-// GetDevicePoolCompatibilityRequest generates a request for the GetDevicePoolCompatibility operation.
+// GetDevicePoolCompatibilityRequest generates a "aws/request.Request" representing the
+// client's request for the GetDevicePoolCompatibility operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetDevicePoolCompatibility method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetDevicePoolCompatibilityRequest method.
+//    req, resp := client.GetDevicePoolCompatibilityRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) GetDevicePoolCompatibilityRequest(input *GetDevicePoolCompatibilityInput) (req *request.Request, output *GetDevicePoolCompatibilityOutput) {
 	op := &request.Operation{
 		Name:       opGetDevicePoolCompatibility,
@@ -315,7 +642,28 @@ func (c *DeviceFarm) GetDevicePoolCompatibility(input *GetDevicePoolCompatibilit
 
 const opGetJob = "GetJob"
 
-// GetJobRequest generates a request for the GetJob operation.
+// GetJobRequest generates a "aws/request.Request" representing the
+// client's request for the GetJob operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetJob method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetJobRequest method.
+//    req, resp := client.GetJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) GetJobRequest(input *GetJobInput) (req *request.Request, output *GetJobOutput) {
 	op := &request.Operation{
 		Name:       opGetJob,
@@ -342,7 +690,28 @@ func (c *DeviceFarm) GetJob(input *GetJobInput) (*GetJobOutput, error) {
 
 const opGetOfferingStatus = "GetOfferingStatus"
 
-// GetOfferingStatusRequest generates a request for the GetOfferingStatus operation.
+// GetOfferingStatusRequest generates a "aws/request.Request" representing the
+// client's request for the GetOfferingStatus operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetOfferingStatus method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetOfferingStatusRequest method.
+//    req, resp := client.GetOfferingStatusRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) GetOfferingStatusRequest(input *GetOfferingStatusInput) (req *request.Request, output *GetOfferingStatusOutput) {
 	op := &request.Operation{
 		Name:       opGetOfferingStatus,
@@ -378,6 +747,23 @@ func (c *DeviceFarm) GetOfferingStatus(input *GetOfferingStatusInput) (*GetOffer
 	return out, err
 }
 
+// GetOfferingStatusPages iterates over the pages of a GetOfferingStatus operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See GetOfferingStatus method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a GetOfferingStatus operation.
+//    pageNum := 0
+//    err := client.GetOfferingStatusPages(params,
+//        func(page *GetOfferingStatusOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) GetOfferingStatusPages(input *GetOfferingStatusInput, fn func(p *GetOfferingStatusOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.GetOfferingStatusRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -388,7 +774,28 @@ func (c *DeviceFarm) GetOfferingStatusPages(input *GetOfferingStatusInput, fn fu
 
 const opGetProject = "GetProject"
 
-// GetProjectRequest generates a request for the GetProject operation.
+// GetProjectRequest generates a "aws/request.Request" representing the
+// client's request for the GetProject operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetProject method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetProjectRequest method.
+//    req, resp := client.GetProjectRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) GetProjectRequest(input *GetProjectInput) (req *request.Request, output *GetProjectOutput) {
 	op := &request.Operation{
 		Name:       opGetProject,
@@ -413,9 +820,78 @@ func (c *DeviceFarm) GetProject(input *GetProjectInput) (*GetProjectOutput, erro
 	return out, err
 }
 
+const opGetRemoteAccessSession = "GetRemoteAccessSession"
+
+// GetRemoteAccessSessionRequest generates a "aws/request.Request" representing the
+// client's request for the GetRemoteAccessSession operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetRemoteAccessSession method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetRemoteAccessSessionRequest method.
+//    req, resp := client.GetRemoteAccessSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *DeviceFarm) GetRemoteAccessSessionRequest(input *GetRemoteAccessSessionInput) (req *request.Request, output *GetRemoteAccessSessionOutput) {
+	op := &request.Operation{
+		Name:       opGetRemoteAccessSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetRemoteAccessSessionInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &GetRemoteAccessSessionOutput{}
+	req.Data = output
+	return
+}
+
+// Returns a link to a currently running remote access session.
+func (c *DeviceFarm) GetRemoteAccessSession(input *GetRemoteAccessSessionInput) (*GetRemoteAccessSessionOutput, error) {
+	req, out := c.GetRemoteAccessSessionRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opGetRun = "GetRun"
 
-// GetRunRequest generates a request for the GetRun operation.
+// GetRunRequest generates a "aws/request.Request" representing the
+// client's request for the GetRun operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetRun method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetRunRequest method.
+//    req, resp := client.GetRunRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) GetRunRequest(input *GetRunInput) (req *request.Request, output *GetRunOutput) {
 	op := &request.Operation{
 		Name:       opGetRun,
@@ -442,7 +918,28 @@ func (c *DeviceFarm) GetRun(input *GetRunInput) (*GetRunOutput, error) {
 
 const opGetSuite = "GetSuite"
 
-// GetSuiteRequest generates a request for the GetSuite operation.
+// GetSuiteRequest generates a "aws/request.Request" representing the
+// client's request for the GetSuite operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetSuite method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetSuiteRequest method.
+//    req, resp := client.GetSuiteRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) GetSuiteRequest(input *GetSuiteInput) (req *request.Request, output *GetSuiteOutput) {
 	op := &request.Operation{
 		Name:       opGetSuite,
@@ -469,7 +966,28 @@ func (c *DeviceFarm) GetSuite(input *GetSuiteInput) (*GetSuiteOutput, error) {
 
 const opGetTest = "GetTest"
 
-// GetTestRequest generates a request for the GetTest operation.
+// GetTestRequest generates a "aws/request.Request" representing the
+// client's request for the GetTest operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetTest method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetTestRequest method.
+//    req, resp := client.GetTestRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) GetTestRequest(input *GetTestInput) (req *request.Request, output *GetTestOutput) {
 	op := &request.Operation{
 		Name:       opGetTest,
@@ -496,7 +1014,28 @@ func (c *DeviceFarm) GetTest(input *GetTestInput) (*GetTestOutput, error) {
 
 const opGetUpload = "GetUpload"
 
-// GetUploadRequest generates a request for the GetUpload operation.
+// GetUploadRequest generates a "aws/request.Request" representing the
+// client's request for the GetUpload operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetUpload method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetUploadRequest method.
+//    req, resp := client.GetUploadRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) GetUploadRequest(input *GetUploadInput) (req *request.Request, output *GetUploadOutput) {
 	op := &request.Operation{
 		Name:       opGetUpload,
@@ -521,9 +1060,80 @@ func (c *DeviceFarm) GetUpload(input *GetUploadInput) (*GetUploadOutput, error) 
 	return out, err
 }
 
+const opInstallToRemoteAccessSession = "InstallToRemoteAccessSession"
+
+// InstallToRemoteAccessSessionRequest generates a "aws/request.Request" representing the
+// client's request for the InstallToRemoteAccessSession operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the InstallToRemoteAccessSession method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the InstallToRemoteAccessSessionRequest method.
+//    req, resp := client.InstallToRemoteAccessSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *DeviceFarm) InstallToRemoteAccessSessionRequest(input *InstallToRemoteAccessSessionInput) (req *request.Request, output *InstallToRemoteAccessSessionOutput) {
+	op := &request.Operation{
+		Name:       opInstallToRemoteAccessSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &InstallToRemoteAccessSessionInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &InstallToRemoteAccessSessionOutput{}
+	req.Data = output
+	return
+}
+
+// Installs an application to the device in a remote access session. For Android
+// applications, the file must be in .apk format. For iOS applications, the
+// file must be in .ipa format.
+func (c *DeviceFarm) InstallToRemoteAccessSession(input *InstallToRemoteAccessSessionInput) (*InstallToRemoteAccessSessionOutput, error) {
+	req, out := c.InstallToRemoteAccessSessionRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opListArtifacts = "ListArtifacts"
 
-// ListArtifactsRequest generates a request for the ListArtifacts operation.
+// ListArtifactsRequest generates a "aws/request.Request" representing the
+// client's request for the ListArtifacts operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListArtifacts method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListArtifactsRequest method.
+//    req, resp := client.ListArtifactsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ListArtifactsRequest(input *ListArtifactsInput) (req *request.Request, output *ListArtifactsOutput) {
 	op := &request.Operation{
 		Name:       opListArtifacts,
@@ -554,6 +1164,23 @@ func (c *DeviceFarm) ListArtifacts(input *ListArtifactsInput) (*ListArtifactsOut
 	return out, err
 }
 
+// ListArtifactsPages iterates over the pages of a ListArtifacts operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListArtifacts method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListArtifacts operation.
+//    pageNum := 0
+//    err := client.ListArtifactsPages(params,
+//        func(page *ListArtifactsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) ListArtifactsPages(input *ListArtifactsInput, fn func(p *ListArtifactsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListArtifactsRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -564,7 +1191,28 @@ func (c *DeviceFarm) ListArtifactsPages(input *ListArtifactsInput, fn func(p *Li
 
 const opListDevicePools = "ListDevicePools"
 
-// ListDevicePoolsRequest generates a request for the ListDevicePools operation.
+// ListDevicePoolsRequest generates a "aws/request.Request" representing the
+// client's request for the ListDevicePools operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListDevicePools method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListDevicePoolsRequest method.
+//    req, resp := client.ListDevicePoolsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ListDevicePoolsRequest(input *ListDevicePoolsInput) (req *request.Request, output *ListDevicePoolsOutput) {
 	op := &request.Operation{
 		Name:       opListDevicePools,
@@ -595,6 +1243,23 @@ func (c *DeviceFarm) ListDevicePools(input *ListDevicePoolsInput) (*ListDevicePo
 	return out, err
 }
 
+// ListDevicePoolsPages iterates over the pages of a ListDevicePools operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListDevicePools method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListDevicePools operation.
+//    pageNum := 0
+//    err := client.ListDevicePoolsPages(params,
+//        func(page *ListDevicePoolsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) ListDevicePoolsPages(input *ListDevicePoolsInput, fn func(p *ListDevicePoolsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListDevicePoolsRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -605,7 +1270,28 @@ func (c *DeviceFarm) ListDevicePoolsPages(input *ListDevicePoolsInput, fn func(p
 
 const opListDevices = "ListDevices"
 
-// ListDevicesRequest generates a request for the ListDevices operation.
+// ListDevicesRequest generates a "aws/request.Request" representing the
+// client's request for the ListDevices operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListDevices method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListDevicesRequest method.
+//    req, resp := client.ListDevicesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ListDevicesRequest(input *ListDevicesInput) (req *request.Request, output *ListDevicesOutput) {
 	op := &request.Operation{
 		Name:       opListDevices,
@@ -636,6 +1322,23 @@ func (c *DeviceFarm) ListDevices(input *ListDevicesInput) (*ListDevicesOutput, e
 	return out, err
 }
 
+// ListDevicesPages iterates over the pages of a ListDevices operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListDevices method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListDevices operation.
+//    pageNum := 0
+//    err := client.ListDevicesPages(params,
+//        func(page *ListDevicesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) ListDevicesPages(input *ListDevicesInput, fn func(p *ListDevicesOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListDevicesRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -646,7 +1349,28 @@ func (c *DeviceFarm) ListDevicesPages(input *ListDevicesInput, fn func(p *ListDe
 
 const opListJobs = "ListJobs"
 
-// ListJobsRequest generates a request for the ListJobs operation.
+// ListJobsRequest generates a "aws/request.Request" representing the
+// client's request for the ListJobs operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListJobs method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListJobsRequest method.
+//    req, resp := client.ListJobsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ListJobsRequest(input *ListJobsInput) (req *request.Request, output *ListJobsOutput) {
 	op := &request.Operation{
 		Name:       opListJobs,
@@ -677,6 +1401,23 @@ func (c *DeviceFarm) ListJobs(input *ListJobsInput) (*ListJobsOutput, error) {
 	return out, err
 }
 
+// ListJobsPages iterates over the pages of a ListJobs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListJobs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListJobs operation.
+//    pageNum := 0
+//    err := client.ListJobsPages(params,
+//        func(page *ListJobsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) ListJobsPages(input *ListJobsInput, fn func(p *ListJobsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListJobsRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -687,7 +1428,28 @@ func (c *DeviceFarm) ListJobsPages(input *ListJobsInput, fn func(p *ListJobsOutp
 
 const opListOfferingTransactions = "ListOfferingTransactions"
 
-// ListOfferingTransactionsRequest generates a request for the ListOfferingTransactions operation.
+// ListOfferingTransactionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListOfferingTransactions operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListOfferingTransactions method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListOfferingTransactionsRequest method.
+//    req, resp := client.ListOfferingTransactionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ListOfferingTransactionsRequest(input *ListOfferingTransactionsInput) (req *request.Request, output *ListOfferingTransactionsOutput) {
 	op := &request.Operation{
 		Name:       opListOfferingTransactions,
@@ -723,6 +1485,23 @@ func (c *DeviceFarm) ListOfferingTransactions(input *ListOfferingTransactionsInp
 	return out, err
 }
 
+// ListOfferingTransactionsPages iterates over the pages of a ListOfferingTransactions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListOfferingTransactions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListOfferingTransactions operation.
+//    pageNum := 0
+//    err := client.ListOfferingTransactionsPages(params,
+//        func(page *ListOfferingTransactionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) ListOfferingTransactionsPages(input *ListOfferingTransactionsInput, fn func(p *ListOfferingTransactionsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListOfferingTransactionsRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -733,7 +1512,28 @@ func (c *DeviceFarm) ListOfferingTransactionsPages(input *ListOfferingTransactio
 
 const opListOfferings = "ListOfferings"
 
-// ListOfferingsRequest generates a request for the ListOfferings operation.
+// ListOfferingsRequest generates a "aws/request.Request" representing the
+// client's request for the ListOfferings operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListOfferings method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListOfferingsRequest method.
+//    req, resp := client.ListOfferingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ListOfferingsRequest(input *ListOfferingsInput) (req *request.Request, output *ListOfferingsOutput) {
 	op := &request.Operation{
 		Name:       opListOfferings,
@@ -769,6 +1569,23 @@ func (c *DeviceFarm) ListOfferings(input *ListOfferingsInput) (*ListOfferingsOut
 	return out, err
 }
 
+// ListOfferingsPages iterates over the pages of a ListOfferings operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListOfferings method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListOfferings operation.
+//    pageNum := 0
+//    err := client.ListOfferingsPages(params,
+//        func(page *ListOfferingsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) ListOfferingsPages(input *ListOfferingsInput, fn func(p *ListOfferingsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListOfferingsRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -779,7 +1596,28 @@ func (c *DeviceFarm) ListOfferingsPages(input *ListOfferingsInput, fn func(p *Li
 
 const opListProjects = "ListProjects"
 
-// ListProjectsRequest generates a request for the ListProjects operation.
+// ListProjectsRequest generates a "aws/request.Request" representing the
+// client's request for the ListProjects operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListProjects method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListProjectsRequest method.
+//    req, resp := client.ListProjectsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ListProjectsRequest(input *ListProjectsInput) (req *request.Request, output *ListProjectsOutput) {
 	op := &request.Operation{
 		Name:       opListProjects,
@@ -810,6 +1648,23 @@ func (c *DeviceFarm) ListProjects(input *ListProjectsInput) (*ListProjectsOutput
 	return out, err
 }
 
+// ListProjectsPages iterates over the pages of a ListProjects operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListProjects method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListProjects operation.
+//    pageNum := 0
+//    err := client.ListProjectsPages(params,
+//        func(page *ListProjectsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) ListProjectsPages(input *ListProjectsInput, fn func(p *ListProjectsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListProjectsRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -818,9 +1673,78 @@ func (c *DeviceFarm) ListProjectsPages(input *ListProjectsInput, fn func(p *List
 	})
 }
 
+const opListRemoteAccessSessions = "ListRemoteAccessSessions"
+
+// ListRemoteAccessSessionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListRemoteAccessSessions operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListRemoteAccessSessions method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListRemoteAccessSessionsRequest method.
+//    req, resp := client.ListRemoteAccessSessionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *DeviceFarm) ListRemoteAccessSessionsRequest(input *ListRemoteAccessSessionsInput) (req *request.Request, output *ListRemoteAccessSessionsOutput) {
+	op := &request.Operation{
+		Name:       opListRemoteAccessSessions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListRemoteAccessSessionsInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &ListRemoteAccessSessionsOutput{}
+	req.Data = output
+	return
+}
+
+// Returns a list of all currently running remote access sessions.
+func (c *DeviceFarm) ListRemoteAccessSessions(input *ListRemoteAccessSessionsInput) (*ListRemoteAccessSessionsOutput, error) {
+	req, out := c.ListRemoteAccessSessionsRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opListRuns = "ListRuns"
 
-// ListRunsRequest generates a request for the ListRuns operation.
+// ListRunsRequest generates a "aws/request.Request" representing the
+// client's request for the ListRuns operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListRuns method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListRunsRequest method.
+//    req, resp := client.ListRunsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ListRunsRequest(input *ListRunsInput) (req *request.Request, output *ListRunsOutput) {
 	op := &request.Operation{
 		Name:       opListRuns,
@@ -851,6 +1775,23 @@ func (c *DeviceFarm) ListRuns(input *ListRunsInput) (*ListRunsOutput, error) {
 	return out, err
 }
 
+// ListRunsPages iterates over the pages of a ListRuns operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListRuns method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListRuns operation.
+//    pageNum := 0
+//    err := client.ListRunsPages(params,
+//        func(page *ListRunsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) ListRunsPages(input *ListRunsInput, fn func(p *ListRunsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListRunsRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -861,7 +1802,28 @@ func (c *DeviceFarm) ListRunsPages(input *ListRunsInput, fn func(p *ListRunsOutp
 
 const opListSamples = "ListSamples"
 
-// ListSamplesRequest generates a request for the ListSamples operation.
+// ListSamplesRequest generates a "aws/request.Request" representing the
+// client's request for the ListSamples operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListSamples method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListSamplesRequest method.
+//    req, resp := client.ListSamplesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ListSamplesRequest(input *ListSamplesInput) (req *request.Request, output *ListSamplesOutput) {
 	op := &request.Operation{
 		Name:       opListSamples,
@@ -892,6 +1854,23 @@ func (c *DeviceFarm) ListSamples(input *ListSamplesInput) (*ListSamplesOutput, e
 	return out, err
 }
 
+// ListSamplesPages iterates over the pages of a ListSamples operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListSamples method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListSamples operation.
+//    pageNum := 0
+//    err := client.ListSamplesPages(params,
+//        func(page *ListSamplesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) ListSamplesPages(input *ListSamplesInput, fn func(p *ListSamplesOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListSamplesRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -902,7 +1881,28 @@ func (c *DeviceFarm) ListSamplesPages(input *ListSamplesInput, fn func(p *ListSa
 
 const opListSuites = "ListSuites"
 
-// ListSuitesRequest generates a request for the ListSuites operation.
+// ListSuitesRequest generates a "aws/request.Request" representing the
+// client's request for the ListSuites operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListSuites method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListSuitesRequest method.
+//    req, resp := client.ListSuitesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ListSuitesRequest(input *ListSuitesInput) (req *request.Request, output *ListSuitesOutput) {
 	op := &request.Operation{
 		Name:       opListSuites,
@@ -933,6 +1933,23 @@ func (c *DeviceFarm) ListSuites(input *ListSuitesInput) (*ListSuitesOutput, erro
 	return out, err
 }
 
+// ListSuitesPages iterates over the pages of a ListSuites operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListSuites method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListSuites operation.
+//    pageNum := 0
+//    err := client.ListSuitesPages(params,
+//        func(page *ListSuitesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) ListSuitesPages(input *ListSuitesInput, fn func(p *ListSuitesOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListSuitesRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -943,7 +1960,28 @@ func (c *DeviceFarm) ListSuitesPages(input *ListSuitesInput, fn func(p *ListSuit
 
 const opListTests = "ListTests"
 
-// ListTestsRequest generates a request for the ListTests operation.
+// ListTestsRequest generates a "aws/request.Request" representing the
+// client's request for the ListTests operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListTests method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListTestsRequest method.
+//    req, resp := client.ListTestsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ListTestsRequest(input *ListTestsInput) (req *request.Request, output *ListTestsOutput) {
 	op := &request.Operation{
 		Name:       opListTests,
@@ -974,6 +2012,23 @@ func (c *DeviceFarm) ListTests(input *ListTestsInput) (*ListTestsOutput, error) 
 	return out, err
 }
 
+// ListTestsPages iterates over the pages of a ListTests operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTests method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTests operation.
+//    pageNum := 0
+//    err := client.ListTestsPages(params,
+//        func(page *ListTestsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) ListTestsPages(input *ListTestsInput, fn func(p *ListTestsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListTestsRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -984,7 +2039,28 @@ func (c *DeviceFarm) ListTestsPages(input *ListTestsInput, fn func(p *ListTestsO
 
 const opListUniqueProblems = "ListUniqueProblems"
 
-// ListUniqueProblemsRequest generates a request for the ListUniqueProblems operation.
+// ListUniqueProblemsRequest generates a "aws/request.Request" representing the
+// client's request for the ListUniqueProblems operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListUniqueProblems method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListUniqueProblemsRequest method.
+//    req, resp := client.ListUniqueProblemsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ListUniqueProblemsRequest(input *ListUniqueProblemsInput) (req *request.Request, output *ListUniqueProblemsOutput) {
 	op := &request.Operation{
 		Name:       opListUniqueProblems,
@@ -1015,6 +2091,23 @@ func (c *DeviceFarm) ListUniqueProblems(input *ListUniqueProblemsInput) (*ListUn
 	return out, err
 }
 
+// ListUniqueProblemsPages iterates over the pages of a ListUniqueProblems operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListUniqueProblems method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListUniqueProblems operation.
+//    pageNum := 0
+//    err := client.ListUniqueProblemsPages(params,
+//        func(page *ListUniqueProblemsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) ListUniqueProblemsPages(input *ListUniqueProblemsInput, fn func(p *ListUniqueProblemsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListUniqueProblemsRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -1025,7 +2118,28 @@ func (c *DeviceFarm) ListUniqueProblemsPages(input *ListUniqueProblemsInput, fn 
 
 const opListUploads = "ListUploads"
 
-// ListUploadsRequest generates a request for the ListUploads operation.
+// ListUploadsRequest generates a "aws/request.Request" representing the
+// client's request for the ListUploads operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListUploads method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListUploadsRequest method.
+//    req, resp := client.ListUploadsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ListUploadsRequest(input *ListUploadsInput) (req *request.Request, output *ListUploadsOutput) {
 	op := &request.Operation{
 		Name:       opListUploads,
@@ -1056,6 +2170,23 @@ func (c *DeviceFarm) ListUploads(input *ListUploadsInput) (*ListUploadsOutput, e
 	return out, err
 }
 
+// ListUploadsPages iterates over the pages of a ListUploads operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListUploads method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListUploads operation.
+//    pageNum := 0
+//    err := client.ListUploadsPages(params,
+//        func(page *ListUploadsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *DeviceFarm) ListUploadsPages(input *ListUploadsInput, fn func(p *ListUploadsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListUploadsRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -1066,7 +2197,28 @@ func (c *DeviceFarm) ListUploadsPages(input *ListUploadsInput, fn func(p *ListUp
 
 const opPurchaseOffering = "PurchaseOffering"
 
-// PurchaseOfferingRequest generates a request for the PurchaseOffering operation.
+// PurchaseOfferingRequest generates a "aws/request.Request" representing the
+// client's request for the PurchaseOffering operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the PurchaseOffering method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the PurchaseOfferingRequest method.
+//    req, resp := client.PurchaseOfferingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) PurchaseOfferingRequest(input *PurchaseOfferingInput) (req *request.Request, output *PurchaseOfferingOutput) {
 	op := &request.Operation{
 		Name:       opPurchaseOffering,
@@ -1098,7 +2250,28 @@ func (c *DeviceFarm) PurchaseOffering(input *PurchaseOfferingInput) (*PurchaseOf
 
 const opRenewOffering = "RenewOffering"
 
-// RenewOfferingRequest generates a request for the RenewOffering operation.
+// RenewOfferingRequest generates a "aws/request.Request" representing the
+// client's request for the RenewOffering operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the RenewOffering method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the RenewOfferingRequest method.
+//    req, resp := client.RenewOfferingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) RenewOfferingRequest(input *RenewOfferingInput) (req *request.Request, output *RenewOfferingOutput) {
 	op := &request.Operation{
 		Name:       opRenewOffering,
@@ -1129,7 +2302,28 @@ func (c *DeviceFarm) RenewOffering(input *RenewOfferingInput) (*RenewOfferingOut
 
 const opScheduleRun = "ScheduleRun"
 
-// ScheduleRunRequest generates a request for the ScheduleRun operation.
+// ScheduleRunRequest generates a "aws/request.Request" representing the
+// client's request for the ScheduleRun operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ScheduleRun method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ScheduleRunRequest method.
+//    req, resp := client.ScheduleRunRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) ScheduleRunRequest(input *ScheduleRunInput) (req *request.Request, output *ScheduleRunOutput) {
 	op := &request.Operation{
 		Name:       opScheduleRun,
@@ -1154,9 +2348,78 @@ func (c *DeviceFarm) ScheduleRun(input *ScheduleRunInput) (*ScheduleRunOutput, e
 	return out, err
 }
 
+const opStopRemoteAccessSession = "StopRemoteAccessSession"
+
+// StopRemoteAccessSessionRequest generates a "aws/request.Request" representing the
+// client's request for the StopRemoteAccessSession operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the StopRemoteAccessSession method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the StopRemoteAccessSessionRequest method.
+//    req, resp := client.StopRemoteAccessSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *DeviceFarm) StopRemoteAccessSessionRequest(input *StopRemoteAccessSessionInput) (req *request.Request, output *StopRemoteAccessSessionOutput) {
+	op := &request.Operation{
+		Name:       opStopRemoteAccessSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopRemoteAccessSessionInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &StopRemoteAccessSessionOutput{}
+	req.Data = output
+	return
+}
+
+// Ends a specified remote access session.
+func (c *DeviceFarm) StopRemoteAccessSession(input *StopRemoteAccessSessionInput) (*StopRemoteAccessSessionOutput, error) {
+	req, out := c.StopRemoteAccessSessionRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opStopRun = "StopRun"
 
-// StopRunRequest generates a request for the StopRun operation.
+// StopRunRequest generates a "aws/request.Request" representing the
+// client's request for the StopRun operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the StopRun method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the StopRunRequest method.
+//    req, resp := client.StopRunRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) StopRunRequest(input *StopRunInput) (req *request.Request, output *StopRunOutput) {
 	op := &request.Operation{
 		Name:       opStopRun,
@@ -1188,7 +2451,28 @@ func (c *DeviceFarm) StopRun(input *StopRunInput) (*StopRunOutput, error) {
 
 const opUpdateDevicePool = "UpdateDevicePool"
 
-// UpdateDevicePoolRequest generates a request for the UpdateDevicePool operation.
+// UpdateDevicePoolRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateDevicePool operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateDevicePool method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateDevicePoolRequest method.
+//    req, resp := client.UpdateDevicePoolRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) UpdateDevicePoolRequest(input *UpdateDevicePoolInput) (req *request.Request, output *UpdateDevicePoolOutput) {
 	op := &request.Operation{
 		Name:       opUpdateDevicePool,
@@ -1217,7 +2501,28 @@ func (c *DeviceFarm) UpdateDevicePool(input *UpdateDevicePoolInput) (*UpdateDevi
 
 const opUpdateProject = "UpdateProject"
 
-// UpdateProjectRequest generates a request for the UpdateProject operation.
+// UpdateProjectRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateProject operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateProject method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateProjectRequest method.
+//    req, resp := client.UpdateProjectRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DeviceFarm) UpdateProjectRequest(input *UpdateProjectInput) (req *request.Request, output *UpdateProjectOutput) {
 	op := &request.Operation{
 		Name:       opUpdateProject,
@@ -1526,6 +2831,95 @@ func (s CreateProjectOutput) GoString() string {
 	return s.String()
 }
 
+// Creates the configuration settings for a remote access session, including
+// the device model and type.
+type CreateRemoteAccessSessionConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Returns the billing method for purposes of configuring a remote access session.
+	BillingMethod *string `locationName:"billingMethod" type:"string" enum:"BillingMethod"`
+}
+
+// String returns the string representation
+func (s CreateRemoteAccessSessionConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateRemoteAccessSessionConfiguration) GoString() string {
+	return s.String()
+}
+
+// Creates and submits a request to start a remote access session.
+type CreateRemoteAccessSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The configuration information for the remote access session request.
+	Configuration *CreateRemoteAccessSessionConfiguration `locationName:"configuration" type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the device for which you want to create
+	// a remote access session.
+	DeviceArn *string `locationName:"deviceArn" min:"32" type:"string" required:"true"`
+
+	// The name of the remote access session that you wish to create.
+	Name *string `locationName:"name" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the project for which you want to create
+	// a remote access session.
+	ProjectArn *string `locationName:"projectArn" min:"32" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateRemoteAccessSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateRemoteAccessSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateRemoteAccessSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateRemoteAccessSessionInput"}
+	if s.DeviceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeviceArn"))
+	}
+	if s.DeviceArn != nil && len(*s.DeviceArn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("DeviceArn", 32))
+	}
+	if s.ProjectArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProjectArn"))
+	}
+	if s.ProjectArn != nil && len(*s.ProjectArn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("ProjectArn", 32))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the server response from a request to create a remote access session.
+type CreateRemoteAccessSessionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A container that describes the remote access session when the request to
+	// create a remote access session is sent.
+	RemoteAccessSession *RemoteAccessSession `locationName:"remoteAccessSession" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateRemoteAccessSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateRemoteAccessSessionOutput) GoString() string {
+	return s.String()
+}
+
 // Represents a request to the create upload operation.
 type CreateUploadInput struct {
 	_ struct{} `type:"structure"`
@@ -1533,7 +2927,7 @@ type CreateUploadInput struct {
 	// The upload's content type (for example, "application/octet-stream").
 	ContentType *string `locationName:"contentType" type:"string"`
 
-	// The upload's file name.
+	// The upload's file name. The name should not contain the '/' character.
 	Name *string `locationName:"name" type:"string" required:"true"`
 
 	// The ARN of the project for the upload.
@@ -1731,6 +3125,57 @@ func (s DeleteProjectOutput) GoString() string {
 	return s.String()
 }
 
+// Represents the request to delete the specified remote access session.
+type DeleteRemoteAccessSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the sesssion for which you want to delete
+	// remote access.
+	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteRemoteAccessSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRemoteAccessSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteRemoteAccessSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteRemoteAccessSessionInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 32))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// The response from the server when a request is made to delete the remote
+// access session.
+type DeleteRemoteAccessSessionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteRemoteAccessSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRemoteAccessSessionOutput) GoString() string {
+	return s.String()
+}
+
 // Represents a request to the delete run operation.
 type DeleteRunInput struct {
 	_ struct{} `type:"structure"`
@@ -1843,6 +3288,13 @@ type Device struct {
 	// Information about the device's CPU.
 	Cpu *CPU `locationName:"cpu" type:"structure"`
 
+	// The name of the fleet to which this device belongs.
+	FleetName *string `locationName:"fleetName" type:"string"`
+
+	// The type of fleet to which this device belongs. Possible values for fleet
+	// type are PRIVATE and PUBLIC.
+	FleetType *string `locationName:"fleetType" type:"string"`
+
 	// The device's form factor.
 	//
 	// Allowed values include:
@@ -1884,6 +3336,9 @@ type Device struct {
 
 	// The device's radio.
 	Radio *string `locationName:"radio" type:"string"`
+
+	// Specifies whether remote access has been enabled for the specified device.
+	RemoteAccessEnabled *bool `locationName:"remoteAccessEnabled" type:"boolean"`
 
 	// Represents the screen resolution of a device in height and width, expressed
 	// in pixels.
@@ -2384,6 +3839,61 @@ func (s GetProjectOutput) GoString() string {
 	return s.String()
 }
 
+// Represents the request to get information about the specified remote access
+// session.
+type GetRemoteAccessSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the remote access session about which you
+	// want to get session information.
+	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetRemoteAccessSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetRemoteAccessSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetRemoteAccessSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetRemoteAccessSessionInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 32))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the response from the server that lists detailed information about
+// the remote access session.
+type GetRemoteAccessSessionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A container that lists detailed information about the remote access session.
+	RemoteAccessSession *RemoteAccessSession `locationName:"remoteAccessSession" type:"structure"`
+}
+
+// String returns the string representation
+func (s GetRemoteAccessSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetRemoteAccessSessionOutput) GoString() string {
+	return s.String()
+}
+
 // Represents a request to the get run operation.
 type GetRunInput struct {
 	_ struct{} `type:"structure"`
@@ -2620,6 +4130,71 @@ func (s IncompatibilityMessage) String() string {
 
 // GoString returns the string representation
 func (s IncompatibilityMessage) GoString() string {
+	return s.String()
+}
+
+// Represents the request to install an Android application (in .apk format)
+// or an iOS application (in .ipa format) as part of a remote access session.
+type InstallToRemoteAccessSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the app about which you are requesting
+	// information.
+	AppArn *string `locationName:"appArn" min:"32" type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the remote access session about which you
+	// are requesting information.
+	RemoteAccessSessionArn *string `locationName:"remoteAccessSessionArn" min:"32" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s InstallToRemoteAccessSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InstallToRemoteAccessSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InstallToRemoteAccessSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InstallToRemoteAccessSessionInput"}
+	if s.AppArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AppArn"))
+	}
+	if s.AppArn != nil && len(*s.AppArn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("AppArn", 32))
+	}
+	if s.RemoteAccessSessionArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RemoteAccessSessionArn"))
+	}
+	if s.RemoteAccessSessionArn != nil && len(*s.RemoteAccessSessionArn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("RemoteAccessSessionArn", 32))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the response from the server after AWS Device Farm makes a request
+// to install to a remote access session.
+type InstallToRemoteAccessSessionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An app or a set of one or more tests to upload or that have been uploaded.
+	AppUpload *Upload `locationName:"appUpload" type:"structure"`
+}
+
+// String returns the string representation
+func (s InstallToRemoteAccessSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InstallToRemoteAccessSessionOutput) GoString() string {
 	return s.String()
 }
 
@@ -3181,6 +4756,72 @@ func (s ListProjectsOutput) String() string {
 
 // GoString returns the string representation
 func (s ListProjectsOutput) GoString() string {
+	return s.String()
+}
+
+// Represents the request to return information about the remote access session.
+type ListRemoteAccessSessionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the remote access session about which you
+	// are requesting information.
+	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
+
+	// An identifier that was returned from the previous call to this operation,
+	// which can be used to return the next set of items in the list.
+	NextToken *string `locationName:"nextToken" min:"4" type:"string"`
+}
+
+// String returns the string representation
+func (s ListRemoteAccessSessionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListRemoteAccessSessionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListRemoteAccessSessionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListRemoteAccessSessionsInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 32))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 4 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 4))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the response from the server after AWS Device Farm makes a request
+// to return information about the remote access session.
+type ListRemoteAccessSessionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An identifier that was returned from the previous call to this operation,
+	// which can be used to return the next set of items in the list.
+	NextToken *string `locationName:"nextToken" min:"4" type:"string"`
+
+	// A container representing the metadata from the service about each remote
+	// access session you are requesting.
+	RemoteAccessSessions []*RemoteAccessSession `locationName:"remoteAccessSessions" type:"list"`
+}
+
+// String returns the string representation
+func (s ListRemoteAccessSessionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListRemoteAccessSessionsOutput) GoString() string {
 	return s.String()
 }
 
@@ -3928,6 +5569,92 @@ func (s RecurringCharge) GoString() string {
 	return s.String()
 }
 
+// Represents information about the remote access session.
+type RemoteAccessSession struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the remote access session.
+	Arn *string `locationName:"arn" min:"32" type:"string"`
+
+	// The billing method of the remote access session. Possible values include
+	// METERED or UNMETERED. For more information about metered devices, see AWS
+	// Device Farm terminology (http://docs.aws.amazon.com/devicefarm/latest/developerguide/welcome.html#welcome-terminology)."
+	BillingMethod *string `locationName:"billingMethod" type:"string" enum:"BillingMethod"`
+
+	// The date and time the remote access session was created.
+	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+
+	// Represents a device type that an app is tested against.
+	Device *Device `locationName:"device" type:"structure"`
+
+	// Represents the total (metered or unmetered) minutes used by the resource
+	// to run tests. Contains the sum of minutes consumed by all children.
+	DeviceMinutes *DeviceMinutes `locationName:"deviceMinutes" type:"structure"`
+
+	// The endpoint for the remote access sesssion.
+	Endpoint *string `locationName:"endpoint" type:"string"`
+
+	// A message about the remote access session.
+	Message *string `locationName:"message" type:"string"`
+
+	// The name of the remote access session.
+	Name *string `locationName:"name" type:"string"`
+
+	// The result of the remote access session. Can be any of the following:
+	//
+	//  PENDING: A pending condition.
+	//
+	// PASSED: A passing condition.
+	//
+	// WARNED: A warning condition.
+	//
+	// FAILED: A failed condition.
+	//
+	// SKIPPED: A skipped condition.
+	//
+	// ERRORED: An error condition.
+	//
+	// STOPPED: A stopped condition.
+	Result *string `locationName:"result" type:"string" enum:"ExecutionResult"`
+
+	// The date and time the remote access session was started.
+	Started *time.Time `locationName:"started" type:"timestamp" timestampFormat:"unix"`
+
+	// The status of the remote access session. Can be any of the following:
+	//
+	//  PENDING: A pending status.
+	//
+	// PENDING_CONCURRENCY: A pending concurrency status.
+	//
+	// PENDING_DEVICE: A pending device status.
+	//
+	// PROCESSING: A processing status.
+	//
+	// SCHEDULING: A scheduling status.
+	//
+	// PREPARING: A preparing status.
+	//
+	// RUNNING: A running status.
+	//
+	// COMPLETED: A completed status.
+	//
+	// STOPPING: A stopping status.
+	Status *string `locationName:"status" type:"string" enum:"ExecutionStatus"`
+
+	// The date and time the remote access session was stopped.
+	Stopped *time.Time `locationName:"stopped" type:"timestamp" timestampFormat:"unix"`
+}
+
+// String returns the string representation
+func (s RemoteAccessSession) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemoteAccessSession) GoString() string {
+	return s.String()
+}
+
 // A request representing an offering renewal.
 type RenewOfferingInput struct {
 	_ struct{} `type:"structure"`
@@ -4470,6 +6197,60 @@ func (s *ScheduleRunTest) Validate() error {
 	return nil
 }
 
+// Represents the request to stop the remote access session.
+type StopRemoteAccessSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the remote access session you wish to stop.
+	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopRemoteAccessSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopRemoteAccessSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopRemoteAccessSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopRemoteAccessSessionInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 32))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the response from the server that describes the remote access
+// session when AWS Device Farm stops the session.
+type StopRemoteAccessSessionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A container representing the metadata from the service about the remote access
+	// session you are stopping.
+	RemoteAccessSession *RemoteAccessSession `locationName:"remoteAccessSession" type:"structure"`
+}
+
+// String returns the string representation
+func (s StopRemoteAccessSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopRemoteAccessSessionOutput) GoString() string {
+	return s.String()
+}
+
 // Represents the request to stop a specific run.
 type StopRunInput struct {
 	_ struct{} `type:"structure"`
@@ -5003,6 +6784,8 @@ const (
 	// @enum ArtifactType
 	ArtifactTypeMessageLog = "MESSAGE_LOG"
 	// @enum ArtifactType
+	ArtifactTypeVideoLog = "VIDEO_LOG"
+	// @enum ArtifactType
 	ArtifactTypeResultLog = "RESULT_LOG"
 	// @enum ArtifactType
 	ArtifactTypeServiceLog = "SERVICE_LOG"
@@ -5065,6 +6848,8 @@ const (
 	DeviceAttributeFormFactor = "FORM_FACTOR"
 	// @enum DeviceAttribute
 	DeviceAttributeManufacturer = "MANUFACTURER"
+	// @enum DeviceAttribute
+	DeviceAttributeRemoteAccessEnabled = "REMOTE_ACCESS_ENABLED"
 )
 
 const (

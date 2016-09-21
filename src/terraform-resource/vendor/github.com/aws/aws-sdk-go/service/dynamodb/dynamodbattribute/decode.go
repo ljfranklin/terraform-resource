@@ -185,14 +185,32 @@ func (d *Decoder) decodeBinary(b []byte, v reflect.Value) error {
 		return nil
 	}
 
-	switch v.Interface().(type) {
-	case []byte:
+	if v.Kind() != reflect.Slice {
+		return &UnmarshalTypeError{Value: "binary", Type: v.Type()}
+	}
+
+	if v.Type() == byteSliceType {
+		// Optimization for []byte types
 		if v.IsNil() || v.Cap() < len(b) {
 			v.Set(reflect.MakeSlice(byteSliceType, len(b), len(b)))
 		} else if v.Len() != len(b) {
 			v.SetLen(len(b))
 		}
 		copy(v.Interface().([]byte), b)
+		return nil
+	}
+
+	switch v.Type().Elem().Kind() {
+	case reflect.Uint8:
+		// Fallback to reflection copy for type aliased of []byte type
+		if v.IsNil() || v.Cap() < len(b) {
+			v.Set(reflect.MakeSlice(v.Type(), len(b), len(b)))
+		} else if v.Len() != len(b) {
+			v.SetLen(len(b))
+		}
+		for i := 0; i < len(b); i++ {
+			v.Index(i).SetUint(uint64(b[i]))
+		}
 	default:
 		if v.Kind() == reflect.Array && v.Type().Elem().Kind() == reflect.Uint8 {
 			reflect.Copy(v, reflect.ValueOf(b))
@@ -431,7 +449,10 @@ func (d *Decoder) decodeMap(avMap map[string]*dynamodb.AttributeValue, v reflect
 		fields := unionStructFields(v.Type(), d.MarshalOptions)
 		for k, av := range avMap {
 			if f, ok := fieldByName(fields, k); ok {
-				fv := v.FieldByIndex(f.Index)
+				fv := fieldByIndex(v, f.Index, func(v *reflect.Value) bool {
+					v.Set(reflect.New(v.Type().Elem()))
+					return true // to continue the loop.
+				})
 				if err := d.decode(av, fv, f.tag); err != nil {
 					return err
 				}
@@ -467,8 +488,11 @@ func (d *Decoder) decodeString(s *string, v reflect.Value, fieldTag tag) error {
 	}
 
 	switch v.Kind() {
-	case reflect.String, reflect.Interface:
-		v.Set(reflect.ValueOf(*s))
+	case reflect.String:
+		v.SetString(*s)
+	case reflect.Interface:
+		// Ensure type aliasing is handled properly
+		v.Set(reflect.ValueOf(*s).Convert(v.Type()))
 	default:
 		return &UnmarshalTypeError{Value: "string", Type: v.Type()}
 	}
@@ -634,7 +658,7 @@ func (e *InvalidUnmarshalError) Message() string {
 		return "cannot unmarshal to nil value"
 	}
 	if e.Type.Kind() != reflect.Ptr {
-		return "cannot unmasrhal to non-pointer value, got " + e.Type.String()
+		return "cannot unmarshal to non-pointer value, got " + e.Type.String()
 	}
 	return "cannot unmarshal to nil value, " + e.Type.String()
 }

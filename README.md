@@ -186,3 +186,20 @@ metadata: { "vpc_id": "vpc-123456", "vpc_tag_name": "concourse" }
 - [Generate director manifest](examples/tasks/director-manifest-aws.erb) from JSON file
 
 See the [Concourse pipeline](ci/pipeline.yml) for additional examples.
+
+## Development
+
+Run tests:
+
+```bash
+cd src/terraform-resource
+go get -u github.com/onsi/ginkgo/ginkgo
+ginkgo -r .
+```
+
+Add/Update dependency:
+
+```bash
+go get -u github.com/FiloSottile/gvt
+gvt fetch -tag=v1.4.11 github.com/aws/aws-sdk-go
+```

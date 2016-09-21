@@ -15,7 +15,28 @@ import (
 
 const opAddInstanceGroups = "AddInstanceGroups"
 
-// AddInstanceGroupsRequest generates a request for the AddInstanceGroups operation.
+// AddInstanceGroupsRequest generates a "aws/request.Request" representing the
+// client's request for the AddInstanceGroups operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AddInstanceGroups method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AddInstanceGroupsRequest method.
+//    req, resp := client.AddInstanceGroupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) AddInstanceGroupsRequest(input *AddInstanceGroupsInput) (req *request.Request, output *AddInstanceGroupsOutput) {
 	op := &request.Operation{
 		Name:       opAddInstanceGroups,
@@ -42,7 +63,28 @@ func (c *EMR) AddInstanceGroups(input *AddInstanceGroupsInput) (*AddInstanceGrou
 
 const opAddJobFlowSteps = "AddJobFlowSteps"
 
-// AddJobFlowStepsRequest generates a request for the AddJobFlowSteps operation.
+// AddJobFlowStepsRequest generates a "aws/request.Request" representing the
+// client's request for the AddJobFlowSteps operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AddJobFlowSteps method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AddJobFlowStepsRequest method.
+//    req, resp := client.AddJobFlowStepsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) AddJobFlowStepsRequest(input *AddJobFlowStepsInput) (req *request.Request, output *AddJobFlowStepsOutput) {
 	op := &request.Operation{
 		Name:       opAddJobFlowSteps,
@@ -71,18 +113,18 @@ func (c *EMR) AddJobFlowStepsRequest(input *AddJobFlowStepsInput) (req *request.
 // on how to do this, go to Add More than 256 Steps to a Job Flow (http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/AddMoreThan256Steps.html)
 // in the Amazon Elastic MapReduce Developer's Guide.
 //
-//  A step specifies the location of a JAR file stored either on the master
+// A step specifies the location of a JAR file stored either on the master
 // node of the job flow or in Amazon S3. Each step is performed by the main
 // function of the main class of the JAR file. The main class can be specified
 // either in the manifest of the JAR or by using the MainFunction parameter
 // of the step.
 //
-//  Elastic MapReduce executes each step in the order listed. For a step to
+// Elastic MapReduce executes each step in the order listed. For a step to
 // be considered complete, the main function must exit with a zero exit code
 // and all Hadoop jobs started while the step was running must have completed
 // and run successfully.
 //
-//  You can only add steps to a job flow that is in one of the following states:
+// You can only add steps to a job flow that is in one of the following states:
 // STARTING, BOOTSTRAPPING, RUNNING, or WAITING.
 func (c *EMR) AddJobFlowSteps(input *AddJobFlowStepsInput) (*AddJobFlowStepsOutput, error) {
 	req, out := c.AddJobFlowStepsRequest(input)
@@ -92,7 +134,28 @@ func (c *EMR) AddJobFlowSteps(input *AddJobFlowStepsInput) (*AddJobFlowStepsOutp
 
 const opAddTags = "AddTags"
 
-// AddTagsRequest generates a request for the AddTags operation.
+// AddTagsRequest generates a "aws/request.Request" representing the
+// client's request for the AddTags operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AddTags method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AddTagsRequest method.
+//    req, resp := client.AddTagsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) AddTagsRequest(input *AddTagsInput) (req *request.Request, output *AddTagsOutput) {
 	op := &request.Operation{
 		Name:       opAddTags,
@@ -120,9 +183,128 @@ func (c *EMR) AddTags(input *AddTagsInput) (*AddTagsOutput, error) {
 	return out, err
 }
 
+const opCreateSecurityConfiguration = "CreateSecurityConfiguration"
+
+// CreateSecurityConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the CreateSecurityConfiguration operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateSecurityConfiguration method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateSecurityConfigurationRequest method.
+//    req, resp := client.CreateSecurityConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *EMR) CreateSecurityConfigurationRequest(input *CreateSecurityConfigurationInput) (req *request.Request, output *CreateSecurityConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opCreateSecurityConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateSecurityConfigurationInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &CreateSecurityConfigurationOutput{}
+	req.Data = output
+	return
+}
+
+// Creates a security configuration using EMR Security Configurations, which
+// are stored in the service. Security Configurations enable you to more easily
+// create a configuration, reuse it, and apply it whenever a cluster is created.
+func (c *EMR) CreateSecurityConfiguration(input *CreateSecurityConfigurationInput) (*CreateSecurityConfigurationOutput, error) {
+	req, out := c.CreateSecurityConfigurationRequest(input)
+	err := req.Send()
+	return out, err
+}
+
+const opDeleteSecurityConfiguration = "DeleteSecurityConfiguration"
+
+// DeleteSecurityConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteSecurityConfiguration operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteSecurityConfiguration method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteSecurityConfigurationRequest method.
+//    req, resp := client.DeleteSecurityConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *EMR) DeleteSecurityConfigurationRequest(input *DeleteSecurityConfigurationInput) (req *request.Request, output *DeleteSecurityConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opDeleteSecurityConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteSecurityConfigurationInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &DeleteSecurityConfigurationOutput{}
+	req.Data = output
+	return
+}
+
+// Deletes a security configuration.
+func (c *EMR) DeleteSecurityConfiguration(input *DeleteSecurityConfigurationInput) (*DeleteSecurityConfigurationOutput, error) {
+	req, out := c.DeleteSecurityConfigurationRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opDescribeCluster = "DescribeCluster"
 
-// DescribeClusterRequest generates a request for the DescribeCluster operation.
+// DescribeClusterRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeCluster operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeCluster method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeClusterRequest method.
+//    req, resp := client.DescribeClusterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) DescribeClusterRequest(input *DescribeClusterInput) (req *request.Request, output *DescribeClusterOutput) {
 	op := &request.Operation{
 		Name:       opDescribeCluster,
@@ -150,7 +332,28 @@ func (c *EMR) DescribeCluster(input *DescribeClusterInput) (*DescribeClusterOutp
 
 const opDescribeJobFlows = "DescribeJobFlows"
 
-// DescribeJobFlowsRequest generates a request for the DescribeJobFlows operation.
+// DescribeJobFlowsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeJobFlows operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeJobFlows method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeJobFlowsRequest method.
+//    req, resp := client.DescribeJobFlowsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) DescribeJobFlowsRequest(input *DescribeJobFlowsInput) (req *request.Request, output *DescribeJobFlowsOutput) {
 	if c.Client.Config.Logger != nil {
 		c.Client.Config.Logger.Log("This operation, DescribeJobFlows, has been deprecated")
@@ -175,29 +378,101 @@ func (c *EMR) DescribeJobFlowsRequest(input *DescribeJobFlowsInput) (req *reques
 // ListClusters, DescribeCluster, ListSteps, ListInstanceGroups and ListBootstrapActions
 // instead.
 //
-//  DescribeJobFlows returns a list of job flows that match all of the supplied
+// DescribeJobFlows returns a list of job flows that match all of the supplied
 // parameters. The parameters can include a list of job flow IDs, job flow states,
 // and restrictions on job flow creation date and time.
 //
-//  Regardless of supplied parameters, only job flows created within the last
+// Regardless of supplied parameters, only job flows created within the last
 // two months are returned.
 //
-//  If no parameters are supplied, then job flows matching either of the following
+// If no parameters are supplied, then job flows matching either of the following
 // criteria are returned:
 //
-//  Job flows created and completed in the last two weeks  Job flows created
-// within the last two months that are in one of the following states: RUNNING,
-// WAITING, SHUTTING_DOWN, STARTING    Amazon Elastic MapReduce can return a
-// maximum of 512 job flow descriptions.
+//   Job flows created and completed in the last two weeks
+//
+//    Job flows created within the last two months that are in one of the following
+// states: RUNNING, WAITING, SHUTTING_DOWN, STARTING
+//
+//   Amazon Elastic MapReduce can return a maximum of 512 job flow descriptions.
 func (c *EMR) DescribeJobFlows(input *DescribeJobFlowsInput) (*DescribeJobFlowsOutput, error) {
 	req, out := c.DescribeJobFlowsRequest(input)
 	err := req.Send()
 	return out, err
 }
 
+const opDescribeSecurityConfiguration = "DescribeSecurityConfiguration"
+
+// DescribeSecurityConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeSecurityConfiguration operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeSecurityConfiguration method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeSecurityConfigurationRequest method.
+//    req, resp := client.DescribeSecurityConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *EMR) DescribeSecurityConfigurationRequest(input *DescribeSecurityConfigurationInput) (req *request.Request, output *DescribeSecurityConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opDescribeSecurityConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeSecurityConfigurationInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &DescribeSecurityConfigurationOutput{}
+	req.Data = output
+	return
+}
+
+// Provides the details of a security configuration by returning the configuration
+// JSON.
+func (c *EMR) DescribeSecurityConfiguration(input *DescribeSecurityConfigurationInput) (*DescribeSecurityConfigurationOutput, error) {
+	req, out := c.DescribeSecurityConfigurationRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opDescribeStep = "DescribeStep"
 
-// DescribeStepRequest generates a request for the DescribeStep operation.
+// DescribeStepRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeStep operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeStep method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeStepRequest method.
+//    req, resp := client.DescribeStepRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) DescribeStepRequest(input *DescribeStepInput) (req *request.Request, output *DescribeStepOutput) {
 	op := &request.Operation{
 		Name:       opDescribeStep,
@@ -224,7 +499,28 @@ func (c *EMR) DescribeStep(input *DescribeStepInput) (*DescribeStepOutput, error
 
 const opListBootstrapActions = "ListBootstrapActions"
 
-// ListBootstrapActionsRequest generates a request for the ListBootstrapActions operation.
+// ListBootstrapActionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListBootstrapActions operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListBootstrapActions method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListBootstrapActionsRequest method.
+//    req, resp := client.ListBootstrapActionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) ListBootstrapActionsRequest(input *ListBootstrapActionsInput) (req *request.Request, output *ListBootstrapActionsOutput) {
 	op := &request.Operation{
 		Name:       opListBootstrapActions,
@@ -255,6 +551,23 @@ func (c *EMR) ListBootstrapActions(input *ListBootstrapActionsInput) (*ListBoots
 	return out, err
 }
 
+// ListBootstrapActionsPages iterates over the pages of a ListBootstrapActions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListBootstrapActions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListBootstrapActions operation.
+//    pageNum := 0
+//    err := client.ListBootstrapActionsPages(params,
+//        func(page *ListBootstrapActionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *EMR) ListBootstrapActionsPages(input *ListBootstrapActionsInput, fn func(p *ListBootstrapActionsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListBootstrapActionsRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -265,7 +578,28 @@ func (c *EMR) ListBootstrapActionsPages(input *ListBootstrapActionsInput, fn fun
 
 const opListClusters = "ListClusters"
 
-// ListClustersRequest generates a request for the ListClusters operation.
+// ListClustersRequest generates a "aws/request.Request" representing the
+// client's request for the ListClusters operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListClusters method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListClustersRequest method.
+//    req, resp := client.ListClustersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) ListClustersRequest(input *ListClustersInput) (req *request.Request, output *ListClustersOutput) {
 	op := &request.Operation{
 		Name:       opListClusters,
@@ -300,6 +634,23 @@ func (c *EMR) ListClusters(input *ListClustersInput) (*ListClustersOutput, error
 	return out, err
 }
 
+// ListClustersPages iterates over the pages of a ListClusters operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListClusters method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListClusters operation.
+//    pageNum := 0
+//    err := client.ListClustersPages(params,
+//        func(page *ListClustersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *EMR) ListClustersPages(input *ListClustersInput, fn func(p *ListClustersOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListClustersRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -310,7 +661,28 @@ func (c *EMR) ListClustersPages(input *ListClustersInput, fn func(p *ListCluster
 
 const opListInstanceGroups = "ListInstanceGroups"
 
-// ListInstanceGroupsRequest generates a request for the ListInstanceGroups operation.
+// ListInstanceGroupsRequest generates a "aws/request.Request" representing the
+// client's request for the ListInstanceGroups operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListInstanceGroups method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListInstanceGroupsRequest method.
+//    req, resp := client.ListInstanceGroupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) ListInstanceGroupsRequest(input *ListInstanceGroupsInput) (req *request.Request, output *ListInstanceGroupsOutput) {
 	op := &request.Operation{
 		Name:       opListInstanceGroups,
@@ -341,6 +713,23 @@ func (c *EMR) ListInstanceGroups(input *ListInstanceGroupsInput) (*ListInstanceG
 	return out, err
 }
 
+// ListInstanceGroupsPages iterates over the pages of a ListInstanceGroups operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListInstanceGroups method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListInstanceGroups operation.
+//    pageNum := 0
+//    err := client.ListInstanceGroupsPages(params,
+//        func(page *ListInstanceGroupsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *EMR) ListInstanceGroupsPages(input *ListInstanceGroupsInput, fn func(p *ListInstanceGroupsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListInstanceGroupsRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -351,7 +740,28 @@ func (c *EMR) ListInstanceGroupsPages(input *ListInstanceGroupsInput, fn func(p 
 
 const opListInstances = "ListInstances"
 
-// ListInstancesRequest generates a request for the ListInstances operation.
+// ListInstancesRequest generates a "aws/request.Request" representing the
+// client's request for the ListInstances operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListInstances method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListInstancesRequest method.
+//    req, resp := client.ListInstancesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) ListInstancesRequest(input *ListInstancesInput) (req *request.Request, output *ListInstancesOutput) {
 	op := &request.Operation{
 		Name:       opListInstances,
@@ -386,6 +796,23 @@ func (c *EMR) ListInstances(input *ListInstancesInput) (*ListInstancesOutput, er
 	return out, err
 }
 
+// ListInstancesPages iterates over the pages of a ListInstances operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListInstances method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListInstances operation.
+//    pageNum := 0
+//    err := client.ListInstancesPages(params,
+//        func(page *ListInstancesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *EMR) ListInstancesPages(input *ListInstancesInput, fn func(p *ListInstancesOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListInstancesRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -394,9 +821,81 @@ func (c *EMR) ListInstancesPages(input *ListInstancesInput, fn func(p *ListInsta
 	})
 }
 
+const opListSecurityConfigurations = "ListSecurityConfigurations"
+
+// ListSecurityConfigurationsRequest generates a "aws/request.Request" representing the
+// client's request for the ListSecurityConfigurations operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListSecurityConfigurations method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListSecurityConfigurationsRequest method.
+//    req, resp := client.ListSecurityConfigurationsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *EMR) ListSecurityConfigurationsRequest(input *ListSecurityConfigurationsInput) (req *request.Request, output *ListSecurityConfigurationsOutput) {
+	op := &request.Operation{
+		Name:       opListSecurityConfigurations,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListSecurityConfigurationsInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &ListSecurityConfigurationsOutput{}
+	req.Data = output
+	return
+}
+
+// Lists all the security configurations visible to this account, providing
+// their creation dates and times, and their names. This call returns a maximum
+// of 50 clusters per call, but returns a marker to track the paging of the
+// cluster list across multiple ListSecurityConfigurations calls.
+func (c *EMR) ListSecurityConfigurations(input *ListSecurityConfigurationsInput) (*ListSecurityConfigurationsOutput, error) {
+	req, out := c.ListSecurityConfigurationsRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opListSteps = "ListSteps"
 
-// ListStepsRequest generates a request for the ListSteps operation.
+// ListStepsRequest generates a "aws/request.Request" representing the
+// client's request for the ListSteps operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListSteps method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListStepsRequest method.
+//    req, resp := client.ListStepsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) ListStepsRequest(input *ListStepsInput) (req *request.Request, output *ListStepsOutput) {
 	op := &request.Operation{
 		Name:       opListSteps,
@@ -427,6 +926,23 @@ func (c *EMR) ListSteps(input *ListStepsInput) (*ListStepsOutput, error) {
 	return out, err
 }
 
+// ListStepsPages iterates over the pages of a ListSteps operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListSteps method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListSteps operation.
+//    pageNum := 0
+//    err := client.ListStepsPages(params,
+//        func(page *ListStepsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *EMR) ListStepsPages(input *ListStepsInput, fn func(p *ListStepsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListStepsRequest(input)
 	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
@@ -437,7 +953,28 @@ func (c *EMR) ListStepsPages(input *ListStepsInput, fn func(p *ListStepsOutput, 
 
 const opModifyInstanceGroups = "ModifyInstanceGroups"
 
-// ModifyInstanceGroupsRequest generates a request for the ModifyInstanceGroups operation.
+// ModifyInstanceGroupsRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyInstanceGroups operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ModifyInstanceGroups method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ModifyInstanceGroupsRequest method.
+//    req, resp := client.ModifyInstanceGroupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) ModifyInstanceGroupsRequest(input *ModifyInstanceGroupsInput) (req *request.Request, output *ModifyInstanceGroupsOutput) {
 	op := &request.Operation{
 		Name:       opModifyInstanceGroups,
@@ -469,7 +1006,28 @@ func (c *EMR) ModifyInstanceGroups(input *ModifyInstanceGroupsInput) (*ModifyIns
 
 const opRemoveTags = "RemoveTags"
 
-// RemoveTagsRequest generates a request for the RemoveTags operation.
+// RemoveTagsRequest generates a "aws/request.Request" representing the
+// client's request for the RemoveTags operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the RemoveTags method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the RemoveTagsRequest method.
+//    req, resp := client.RemoveTagsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) RemoveTagsRequest(input *RemoveTagsInput) (req *request.Request, output *RemoveTagsOutput) {
 	op := &request.Operation{
 		Name:       opRemoveTags,
@@ -501,7 +1059,28 @@ func (c *EMR) RemoveTags(input *RemoveTagsInput) (*RemoveTagsOutput, error) {
 
 const opRunJobFlow = "RunJobFlow"
 
-// RunJobFlowRequest generates a request for the RunJobFlow operation.
+// RunJobFlowRequest generates a "aws/request.Request" representing the
+// client's request for the RunJobFlow operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the RunJobFlow method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the RunJobFlowRequest method.
+//    req, resp := client.RunJobFlowRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) RunJobFlowRequest(input *RunJobFlowInput) (req *request.Request, output *RunJobFlowOutput) {
 	op := &request.Operation{
 		Name:       opRunJobFlow,
@@ -550,7 +1129,28 @@ func (c *EMR) RunJobFlow(input *RunJobFlowInput) (*RunJobFlowOutput, error) {
 
 const opSetTerminationProtection = "SetTerminationProtection"
 
-// SetTerminationProtectionRequest generates a request for the SetTerminationProtection operation.
+// SetTerminationProtectionRequest generates a "aws/request.Request" representing the
+// client's request for the SetTerminationProtection operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the SetTerminationProtection method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the SetTerminationProtectionRequest method.
+//    req, resp := client.SetTerminationProtectionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) SetTerminationProtectionRequest(input *SetTerminationProtectionInput) (req *request.Request, output *SetTerminationProtectionOutput) {
 	op := &request.Operation{
 		Name:       opSetTerminationProtection,
@@ -577,7 +1177,7 @@ func (c *EMR) SetTerminationProtectionRequest(input *SetTerminationProtectionInp
 // is analogous to calling the Amazon EC2 DisableAPITermination API on all of
 // the EC2 instances in a cluster.
 //
-//  SetTerminationProtection is used to prevent accidental termination of a
+// SetTerminationProtection is used to prevent accidental termination of a
 // job flow and to ensure that in the event of an error, the instances will
 // persist so you can recover any data stored in their ephemeral instance storage.
 //
@@ -595,7 +1195,28 @@ func (c *EMR) SetTerminationProtection(input *SetTerminationProtectionInput) (*S
 
 const opSetVisibleToAllUsers = "SetVisibleToAllUsers"
 
-// SetVisibleToAllUsersRequest generates a request for the SetVisibleToAllUsers operation.
+// SetVisibleToAllUsersRequest generates a "aws/request.Request" representing the
+// client's request for the SetVisibleToAllUsers operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the SetVisibleToAllUsers method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the SetVisibleToAllUsersRequest method.
+//    req, resp := client.SetVisibleToAllUsersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) SetVisibleToAllUsersRequest(input *SetVisibleToAllUsersInput) (req *request.Request, output *SetVisibleToAllUsersOutput) {
 	op := &request.Operation{
 		Name:       opSetVisibleToAllUsers,
@@ -629,7 +1250,28 @@ func (c *EMR) SetVisibleToAllUsers(input *SetVisibleToAllUsersInput) (*SetVisibl
 
 const opTerminateJobFlows = "TerminateJobFlows"
 
-// TerminateJobFlowsRequest generates a request for the TerminateJobFlows operation.
+// TerminateJobFlowsRequest generates a "aws/request.Request" representing the
+// client's request for the TerminateJobFlows operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the TerminateJobFlows method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the TerminateJobFlowsRequest method.
+//    req, resp := client.TerminateJobFlowsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *EMR) TerminateJobFlowsRequest(input *TerminateJobFlowsInput) (req *request.Request, output *TerminateJobFlowsOutput) {
 	op := &request.Operation{
 		Name:       opTerminateJobFlows,
@@ -654,7 +1296,7 @@ func (c *EMR) TerminateJobFlowsRequest(input *TerminateJobFlowsInput) (req *requ
 // the job flow is running are stopped. Any log files not already saved are
 // uploaded to Amazon S3 if a LogUri was specified when the job flow was created.
 //
-//  The maximum number of JobFlows allowed is 10. The call to TerminateJobFlows
+// The maximum number of JobFlows allowed is 10. The call to TerminateJobFlows
 // is asynchronous. Depending on the configuration of the job flow, it may take
 // up to 5-20 minutes for the job flow to completely terminate and release allocated
 // resources, such as Amazon EC2 instances.
@@ -862,12 +1504,16 @@ func (s AddTagsOutput) GoString() string {
 // Flow on the MapR Distribution for Hadoop (http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/emr-mapr.html).
 // Currently supported values are:
 //
-//  "mapr-m3" - launch the job flow using MapR M3 Edition. "mapr-m5" - launch
-// the job flow using MapR M5 Edition. "mapr" with the user arguments specifying
-// "--edition,m3" or "--edition,m5" - launch the job flow using MapR M3 or M5
-// Edition, respectively.  In Amazon EMR releases 4.0 and greater, the only
-// accepted parameter is the application name. To pass arguments to applications,
-// you supply a configuration for each application.
+//   "mapr-m3" - launch the job flow using MapR M3 Edition.
+//
+//   "mapr-m5" - launch the job flow using MapR M5 Edition.
+//
+//   "mapr" with the user arguments specifying "--edition,m3" or "--edition,m5"
+// - launch the job flow using MapR M3 or M5 Edition, respectively.
+//
+//    In Amazon EMR releases 4.0 and greater, the only accepted parameter is
+// the application name. To pass arguments to applications, you supply a configuration
+// for each application.
 type Application struct {
 	_ struct{} `type:"structure"`
 
@@ -895,14 +1541,11 @@ func (s Application) GoString() string {
 	return s.String()
 }
 
-// Configuration of a bootstrap action.
 type BootstrapActionConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the bootstrap action.
 	Name *string `type:"string" required:"true"`
 
-	// The script run by the bootstrap action.
 	ScriptBootstrapAction *ScriptBootstrapActionConfig `type:"structure" required:"true"`
 }
 
@@ -967,7 +1610,7 @@ type Cluster struct {
 
 	// Amazon EMR releases 4.x or later.
 	//
-	// The list of Configurations supplied to the EMR cluster.
+	//  The list of Configurations supplied to the EMR cluster.
 	Configurations []*Configuration `type:"list"`
 
 	// Provides information about the EC2 instances in a cluster grouped by category.
@@ -1003,6 +1646,9 @@ type Cluster struct {
 
 	// The AMI version running on this cluster.
 	RunningAmiVersion *string `type:"string"`
+
+	// The name of the security configuration applied to the cluster.
+	SecurityConfiguration *string `type:"string"`
 
 	// The IAM role that will be assumed by the Amazon EMR service to access AWS
 	// resources on your behalf.
@@ -1166,7 +1812,7 @@ func (s Command) GoString() string {
 
 // Amazon EMR releases 4.x or later.
 //
-// Specifies a hardware and software configuration of the EMR cluster. This
+//  Specifies a hardware and software configuration of the EMR cluster. This
 // includes configurations for applications and software bundled with Amazon
 // EMR. The Configuration object is a JSON object which is defined by a classification
 // and a set of properties. Configurations can be nested, so a configuration
@@ -1192,6 +1838,106 @@ func (s Configuration) String() string {
 
 // GoString returns the string representation
 func (s Configuration) GoString() string {
+	return s.String()
+}
+
+type CreateSecurityConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the security configuration.
+	Name *string `type:"string" required:"true"`
+
+	// The security configuration details in JSON format.
+	SecurityConfiguration *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateSecurityConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateSecurityConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateSecurityConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateSecurityConfigurationInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.SecurityConfiguration == nil {
+		invalidParams.Add(request.NewErrParamRequired("SecurityConfiguration"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type CreateSecurityConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The date and time the security configuration was created.
+	CreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix" required:"true"`
+
+	// The name of the security configuration.
+	Name *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateSecurityConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateSecurityConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteSecurityConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the security configuration.
+	Name *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteSecurityConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteSecurityConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteSecurityConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteSecurityConfigurationInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type DeleteSecurityConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteSecurityConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteSecurityConfigurationOutput) GoString() string {
 	return s.String()
 }
 
@@ -1286,6 +2032,59 @@ func (s DescribeJobFlowsOutput) String() string {
 
 // GoString returns the string representation
 func (s DescribeJobFlowsOutput) GoString() string {
+	return s.String()
+}
+
+type DescribeSecurityConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the security configuration.
+	Name *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeSecurityConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeSecurityConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeSecurityConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeSecurityConfigurationInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type DescribeSecurityConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The date and time the security configuration was created
+	CreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The name of the security configuration.
+	Name *string `type:"string"`
+
+	// The security configuration details in JSON format.
+	SecurityConfiguration *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeSecurityConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeSecurityConfigurationOutput) GoString() string {
 	return s.String()
 }
 
@@ -1491,7 +2290,7 @@ type Ec2InstanceAttributes struct {
 	// not specify this value, the job flow is launched in the normal AWS cloud,
 	// outside of a VPC.
 	//
-	//  Amazon VPC currently does not support cluster compute quadruple extra large
+	// Amazon VPC currently does not support cluster compute quadruple extra large
 	// (cc1.4xlarge) instances. Thus, you cannot specify the cc1.4xlarge instance
 	// type for nodes of a job flow launched in a VPC.
 	Ec2SubnetId *string `type:"string"`
@@ -1518,6 +2317,36 @@ func (s Ec2InstanceAttributes) String() string {
 
 // GoString returns the string representation
 func (s Ec2InstanceAttributes) GoString() string {
+	return s.String()
+}
+
+// The details of the step failure. The service attempts to detect the root
+// cause for many common failures.
+type FailureDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The path to the log file where the step failure root cause was originally
+	// recorded.
+	LogFile *string `type:"string"`
+
+	// The descriptive message including the error the EMR service has identified
+	// as the cause of step failure. This is text from an error log that describes
+	// the root cause of the failure.
+	Message *string `type:"string"`
+
+	// The reason for the step failure. In the case where the service cannot successfully
+	// determine the root cause of the failure, it returns "Unknown Error" as a
+	// reason.
+	Reason *string `type:"string"`
+}
+
+// String returns the string representation
+func (s FailureDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FailureDetails) GoString() string {
 	return s.String()
 }
 
@@ -1651,15 +2480,15 @@ type InstanceGroup struct {
 
 	// Amazon EMR releases 4.x or later.
 	//
-	// The list of configurations supplied for an EMR cluster instance group. You
-	// can specify a separate configuration for each instance group (master, core,
-	// and task).
+	//  The list of configurations supplied for an EMR cluster instance group.
+	// You can specify a separate configuration for each instance group (master,
+	// core, and task).
 	Configurations []*Configuration `type:"list"`
 
 	// The EBS block devices that are mapped to this instance group.
 	EbsBlockDevices []*EbsBlockDevice `type:"list"`
 
-	// If the instance group is EBS-optimized. An Amazon EBS–optimized instance
+	// If the instance group is EBS-optimized. An Amazon EBS-optimized instance
 	// uses an optimized configuration stack and provides additional, dedicated
 	// capacity for Amazon EBS I/O.
 	EbsOptimized *bool `type:"boolean"`
@@ -1713,9 +2542,9 @@ type InstanceGroupConfig struct {
 
 	// Amazon EMR releases 4.x or later.
 	//
-	// The list of configurations supplied for an EMR cluster instance group. You
-	// can specify a separate configuration for each instance group (master, core,
-	// and task).
+	//  The list of configurations supplied for an EMR cluster instance group.
+	// You can specify a separate configuration for each instance group (master,
+	// core, and task).
 	Configurations []*Configuration `type:"list"`
 
 	// EBS configurations that will be attached to each Amazon EC2 instance in the
@@ -2158,7 +2987,7 @@ type JobFlowInstancesConfig struct {
 	// the job flow to launch. If you do not specify this value, the job flow is
 	// launched in the normal Amazon Web Services cloud, outside of an Amazon VPC.
 	//
-	//  Amazon VPC currently does not support cluster compute quadruple extra large
+	// Amazon VPC currently does not support cluster compute quadruple extra large
 	// (cc1.4xlarge) instances. Thus you cannot specify the cc1.4xlarge instance
 	// type for nodes of a job flow launched in a Amazon VPC.
 	Ec2SubnetId *string `type:"string"`
@@ -2339,7 +3168,7 @@ type ListBootstrapActionsInput struct {
 	// The cluster identifier for the bootstrap actions to list .
 	ClusterId *string `type:"string" required:"true"`
 
-	// The pagination token that indicates the next set of results to retrieve .
+	// The pagination token that indicates the next set of results to retrieve.
 	Marker *string `type:"string"`
 }
 
@@ -2373,7 +3202,7 @@ type ListBootstrapActionsOutput struct {
 	// The bootstrap actions associated with the cluster .
 	BootstrapActions []*Command `type:"list"`
 
-	// The pagination token that indicates the next set of results to retrieve .
+	// The pagination token that indicates the next set of results to retrieve.
 	Marker *string `type:"string"`
 }
 
@@ -2554,6 +3383,45 @@ func (s ListInstancesOutput) String() string {
 
 // GoString returns the string representation
 func (s ListInstancesOutput) GoString() string {
+	return s.String()
+}
+
+type ListSecurityConfigurationsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The pagination token that indicates the set of results to retrieve.
+	Marker *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListSecurityConfigurationsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListSecurityConfigurationsInput) GoString() string {
+	return s.String()
+}
+
+type ListSecurityConfigurationsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A pagination token that indicates the next set of results to retrieve. Include
+	// the marker in the next ListSecurityConfiguration call to retrieve the next
+	// page of results, if required.
+	Marker *string `type:"string"`
+
+	// The creation date and time, and name, of each security configuration.
+	SecurityConfigurations []*SecurityConfigurationSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s ListSecurityConfigurationsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListSecurityConfigurationsOutput) GoString() string {
 	return s.String()
 }
 
@@ -2765,13 +3633,15 @@ type RunJobFlowInput struct {
 	// For Amazon EMR releases 3.x and 2.x. For Amazon EMR releases 4.x and greater,
 	// use ReleaseLabel.
 	//
-	// The version of the Amazon Machine Image (AMI) to use when launching Amazon
+	//  The version of the Amazon Machine Image (AMI) to use when launching Amazon
 	// EC2 instances in the job flow. The following values are valid:
 	//
-	//  The version number of the AMI to use, for example, "2.0."  If the AMI supports
-	// multiple versions of Hadoop (for example, AMI 1.0 supports both Hadoop 0.18
-	// and 0.20) you can use the JobFlowInstancesConfig HadoopVersion parameter
-	// to modify the version of Hadoop from the defaults shown above.
+	//   The version number of the AMI to use, for example, "2.0."
+	//
+	//   If the AMI supports multiple versions of Hadoop (for example, AMI 1.0
+	// supports both Hadoop 0.18 and 0.20) you can use the JobFlowInstancesConfig
+	// HadoopVersion parameter to modify the version of Hadoop from the defaults
+	// shown above.
 	//
 	// For details about the AMI versions currently supported by Amazon Elastic
 	// MapReduce, go to AMI Versions Supported in Elastic MapReduce (http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/EnvironmentConfig_AMIVersion.html#ami-versions-supported)
@@ -2780,7 +3650,7 @@ type RunJobFlowInput struct {
 
 	// Amazon EMR releases 4.x or later.
 	//
-	// A list of applications for the cluster. Valid values are: "Hadoop", "Hive",
+	//  A list of applications for the cluster. Valid values are: "Hadoop", "Hive",
 	// "Mahout", "Pig", and "Spark." They are case insensitive.
 	Applications []*Application `type:"list"`
 
@@ -2790,7 +3660,7 @@ type RunJobFlowInput struct {
 
 	// Amazon EMR releases 4.x or later.
 	//
-	// The list of configurations supplied for the EMR cluster you are creating.
+	//  The list of configurations supplied for the EMR cluster you are creating.
 	Configurations []*Configuration `type:"list"`
 
 	// A specification of the number and type of Amazon EC2 instances on which to
@@ -2813,28 +3683,39 @@ type RunJobFlowInput struct {
 	// For Amazon EMR releases 3.x and 2.x. For Amazon EMR releases 4.x and greater,
 	// use Applications.
 	//
-	// A list of strings that indicates third-party software to use with the job
+	//  A list of strings that indicates third-party software to use with the job
 	// flow that accepts a user argument list. EMR accepts and forwards the argument
 	// list to the corresponding installation script as bootstrap action arguments.
 	// For more information, see Launch a Job Flow on the MapR Distribution for
 	// Hadoop (http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/emr-mapr.html).
 	// Currently supported values are:
 	//
-	//  "mapr-m3" - launch the cluster using MapR M3 Edition. "mapr-m5" - launch
-	// the cluster using MapR M5 Edition. "mapr" with the user arguments specifying
-	// "--edition,m3" or "--edition,m5" - launch the job flow using MapR M3 or M5
-	// Edition respectively. "mapr-m7" - launch the cluster using MapR M7 Edition.
-	// "hunk" - launch the cluster with the Hunk Big Data Analtics Platform. "hue"-
-	// launch the cluster with Hue installed. "spark" - launch the cluster with
-	// Apache Spark installed. "ganglia" - launch the cluster with the Ganglia Monitoring
-	// System installed.
+	//   "mapr-m3" - launch the cluster using MapR M3 Edition.
+	//
+	//   "mapr-m5" - launch the cluster using MapR M5 Edition.
+	//
+	//   "mapr" with the user arguments specifying "--edition,m3" or "--edition,m5"
+	// - launch the job flow using MapR M3 or M5 Edition respectively.
+	//
+	//   "mapr-m7" - launch the cluster using MapR M7 Edition.
+	//
+	//   "hunk" - launch the cluster with the Hunk Big Data Analtics Platform.
+	//
+	//   "hue"- launch the cluster with Hue installed.
+	//
+	//   "spark" - launch the cluster with Apache Spark installed.
+	//
+	//   "ganglia" - launch the cluster with the Ganglia Monitoring System installed.
 	NewSupportedProducts []*SupportedProductConfig `type:"list"`
 
 	// Amazon EMR releases 4.x or later.
 	//
-	// The release label for the Amazon EMR release. For Amazon EMR 3.x and 2.x
+	//  The release label for the Amazon EMR release. For Amazon EMR 3.x and 2.x
 	// AMIs, use amiVersion instead instead of ReleaseLabel.
 	ReleaseLabel *string `type:"string"`
+
+	// The name of a security configuration to apply to the cluster.
+	SecurityConfiguration *string `type:"string"`
 
 	// The IAM role that will be assumed by the Amazon EMR service to access AWS
 	// resources on your behalf.
@@ -2846,13 +3727,14 @@ type RunJobFlowInput struct {
 	// For Amazon EMR releases 3.x and 2.x. For Amazon EMR releases 4.x and greater,
 	// use Applications.
 	//
-	// A list of strings that indicates third-party software to use with the job
+	//  A list of strings that indicates third-party software to use with the job
 	// flow. For more information, go to Use Third Party Applications with Amazon
 	// EMR (http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/emr-supported-products.html).
 	// Currently supported values are:
 	//
-	//  "mapr-m3" - launch the job flow using MapR M3 Edition. "mapr-m5" - launch
-	// the job flow using MapR M5 Edition.
+	//   "mapr-m3" - launch the job flow using MapR M3 Edition.
+	//
+	//   "mapr-m5" - launch the job flow using MapR M5 Edition.
 	SupportedProducts []*string `type:"list"`
 
 	// A list of tags to associate with a cluster and propagate to Amazon EC2 instances.
@@ -2935,15 +3817,11 @@ func (s RunJobFlowOutput) GoString() string {
 	return s.String()
 }
 
-// Configuration of the script to run during a bootstrap action.
 type ScriptBootstrapActionConfig struct {
 	_ struct{} `type:"structure"`
 
-	// A list of command line arguments to pass to the bootstrap action script.
 	Args []*string `type:"list"`
 
-	// Location of the script to run during a bootstrap action. Can be either a
-	// location in Amazon S3 or on a local file system.
 	Path *string `type:"string" required:"true"`
 }
 
@@ -2968,6 +3846,27 @@ func (s *ScriptBootstrapActionConfig) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// The creation date and time, and name, of a security configuration.
+type SecurityConfigurationSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The date and time the security configuration was created.
+	CreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The name of the security configuration.
+	Name *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SecurityConfigurationSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SecurityConfigurationSummary) GoString() string {
+	return s.String()
 }
 
 // The input argument to the TerminationProtection operation.
@@ -3257,6 +4156,10 @@ func (s StepStateChangeReason) GoString() string {
 type StepStatus struct {
 	_ struct{} `type:"structure"`
 
+	// The details for the step failure including reason, message, and log file
+	// path where the root cause was identified.
+	FailureDetails *FailureDetails `type:"structure"`
+
 	// The execution state of the cluster step.
 	State *string `type:"string" enum:"StepState"`
 
@@ -3435,7 +4338,7 @@ type VolumeSpecification struct {
 	// The number of I/O operations per second (IOPS) that the volume supports.
 	Iops *int64 `type:"integer"`
 
-	// The volume size, in gibibytes (GiB). This can be a number from 1 – 1024.
+	// The volume size, in gibibytes (GiB). This can be a number from 1 - 1024.
 	// If the volume type is EBS-optimized, the minimum value is 10.
 	SizeInGB *int64 `type:"integer" required:"true"`
 
@@ -3593,10 +4496,6 @@ const (
 )
 
 // The type of instance.
-//
-//   A small instance
-//
-//   A large instance
 const (
 	// @enum JobFlowExecutionState
 	JobFlowExecutionStateStarting = "STARTING"

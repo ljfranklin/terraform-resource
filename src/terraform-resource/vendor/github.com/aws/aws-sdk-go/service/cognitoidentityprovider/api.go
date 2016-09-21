@@ -16,7 +16,28 @@ import (
 
 const opAddCustomAttributes = "AddCustomAttributes"
 
-// AddCustomAttributesRequest generates a request for the AddCustomAttributes operation.
+// AddCustomAttributesRequest generates a "aws/request.Request" representing the
+// client's request for the AddCustomAttributes operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AddCustomAttributes method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AddCustomAttributesRequest method.
+//    req, resp := client.AddCustomAttributesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) AddCustomAttributesRequest(input *AddCustomAttributesInput) (req *request.Request, output *AddCustomAttributesOutput) {
 	op := &request.Operation{
 		Name:       opAddCustomAttributes,
@@ -43,7 +64,28 @@ func (c *CognitoIdentityProvider) AddCustomAttributes(input *AddCustomAttributes
 
 const opAdminConfirmSignUp = "AdminConfirmSignUp"
 
-// AdminConfirmSignUpRequest generates a request for the AdminConfirmSignUp operation.
+// AdminConfirmSignUpRequest generates a "aws/request.Request" representing the
+// client's request for the AdminConfirmSignUp operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminConfirmSignUp method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminConfirmSignUpRequest method.
+//    req, resp := client.AdminConfirmSignUpRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) AdminConfirmSignUpRequest(input *AdminConfirmSignUpInput) (req *request.Request, output *AdminConfirmSignUpOutput) {
 	op := &request.Operation{
 		Name:       opAdminConfirmSignUp,
@@ -71,7 +113,28 @@ func (c *CognitoIdentityProvider) AdminConfirmSignUp(input *AdminConfirmSignUpIn
 
 const opAdminDeleteUser = "AdminDeleteUser"
 
-// AdminDeleteUserRequest generates a request for the AdminDeleteUser operation.
+// AdminDeleteUserRequest generates a "aws/request.Request" representing the
+// client's request for the AdminDeleteUser operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminDeleteUser method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminDeleteUserRequest method.
+//    req, resp := client.AdminDeleteUserRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) AdminDeleteUserRequest(input *AdminDeleteUserInput) (req *request.Request, output *AdminDeleteUserOutput) {
 	op := &request.Operation{
 		Name:       opAdminDeleteUser,
@@ -100,7 +163,28 @@ func (c *CognitoIdentityProvider) AdminDeleteUser(input *AdminDeleteUserInput) (
 
 const opAdminDeleteUserAttributes = "AdminDeleteUserAttributes"
 
-// AdminDeleteUserAttributesRequest generates a request for the AdminDeleteUserAttributes operation.
+// AdminDeleteUserAttributesRequest generates a "aws/request.Request" representing the
+// client's request for the AdminDeleteUserAttributes operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminDeleteUserAttributes method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminDeleteUserAttributesRequest method.
+//    req, resp := client.AdminDeleteUserAttributesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) AdminDeleteUserAttributesRequest(input *AdminDeleteUserAttributesInput) (req *request.Request, output *AdminDeleteUserAttributesOutput) {
 	op := &request.Operation{
 		Name:       opAdminDeleteUserAttributes,
@@ -128,7 +212,28 @@ func (c *CognitoIdentityProvider) AdminDeleteUserAttributes(input *AdminDeleteUs
 
 const opAdminDisableUser = "AdminDisableUser"
 
-// AdminDisableUserRequest generates a request for the AdminDisableUser operation.
+// AdminDisableUserRequest generates a "aws/request.Request" representing the
+// client's request for the AdminDisableUser operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminDisableUser method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminDisableUserRequest method.
+//    req, resp := client.AdminDisableUserRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) AdminDisableUserRequest(input *AdminDisableUserInput) (req *request.Request, output *AdminDisableUserOutput) {
 	op := &request.Operation{
 		Name:       opAdminDisableUser,
@@ -155,7 +260,28 @@ func (c *CognitoIdentityProvider) AdminDisableUser(input *AdminDisableUserInput)
 
 const opAdminEnableUser = "AdminEnableUser"
 
-// AdminEnableUserRequest generates a request for the AdminEnableUser operation.
+// AdminEnableUserRequest generates a "aws/request.Request" representing the
+// client's request for the AdminEnableUser operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminEnableUser method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminEnableUserRequest method.
+//    req, resp := client.AdminEnableUserRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) AdminEnableUserRequest(input *AdminEnableUserInput) (req *request.Request, output *AdminEnableUserOutput) {
 	op := &request.Operation{
 		Name:       opAdminEnableUser,
@@ -180,9 +306,128 @@ func (c *CognitoIdentityProvider) AdminEnableUser(input *AdminEnableUserInput) (
 	return out, err
 }
 
+const opAdminForgetDevice = "AdminForgetDevice"
+
+// AdminForgetDeviceRequest generates a "aws/request.Request" representing the
+// client's request for the AdminForgetDevice operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminForgetDevice method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminForgetDeviceRequest method.
+//    req, resp := client.AdminForgetDeviceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) AdminForgetDeviceRequest(input *AdminForgetDeviceInput) (req *request.Request, output *AdminForgetDeviceOutput) {
+	op := &request.Operation{
+		Name:       opAdminForgetDevice,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AdminForgetDeviceInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	output = &AdminForgetDeviceOutput{}
+	req.Data = output
+	return
+}
+
+// Forgets the device, as an administrator.
+func (c *CognitoIdentityProvider) AdminForgetDevice(input *AdminForgetDeviceInput) (*AdminForgetDeviceOutput, error) {
+	req, out := c.AdminForgetDeviceRequest(input)
+	err := req.Send()
+	return out, err
+}
+
+const opAdminGetDevice = "AdminGetDevice"
+
+// AdminGetDeviceRequest generates a "aws/request.Request" representing the
+// client's request for the AdminGetDevice operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminGetDevice method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminGetDeviceRequest method.
+//    req, resp := client.AdminGetDeviceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) AdminGetDeviceRequest(input *AdminGetDeviceInput) (req *request.Request, output *AdminGetDeviceOutput) {
+	op := &request.Operation{
+		Name:       opAdminGetDevice,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AdminGetDeviceInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &AdminGetDeviceOutput{}
+	req.Data = output
+	return
+}
+
+// Gets the device, as an administrator.
+func (c *CognitoIdentityProvider) AdminGetDevice(input *AdminGetDeviceInput) (*AdminGetDeviceOutput, error) {
+	req, out := c.AdminGetDeviceRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opAdminGetUser = "AdminGetUser"
 
-// AdminGetUserRequest generates a request for the AdminGetUser operation.
+// AdminGetUserRequest generates a "aws/request.Request" representing the
+// client's request for the AdminGetUser operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminGetUser method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminGetUserRequest method.
+//    req, resp := client.AdminGetUserRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) AdminGetUserRequest(input *AdminGetUserInput) (req *request.Request, output *AdminGetUserOutput) {
 	op := &request.Operation{
 		Name:       opAdminGetUser,
@@ -208,9 +453,126 @@ func (c *CognitoIdentityProvider) AdminGetUser(input *AdminGetUserInput) (*Admin
 	return out, err
 }
 
+const opAdminInitiateAuth = "AdminInitiateAuth"
+
+// AdminInitiateAuthRequest generates a "aws/request.Request" representing the
+// client's request for the AdminInitiateAuth operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminInitiateAuth method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminInitiateAuthRequest method.
+//    req, resp := client.AdminInitiateAuthRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) AdminInitiateAuthRequest(input *AdminInitiateAuthInput) (req *request.Request, output *AdminInitiateAuthOutput) {
+	op := &request.Operation{
+		Name:       opAdminInitiateAuth,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AdminInitiateAuthInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &AdminInitiateAuthOutput{}
+	req.Data = output
+	return
+}
+
+// Initiates the authentication flow, as an administrator.
+func (c *CognitoIdentityProvider) AdminInitiateAuth(input *AdminInitiateAuthInput) (*AdminInitiateAuthOutput, error) {
+	req, out := c.AdminInitiateAuthRequest(input)
+	err := req.Send()
+	return out, err
+}
+
+const opAdminListDevices = "AdminListDevices"
+
+// AdminListDevicesRequest generates a "aws/request.Request" representing the
+// client's request for the AdminListDevices operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminListDevices method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminListDevicesRequest method.
+//    req, resp := client.AdminListDevicesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) AdminListDevicesRequest(input *AdminListDevicesInput) (req *request.Request, output *AdminListDevicesOutput) {
+	op := &request.Operation{
+		Name:       opAdminListDevices,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AdminListDevicesInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &AdminListDevicesOutput{}
+	req.Data = output
+	return
+}
+
+// Lists devices, as an administrator.
+func (c *CognitoIdentityProvider) AdminListDevices(input *AdminListDevicesInput) (*AdminListDevicesOutput, error) {
+	req, out := c.AdminListDevicesRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opAdminResetUserPassword = "AdminResetUserPassword"
 
-// AdminResetUserPasswordRequest generates a request for the AdminResetUserPassword operation.
+// AdminResetUserPasswordRequest generates a "aws/request.Request" representing the
+// client's request for the AdminResetUserPassword operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminResetUserPassword method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminResetUserPasswordRequest method.
+//    req, resp := client.AdminResetUserPasswordRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) AdminResetUserPasswordRequest(input *AdminResetUserPasswordInput) (req *request.Request, output *AdminResetUserPasswordOutput) {
 	op := &request.Operation{
 		Name:       opAdminResetUserPassword,
@@ -230,15 +592,94 @@ func (c *CognitoIdentityProvider) AdminResetUserPasswordRequest(input *AdminRese
 
 // Resets the specified user's password in a user pool as an administrator.
 // Works on any user.
+//
+// When a developer calls this API, the current password is invalidated, so
+// it must be changed. If a user tries to sign in after the API is called, the
+// app will get a PasswordResetRequiredException exception back and should direct
+// the user down the flow to reset the password, which is the same as the forgot
+// password flow. In addition, if the user pool has phone verification selected
+// and a verified phone number exists for the user, or if email verification
+// is selected and a verified email exists for the user, calling this API will
+// also result in sending a message to the end user with the code to change
+// their password.
 func (c *CognitoIdentityProvider) AdminResetUserPassword(input *AdminResetUserPasswordInput) (*AdminResetUserPasswordOutput, error) {
 	req, out := c.AdminResetUserPasswordRequest(input)
 	err := req.Send()
 	return out, err
 }
 
+const opAdminRespondToAuthChallenge = "AdminRespondToAuthChallenge"
+
+// AdminRespondToAuthChallengeRequest generates a "aws/request.Request" representing the
+// client's request for the AdminRespondToAuthChallenge operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminRespondToAuthChallenge method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminRespondToAuthChallengeRequest method.
+//    req, resp := client.AdminRespondToAuthChallengeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) AdminRespondToAuthChallengeRequest(input *AdminRespondToAuthChallengeInput) (req *request.Request, output *AdminRespondToAuthChallengeOutput) {
+	op := &request.Operation{
+		Name:       opAdminRespondToAuthChallenge,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AdminRespondToAuthChallengeInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &AdminRespondToAuthChallengeOutput{}
+	req.Data = output
+	return
+}
+
+// Responds to an authentication challenge, as an administrator.
+func (c *CognitoIdentityProvider) AdminRespondToAuthChallenge(input *AdminRespondToAuthChallengeInput) (*AdminRespondToAuthChallengeOutput, error) {
+	req, out := c.AdminRespondToAuthChallengeRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opAdminSetUserSettings = "AdminSetUserSettings"
 
-// AdminSetUserSettingsRequest generates a request for the AdminSetUserSettings operation.
+// AdminSetUserSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the AdminSetUserSettings operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminSetUserSettings method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminSetUserSettingsRequest method.
+//    req, resp := client.AdminSetUserSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) AdminSetUserSettingsRequest(input *AdminSetUserSettingsInput) (req *request.Request, output *AdminSetUserSettingsOutput) {
 	op := &request.Operation{
 		Name:       opAdminSetUserSettings,
@@ -263,9 +704,78 @@ func (c *CognitoIdentityProvider) AdminSetUserSettings(input *AdminSetUserSettin
 	return out, err
 }
 
+const opAdminUpdateDeviceStatus = "AdminUpdateDeviceStatus"
+
+// AdminUpdateDeviceStatusRequest generates a "aws/request.Request" representing the
+// client's request for the AdminUpdateDeviceStatus operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminUpdateDeviceStatus method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminUpdateDeviceStatusRequest method.
+//    req, resp := client.AdminUpdateDeviceStatusRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) AdminUpdateDeviceStatusRequest(input *AdminUpdateDeviceStatusInput) (req *request.Request, output *AdminUpdateDeviceStatusOutput) {
+	op := &request.Operation{
+		Name:       opAdminUpdateDeviceStatus,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AdminUpdateDeviceStatusInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &AdminUpdateDeviceStatusOutput{}
+	req.Data = output
+	return
+}
+
+// Updates the device status as an administrator.
+func (c *CognitoIdentityProvider) AdminUpdateDeviceStatus(input *AdminUpdateDeviceStatusInput) (*AdminUpdateDeviceStatusOutput, error) {
+	req, out := c.AdminUpdateDeviceStatusRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opAdminUpdateUserAttributes = "AdminUpdateUserAttributes"
 
-// AdminUpdateUserAttributesRequest generates a request for the AdminUpdateUserAttributes operation.
+// AdminUpdateUserAttributesRequest generates a "aws/request.Request" representing the
+// client's request for the AdminUpdateUserAttributes operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminUpdateUserAttributes method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminUpdateUserAttributesRequest method.
+//    req, resp := client.AdminUpdateUserAttributesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) AdminUpdateUserAttributesRequest(input *AdminUpdateUserAttributesInput) (req *request.Request, output *AdminUpdateUserAttributesOutput) {
 	op := &request.Operation{
 		Name:       opAdminUpdateUserAttributes,
@@ -291,9 +801,78 @@ func (c *CognitoIdentityProvider) AdminUpdateUserAttributes(input *AdminUpdateUs
 	return out, err
 }
 
+const opAdminUserGlobalSignOut = "AdminUserGlobalSignOut"
+
+// AdminUserGlobalSignOutRequest generates a "aws/request.Request" representing the
+// client's request for the AdminUserGlobalSignOut operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AdminUserGlobalSignOut method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AdminUserGlobalSignOutRequest method.
+//    req, resp := client.AdminUserGlobalSignOutRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) AdminUserGlobalSignOutRequest(input *AdminUserGlobalSignOutInput) (req *request.Request, output *AdminUserGlobalSignOutOutput) {
+	op := &request.Operation{
+		Name:       opAdminUserGlobalSignOut,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AdminUserGlobalSignOutInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &AdminUserGlobalSignOutOutput{}
+	req.Data = output
+	return
+}
+
+// Signs out users from all devices, as an administrator.
+func (c *CognitoIdentityProvider) AdminUserGlobalSignOut(input *AdminUserGlobalSignOutInput) (*AdminUserGlobalSignOutOutput, error) {
+	req, out := c.AdminUserGlobalSignOutRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opChangePassword = "ChangePassword"
 
-// ChangePasswordRequest generates a request for the ChangePassword operation.
+// ChangePasswordRequest generates a "aws/request.Request" representing the
+// client's request for the ChangePassword operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ChangePassword method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ChangePasswordRequest method.
+//    req, resp := client.ChangePasswordRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) ChangePasswordRequest(input *ChangePasswordInput) (req *request.Request, output *ChangePasswordOutput) {
 	op := &request.Operation{
 		Name:       opChangePassword,
@@ -319,9 +898,79 @@ func (c *CognitoIdentityProvider) ChangePassword(input *ChangePasswordInput) (*C
 	return out, err
 }
 
+const opConfirmDevice = "ConfirmDevice"
+
+// ConfirmDeviceRequest generates a "aws/request.Request" representing the
+// client's request for the ConfirmDevice operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ConfirmDevice method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ConfirmDeviceRequest method.
+//    req, resp := client.ConfirmDeviceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) ConfirmDeviceRequest(input *ConfirmDeviceInput) (req *request.Request, output *ConfirmDeviceOutput) {
+	op := &request.Operation{
+		Name:       opConfirmDevice,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ConfirmDeviceInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &ConfirmDeviceOutput{}
+	req.Data = output
+	return
+}
+
+// Confirms tracking of the device. This API call is the call that beings device
+// tracking.
+func (c *CognitoIdentityProvider) ConfirmDevice(input *ConfirmDeviceInput) (*ConfirmDeviceOutput, error) {
+	req, out := c.ConfirmDeviceRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opConfirmForgotPassword = "ConfirmForgotPassword"
 
-// ConfirmForgotPasswordRequest generates a request for the ConfirmForgotPassword operation.
+// ConfirmForgotPasswordRequest generates a "aws/request.Request" representing the
+// client's request for the ConfirmForgotPassword operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ConfirmForgotPassword method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ConfirmForgotPasswordRequest method.
+//    req, resp := client.ConfirmForgotPasswordRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) ConfirmForgotPasswordRequest(input *ConfirmForgotPasswordInput) (req *request.Request, output *ConfirmForgotPasswordOutput) {
 	op := &request.Operation{
 		Name:       opConfirmForgotPassword,
@@ -350,7 +999,28 @@ func (c *CognitoIdentityProvider) ConfirmForgotPassword(input *ConfirmForgotPass
 
 const opConfirmSignUp = "ConfirmSignUp"
 
-// ConfirmSignUpRequest generates a request for the ConfirmSignUp operation.
+// ConfirmSignUpRequest generates a "aws/request.Request" representing the
+// client's request for the ConfirmSignUp operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ConfirmSignUp method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ConfirmSignUpRequest method.
+//    req, resp := client.ConfirmSignUpRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) ConfirmSignUpRequest(input *ConfirmSignUpInput) (req *request.Request, output *ConfirmSignUpOutput) {
 	op := &request.Operation{
 		Name:       opConfirmSignUp,
@@ -377,9 +1047,78 @@ func (c *CognitoIdentityProvider) ConfirmSignUp(input *ConfirmSignUpInput) (*Con
 	return out, err
 }
 
+const opCreateUserImportJob = "CreateUserImportJob"
+
+// CreateUserImportJobRequest generates a "aws/request.Request" representing the
+// client's request for the CreateUserImportJob operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateUserImportJob method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateUserImportJobRequest method.
+//    req, resp := client.CreateUserImportJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) CreateUserImportJobRequest(input *CreateUserImportJobInput) (req *request.Request, output *CreateUserImportJobOutput) {
+	op := &request.Operation{
+		Name:       opCreateUserImportJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateUserImportJobInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &CreateUserImportJobOutput{}
+	req.Data = output
+	return
+}
+
+// Creates the user import job.
+func (c *CognitoIdentityProvider) CreateUserImportJob(input *CreateUserImportJobInput) (*CreateUserImportJobOutput, error) {
+	req, out := c.CreateUserImportJobRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opCreateUserPool = "CreateUserPool"
 
-// CreateUserPoolRequest generates a request for the CreateUserPool operation.
+// CreateUserPoolRequest generates a "aws/request.Request" representing the
+// client's request for the CreateUserPool operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateUserPool method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateUserPoolRequest method.
+//    req, resp := client.CreateUserPoolRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) CreateUserPoolRequest(input *CreateUserPoolInput) (req *request.Request, output *CreateUserPoolOutput) {
 	op := &request.Operation{
 		Name:       opCreateUserPool,
@@ -407,7 +1146,28 @@ func (c *CognitoIdentityProvider) CreateUserPool(input *CreateUserPoolInput) (*C
 
 const opCreateUserPoolClient = "CreateUserPoolClient"
 
-// CreateUserPoolClientRequest generates a request for the CreateUserPoolClient operation.
+// CreateUserPoolClientRequest generates a "aws/request.Request" representing the
+// client's request for the CreateUserPoolClient operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateUserPoolClient method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateUserPoolClientRequest method.
+//    req, resp := client.CreateUserPoolClientRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) CreateUserPoolClientRequest(input *CreateUserPoolClientInput) (req *request.Request, output *CreateUserPoolClientOutput) {
 	op := &request.Operation{
 		Name:       opCreateUserPoolClient,
@@ -434,7 +1194,28 @@ func (c *CognitoIdentityProvider) CreateUserPoolClient(input *CreateUserPoolClie
 
 const opDeleteUser = "DeleteUser"
 
-// DeleteUserRequest generates a request for the DeleteUser operation.
+// DeleteUserRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteUser operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteUser method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteUserRequest method.
+//    req, resp := client.DeleteUserRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) DeleteUserRequest(input *DeleteUserInput) (req *request.Request, output *DeleteUserOutput) {
 	op := &request.Operation{
 		Name:       opDeleteUser,
@@ -464,7 +1245,28 @@ func (c *CognitoIdentityProvider) DeleteUser(input *DeleteUserInput) (*DeleteUse
 
 const opDeleteUserAttributes = "DeleteUserAttributes"
 
-// DeleteUserAttributesRequest generates a request for the DeleteUserAttributes operation.
+// DeleteUserAttributesRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteUserAttributes operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteUserAttributes method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteUserAttributesRequest method.
+//    req, resp := client.DeleteUserAttributesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) DeleteUserAttributesRequest(input *DeleteUserAttributesInput) (req *request.Request, output *DeleteUserAttributesOutput) {
 	op := &request.Operation{
 		Name:       opDeleteUserAttributes,
@@ -492,7 +1294,28 @@ func (c *CognitoIdentityProvider) DeleteUserAttributes(input *DeleteUserAttribut
 
 const opDeleteUserPool = "DeleteUserPool"
 
-// DeleteUserPoolRequest generates a request for the DeleteUserPool operation.
+// DeleteUserPoolRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteUserPool operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteUserPool method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteUserPoolRequest method.
+//    req, resp := client.DeleteUserPoolRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) DeleteUserPoolRequest(input *DeleteUserPoolInput) (req *request.Request, output *DeleteUserPoolOutput) {
 	op := &request.Operation{
 		Name:       opDeleteUserPool,
@@ -521,7 +1344,28 @@ func (c *CognitoIdentityProvider) DeleteUserPool(input *DeleteUserPoolInput) (*D
 
 const opDeleteUserPoolClient = "DeleteUserPoolClient"
 
-// DeleteUserPoolClientRequest generates a request for the DeleteUserPoolClient operation.
+// DeleteUserPoolClientRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteUserPoolClient operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteUserPoolClient method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteUserPoolClientRequest method.
+//    req, resp := client.DeleteUserPoolClientRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) DeleteUserPoolClientRequest(input *DeleteUserPoolClientInput) (req *request.Request, output *DeleteUserPoolClientOutput) {
 	op := &request.Operation{
 		Name:       opDeleteUserPoolClient,
@@ -548,9 +1392,78 @@ func (c *CognitoIdentityProvider) DeleteUserPoolClient(input *DeleteUserPoolClie
 	return out, err
 }
 
+const opDescribeUserImportJob = "DescribeUserImportJob"
+
+// DescribeUserImportJobRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeUserImportJob operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeUserImportJob method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeUserImportJobRequest method.
+//    req, resp := client.DescribeUserImportJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) DescribeUserImportJobRequest(input *DescribeUserImportJobInput) (req *request.Request, output *DescribeUserImportJobOutput) {
+	op := &request.Operation{
+		Name:       opDescribeUserImportJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeUserImportJobInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &DescribeUserImportJobOutput{}
+	req.Data = output
+	return
+}
+
+// Describes the user import job.
+func (c *CognitoIdentityProvider) DescribeUserImportJob(input *DescribeUserImportJobInput) (*DescribeUserImportJobOutput, error) {
+	req, out := c.DescribeUserImportJobRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opDescribeUserPool = "DescribeUserPool"
 
-// DescribeUserPoolRequest generates a request for the DescribeUserPool operation.
+// DescribeUserPoolRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeUserPool operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeUserPool method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeUserPoolRequest method.
+//    req, resp := client.DescribeUserPoolRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) DescribeUserPoolRequest(input *DescribeUserPoolInput) (req *request.Request, output *DescribeUserPoolOutput) {
 	op := &request.Operation{
 		Name:       opDescribeUserPool,
@@ -578,7 +1491,28 @@ func (c *CognitoIdentityProvider) DescribeUserPool(input *DescribeUserPoolInput)
 
 const opDescribeUserPoolClient = "DescribeUserPoolClient"
 
-// DescribeUserPoolClientRequest generates a request for the DescribeUserPoolClient operation.
+// DescribeUserPoolClientRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeUserPoolClient operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeUserPoolClient method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeUserPoolClientRequest method.
+//    req, resp := client.DescribeUserPoolClientRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) DescribeUserPoolClientRequest(input *DescribeUserPoolClientInput) (req *request.Request, output *DescribeUserPoolClientOutput) {
 	op := &request.Operation{
 		Name:       opDescribeUserPoolClient,
@@ -604,9 +1538,80 @@ func (c *CognitoIdentityProvider) DescribeUserPoolClient(input *DescribeUserPool
 	return out, err
 }
 
+const opForgetDevice = "ForgetDevice"
+
+// ForgetDeviceRequest generates a "aws/request.Request" representing the
+// client's request for the ForgetDevice operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ForgetDevice method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ForgetDeviceRequest method.
+//    req, resp := client.ForgetDeviceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) ForgetDeviceRequest(input *ForgetDeviceInput) (req *request.Request, output *ForgetDeviceOutput) {
+	op := &request.Operation{
+		Name:       opForgetDevice,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ForgetDeviceInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	output = &ForgetDeviceOutput{}
+	req.Data = output
+	return
+}
+
+// Forgets the specified device.
+func (c *CognitoIdentityProvider) ForgetDevice(input *ForgetDeviceInput) (*ForgetDeviceOutput, error) {
+	req, out := c.ForgetDeviceRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opForgotPassword = "ForgotPassword"
 
-// ForgotPasswordRequest generates a request for the ForgotPassword operation.
+// ForgotPasswordRequest generates a "aws/request.Request" representing the
+// client's request for the ForgotPassword operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ForgotPassword method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ForgotPasswordRequest method.
+//    req, resp := client.ForgotPasswordRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) ForgotPasswordRequest(input *ForgotPasswordInput) (req *request.Request, output *ForgotPasswordOutput) {
 	op := &request.Operation{
 		Name:       opForgotPassword,
@@ -632,9 +1637,127 @@ func (c *CognitoIdentityProvider) ForgotPassword(input *ForgotPasswordInput) (*F
 	return out, err
 }
 
+const opGetCSVHeader = "GetCSVHeader"
+
+// GetCSVHeaderRequest generates a "aws/request.Request" representing the
+// client's request for the GetCSVHeader operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetCSVHeader method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetCSVHeaderRequest method.
+//    req, resp := client.GetCSVHeaderRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) GetCSVHeaderRequest(input *GetCSVHeaderInput) (req *request.Request, output *GetCSVHeaderOutput) {
+	op := &request.Operation{
+		Name:       opGetCSVHeader,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetCSVHeaderInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &GetCSVHeaderOutput{}
+	req.Data = output
+	return
+}
+
+// Gets the header information for the .csv file to be used as input for the
+// user import job.
+func (c *CognitoIdentityProvider) GetCSVHeader(input *GetCSVHeaderInput) (*GetCSVHeaderOutput, error) {
+	req, out := c.GetCSVHeaderRequest(input)
+	err := req.Send()
+	return out, err
+}
+
+const opGetDevice = "GetDevice"
+
+// GetDeviceRequest generates a "aws/request.Request" representing the
+// client's request for the GetDevice operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetDevice method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetDeviceRequest method.
+//    req, resp := client.GetDeviceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) GetDeviceRequest(input *GetDeviceInput) (req *request.Request, output *GetDeviceOutput) {
+	op := &request.Operation{
+		Name:       opGetDevice,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetDeviceInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &GetDeviceOutput{}
+	req.Data = output
+	return
+}
+
+// Gets the device.
+func (c *CognitoIdentityProvider) GetDevice(input *GetDeviceInput) (*GetDeviceOutput, error) {
+	req, out := c.GetDeviceRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opGetUser = "GetUser"
 
-// GetUserRequest generates a request for the GetUser operation.
+// GetUserRequest generates a "aws/request.Request" representing the
+// client's request for the GetUser operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetUser method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetUserRequest method.
+//    req, resp := client.GetUserRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) GetUserRequest(input *GetUserInput) (req *request.Request, output *GetUserOutput) {
 	op := &request.Operation{
 		Name:       opGetUser,
@@ -662,7 +1785,28 @@ func (c *CognitoIdentityProvider) GetUser(input *GetUserInput) (*GetUserOutput, 
 
 const opGetUserAttributeVerificationCode = "GetUserAttributeVerificationCode"
 
-// GetUserAttributeVerificationCodeRequest generates a request for the GetUserAttributeVerificationCode operation.
+// GetUserAttributeVerificationCodeRequest generates a "aws/request.Request" representing the
+// client's request for the GetUserAttributeVerificationCode operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetUserAttributeVerificationCode method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetUserAttributeVerificationCodeRequest method.
+//    req, resp := client.GetUserAttributeVerificationCodeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) GetUserAttributeVerificationCodeRequest(input *GetUserAttributeVerificationCodeInput) (req *request.Request, output *GetUserAttributeVerificationCodeOutput) {
 	op := &request.Operation{
 		Name:       opGetUserAttributeVerificationCode,
@@ -688,9 +1832,222 @@ func (c *CognitoIdentityProvider) GetUserAttributeVerificationCode(input *GetUse
 	return out, err
 }
 
+const opGlobalSignOut = "GlobalSignOut"
+
+// GlobalSignOutRequest generates a "aws/request.Request" representing the
+// client's request for the GlobalSignOut operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GlobalSignOut method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GlobalSignOutRequest method.
+//    req, resp := client.GlobalSignOutRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) GlobalSignOutRequest(input *GlobalSignOutInput) (req *request.Request, output *GlobalSignOutOutput) {
+	op := &request.Operation{
+		Name:       opGlobalSignOut,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GlobalSignOutInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &GlobalSignOutOutput{}
+	req.Data = output
+	return
+}
+
+// Signs out users from all devices.
+func (c *CognitoIdentityProvider) GlobalSignOut(input *GlobalSignOutInput) (*GlobalSignOutOutput, error) {
+	req, out := c.GlobalSignOutRequest(input)
+	err := req.Send()
+	return out, err
+}
+
+const opInitiateAuth = "InitiateAuth"
+
+// InitiateAuthRequest generates a "aws/request.Request" representing the
+// client's request for the InitiateAuth operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the InitiateAuth method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the InitiateAuthRequest method.
+//    req, resp := client.InitiateAuthRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) InitiateAuthRequest(input *InitiateAuthInput) (req *request.Request, output *InitiateAuthOutput) {
+	op := &request.Operation{
+		Name:       opInitiateAuth,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &InitiateAuthInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &InitiateAuthOutput{}
+	req.Data = output
+	return
+}
+
+// Initiates the authentication flow.
+func (c *CognitoIdentityProvider) InitiateAuth(input *InitiateAuthInput) (*InitiateAuthOutput, error) {
+	req, out := c.InitiateAuthRequest(input)
+	err := req.Send()
+	return out, err
+}
+
+const opListDevices = "ListDevices"
+
+// ListDevicesRequest generates a "aws/request.Request" representing the
+// client's request for the ListDevices operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListDevices method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListDevicesRequest method.
+//    req, resp := client.ListDevicesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) ListDevicesRequest(input *ListDevicesInput) (req *request.Request, output *ListDevicesOutput) {
+	op := &request.Operation{
+		Name:       opListDevices,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListDevicesInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &ListDevicesOutput{}
+	req.Data = output
+	return
+}
+
+// Lists the devices.
+func (c *CognitoIdentityProvider) ListDevices(input *ListDevicesInput) (*ListDevicesOutput, error) {
+	req, out := c.ListDevicesRequest(input)
+	err := req.Send()
+	return out, err
+}
+
+const opListUserImportJobs = "ListUserImportJobs"
+
+// ListUserImportJobsRequest generates a "aws/request.Request" representing the
+// client's request for the ListUserImportJobs operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListUserImportJobs method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListUserImportJobsRequest method.
+//    req, resp := client.ListUserImportJobsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) ListUserImportJobsRequest(input *ListUserImportJobsInput) (req *request.Request, output *ListUserImportJobsOutput) {
+	op := &request.Operation{
+		Name:       opListUserImportJobs,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListUserImportJobsInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &ListUserImportJobsOutput{}
+	req.Data = output
+	return
+}
+
+// Lists the user import jobs.
+func (c *CognitoIdentityProvider) ListUserImportJobs(input *ListUserImportJobsInput) (*ListUserImportJobsOutput, error) {
+	req, out := c.ListUserImportJobsRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opListUserPoolClients = "ListUserPoolClients"
 
-// ListUserPoolClientsRequest generates a request for the ListUserPoolClients operation.
+// ListUserPoolClientsRequest generates a "aws/request.Request" representing the
+// client's request for the ListUserPoolClients operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListUserPoolClients method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListUserPoolClientsRequest method.
+//    req, resp := client.ListUserPoolClientsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) ListUserPoolClientsRequest(input *ListUserPoolClientsInput) (req *request.Request, output *ListUserPoolClientsOutput) {
 	op := &request.Operation{
 		Name:       opListUserPoolClients,
@@ -717,7 +2074,28 @@ func (c *CognitoIdentityProvider) ListUserPoolClients(input *ListUserPoolClients
 
 const opListUserPools = "ListUserPools"
 
-// ListUserPoolsRequest generates a request for the ListUserPools operation.
+// ListUserPoolsRequest generates a "aws/request.Request" representing the
+// client's request for the ListUserPools operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListUserPools method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListUserPoolsRequest method.
+//    req, resp := client.ListUserPoolsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) ListUserPoolsRequest(input *ListUserPoolsInput) (req *request.Request, output *ListUserPoolsOutput) {
 	op := &request.Operation{
 		Name:       opListUserPools,
@@ -744,7 +2122,28 @@ func (c *CognitoIdentityProvider) ListUserPools(input *ListUserPoolsInput) (*Lis
 
 const opListUsers = "ListUsers"
 
-// ListUsersRequest generates a request for the ListUsers operation.
+// ListUsersRequest generates a "aws/request.Request" representing the
+// client's request for the ListUsers operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListUsers method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListUsersRequest method.
+//    req, resp := client.ListUsersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) ListUsersRequest(input *ListUsersInput) (req *request.Request, output *ListUsersOutput) {
 	op := &request.Operation{
 		Name:       opListUsers,
@@ -771,7 +2170,28 @@ func (c *CognitoIdentityProvider) ListUsers(input *ListUsersInput) (*ListUsersOu
 
 const opResendConfirmationCode = "ResendConfirmationCode"
 
-// ResendConfirmationCodeRequest generates a request for the ResendConfirmationCode operation.
+// ResendConfirmationCodeRequest generates a "aws/request.Request" representing the
+// client's request for the ResendConfirmationCode operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ResendConfirmationCode method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ResendConfirmationCodeRequest method.
+//    req, resp := client.ResendConfirmationCodeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) ResendConfirmationCodeRequest(input *ResendConfirmationCodeInput) (req *request.Request, output *ResendConfirmationCodeOutput) {
 	op := &request.Operation{
 		Name:       opResendConfirmationCode,
@@ -798,9 +2218,78 @@ func (c *CognitoIdentityProvider) ResendConfirmationCode(input *ResendConfirmati
 	return out, err
 }
 
+const opRespondToAuthChallenge = "RespondToAuthChallenge"
+
+// RespondToAuthChallengeRequest generates a "aws/request.Request" representing the
+// client's request for the RespondToAuthChallenge operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the RespondToAuthChallenge method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the RespondToAuthChallengeRequest method.
+//    req, resp := client.RespondToAuthChallengeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) RespondToAuthChallengeRequest(input *RespondToAuthChallengeInput) (req *request.Request, output *RespondToAuthChallengeOutput) {
+	op := &request.Operation{
+		Name:       opRespondToAuthChallenge,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &RespondToAuthChallengeInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &RespondToAuthChallengeOutput{}
+	req.Data = output
+	return
+}
+
+// Responds to the authentication challenge.
+func (c *CognitoIdentityProvider) RespondToAuthChallenge(input *RespondToAuthChallengeInput) (*RespondToAuthChallengeOutput, error) {
+	req, out := c.RespondToAuthChallengeRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opSetUserSettings = "SetUserSettings"
 
-// SetUserSettingsRequest generates a request for the SetUserSettings operation.
+// SetUserSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the SetUserSettings operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the SetUserSettings method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the SetUserSettingsRequest method.
+//    req, resp := client.SetUserSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) SetUserSettingsRequest(input *SetUserSettingsInput) (req *request.Request, output *SetUserSettingsOutput) {
 	op := &request.Operation{
 		Name:       opSetUserSettings,
@@ -830,7 +2319,28 @@ func (c *CognitoIdentityProvider) SetUserSettings(input *SetUserSettingsInput) (
 
 const opSignUp = "SignUp"
 
-// SignUpRequest generates a request for the SignUp operation.
+// SignUpRequest generates a "aws/request.Request" representing the
+// client's request for the SignUp operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the SignUp method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the SignUpRequest method.
+//    req, resp := client.SignUpRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) SignUpRequest(input *SignUpInput) (req *request.Request, output *SignUpOutput) {
 	op := &request.Operation{
 		Name:       opSignUp,
@@ -857,9 +2367,174 @@ func (c *CognitoIdentityProvider) SignUp(input *SignUpInput) (*SignUpOutput, err
 	return out, err
 }
 
+const opStartUserImportJob = "StartUserImportJob"
+
+// StartUserImportJobRequest generates a "aws/request.Request" representing the
+// client's request for the StartUserImportJob operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the StartUserImportJob method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the StartUserImportJobRequest method.
+//    req, resp := client.StartUserImportJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) StartUserImportJobRequest(input *StartUserImportJobInput) (req *request.Request, output *StartUserImportJobOutput) {
+	op := &request.Operation{
+		Name:       opStartUserImportJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartUserImportJobInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &StartUserImportJobOutput{}
+	req.Data = output
+	return
+}
+
+// Starts the user import.
+func (c *CognitoIdentityProvider) StartUserImportJob(input *StartUserImportJobInput) (*StartUserImportJobOutput, error) {
+	req, out := c.StartUserImportJobRequest(input)
+	err := req.Send()
+	return out, err
+}
+
+const opStopUserImportJob = "StopUserImportJob"
+
+// StopUserImportJobRequest generates a "aws/request.Request" representing the
+// client's request for the StopUserImportJob operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the StopUserImportJob method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the StopUserImportJobRequest method.
+//    req, resp := client.StopUserImportJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) StopUserImportJobRequest(input *StopUserImportJobInput) (req *request.Request, output *StopUserImportJobOutput) {
+	op := &request.Operation{
+		Name:       opStopUserImportJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopUserImportJobInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &StopUserImportJobOutput{}
+	req.Data = output
+	return
+}
+
+// Stops the user import job.
+func (c *CognitoIdentityProvider) StopUserImportJob(input *StopUserImportJobInput) (*StopUserImportJobOutput, error) {
+	req, out := c.StopUserImportJobRequest(input)
+	err := req.Send()
+	return out, err
+}
+
+const opUpdateDeviceStatus = "UpdateDeviceStatus"
+
+// UpdateDeviceStatusRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateDeviceStatus operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateDeviceStatus method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateDeviceStatusRequest method.
+//    req, resp := client.UpdateDeviceStatusRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *CognitoIdentityProvider) UpdateDeviceStatusRequest(input *UpdateDeviceStatusInput) (req *request.Request, output *UpdateDeviceStatusOutput) {
+	op := &request.Operation{
+		Name:       opUpdateDeviceStatus,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateDeviceStatusInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &UpdateDeviceStatusOutput{}
+	req.Data = output
+	return
+}
+
+// Updates the device status.
+func (c *CognitoIdentityProvider) UpdateDeviceStatus(input *UpdateDeviceStatusInput) (*UpdateDeviceStatusOutput, error) {
+	req, out := c.UpdateDeviceStatusRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opUpdateUserAttributes = "UpdateUserAttributes"
 
-// UpdateUserAttributesRequest generates a request for the UpdateUserAttributes operation.
+// UpdateUserAttributesRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateUserAttributes operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateUserAttributes method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateUserAttributesRequest method.
+//    req, resp := client.UpdateUserAttributesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) UpdateUserAttributesRequest(input *UpdateUserAttributesInput) (req *request.Request, output *UpdateUserAttributesOutput) {
 	op := &request.Operation{
 		Name:       opUpdateUserAttributes,
@@ -887,7 +2562,28 @@ func (c *CognitoIdentityProvider) UpdateUserAttributes(input *UpdateUserAttribut
 
 const opUpdateUserPool = "UpdateUserPool"
 
-// UpdateUserPoolRequest generates a request for the UpdateUserPool operation.
+// UpdateUserPoolRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateUserPool operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateUserPool method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateUserPoolRequest method.
+//    req, resp := client.UpdateUserPoolRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) UpdateUserPoolRequest(input *UpdateUserPoolInput) (req *request.Request, output *UpdateUserPoolOutput) {
 	op := &request.Operation{
 		Name:       opUpdateUserPool,
@@ -914,7 +2610,28 @@ func (c *CognitoIdentityProvider) UpdateUserPool(input *UpdateUserPoolInput) (*U
 
 const opUpdateUserPoolClient = "UpdateUserPoolClient"
 
-// UpdateUserPoolClientRequest generates a request for the UpdateUserPoolClient operation.
+// UpdateUserPoolClientRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateUserPoolClient operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateUserPoolClient method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateUserPoolClientRequest method.
+//    req, resp := client.UpdateUserPoolClientRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) UpdateUserPoolClientRequest(input *UpdateUserPoolClientInput) (req *request.Request, output *UpdateUserPoolClientOutput) {
 	op := &request.Operation{
 		Name:       opUpdateUserPoolClient,
@@ -942,7 +2659,28 @@ func (c *CognitoIdentityProvider) UpdateUserPoolClient(input *UpdateUserPoolClie
 
 const opVerifyUserAttribute = "VerifyUserAttribute"
 
-// VerifyUserAttributeRequest generates a request for the VerifyUserAttribute operation.
+// VerifyUserAttributeRequest generates a "aws/request.Request" representing the
+// client's request for the VerifyUserAttribute operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the VerifyUserAttribute method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the VerifyUserAttributeRequest method.
+//    req, resp := client.VerifyUserAttributeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *CognitoIdentityProvider) VerifyUserAttributeRequest(input *VerifyUserAttributeInput) (req *request.Request, output *VerifyUserAttributeOutput) {
 	op := &request.Operation{
 		Name:       opVerifyUserAttribute,
@@ -1334,6 +3072,142 @@ func (s AdminEnableUserOutput) GoString() string {
 	return s.String()
 }
 
+// Sends the forgot device request, as an administrator.
+type AdminForgetDeviceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The device key.
+	DeviceKey *string `min:"1" type:"string" required:"true"`
+
+	// The user pool ID.
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+
+	// The user name.
+	Username *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AdminForgetDeviceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminForgetDeviceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AdminForgetDeviceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AdminForgetDeviceInput"}
+	if s.DeviceKey == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeviceKey"))
+	}
+	if s.DeviceKey != nil && len(*s.DeviceKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeviceKey", 1))
+	}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+	if s.Username == nil {
+		invalidParams.Add(request.NewErrParamRequired("Username"))
+	}
+	if s.Username != nil && len(*s.Username) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Username", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type AdminForgetDeviceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s AdminForgetDeviceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminForgetDeviceOutput) GoString() string {
+	return s.String()
+}
+
+// Represents the request to get the device, as an administrator.
+type AdminGetDeviceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The device key.
+	DeviceKey *string `min:"1" type:"string" required:"true"`
+
+	// The user pool ID.
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+
+	// The user name.
+	Username *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AdminGetDeviceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminGetDeviceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AdminGetDeviceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AdminGetDeviceInput"}
+	if s.DeviceKey == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeviceKey"))
+	}
+	if s.DeviceKey != nil && len(*s.DeviceKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeviceKey", 1))
+	}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+	if s.Username == nil {
+		invalidParams.Add(request.NewErrParamRequired("Username"))
+	}
+	if s.Username != nil && len(*s.Username) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Username", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Gets the device response, as an administrator.
+type AdminGetDeviceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The device.
+	Device *DeviceType `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s AdminGetDeviceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminGetDeviceOutput) GoString() string {
+	return s.String()
+}
+
 // Represents the request to get the specified user as an administrator.
 type AdminGetUserInput struct {
 	_ struct{} `type:"structure"`
@@ -1420,6 +3294,161 @@ func (s AdminGetUserOutput) GoString() string {
 	return s.String()
 }
 
+// Initiates the authorization request, as an administrator.
+type AdminInitiateAuthInput struct {
+	_ struct{} `type:"structure"`
+
+	// The authentication flow.
+	AuthFlow *string `type:"string" required:"true" enum:"AuthFlowType"`
+
+	// The authentication parameters.
+	AuthParameters map[string]*string `type:"map"`
+
+	// The client app ID.
+	ClientId *string `min:"1" type:"string" required:"true"`
+
+	// The client app metadata.
+	ClientMetadata map[string]*string `type:"map"`
+
+	// The ID of the Amazon Cognito user pool.
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AdminInitiateAuthInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminInitiateAuthInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AdminInitiateAuthInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AdminInitiateAuthInput"}
+	if s.AuthFlow == nil {
+		invalidParams.Add(request.NewErrParamRequired("AuthFlow"))
+	}
+	if s.ClientId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClientId"))
+	}
+	if s.ClientId != nil && len(*s.ClientId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientId", 1))
+	}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Initiates the authentication response, as an administrator.
+type AdminInitiateAuthOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The result type of the authentication result.
+	AuthenticationResult *AuthenticationResultType `type:"structure"`
+
+	// The name of the challenge.
+	ChallengeName *string `type:"string" enum:"ChallengeNameType"`
+
+	// The challenge parameters.
+	ChallengeParameters map[string]*string `type:"map"`
+
+	// The session.
+	Session *string `min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s AdminInitiateAuthOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminInitiateAuthOutput) GoString() string {
+	return s.String()
+}
+
+// Represents the request to list devices, as an administrator.
+type AdminListDevicesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The limit of the devices request.
+	Limit *int64 `type:"integer"`
+
+	// The pagination token.
+	PaginationToken *string `min:"1" type:"string"`
+
+	// The user pool ID.
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+
+	// The user name.
+	Username *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AdminListDevicesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminListDevicesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AdminListDevicesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AdminListDevicesInput"}
+	if s.PaginationToken != nil && len(*s.PaginationToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PaginationToken", 1))
+	}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+	if s.Username == nil {
+		invalidParams.Add(request.NewErrParamRequired("Username"))
+	}
+	if s.Username != nil && len(*s.Username) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Username", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Lists the device's response, as an administrator.
+type AdminListDevicesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The devices in the list of devices response.
+	Devices []*DeviceType `type:"list"`
+
+	// The pagination token.
+	PaginationToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s AdminListDevicesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminListDevicesOutput) GoString() string {
+	return s.String()
+}
+
 // Represents the request to reset a user's password as an administrator.
 type AdminResetUserPasswordInput struct {
 	_ struct{} `type:"structure"`
@@ -1475,6 +3504,91 @@ func (s AdminResetUserPasswordOutput) String() string {
 
 // GoString returns the string representation
 func (s AdminResetUserPasswordOutput) GoString() string {
+	return s.String()
+}
+
+// The request to respond to the authentication challenge, as an administrator.
+type AdminRespondToAuthChallengeInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the challenge.
+	ChallengeName *string `type:"string" required:"true" enum:"ChallengeNameType"`
+
+	// The challenge response.
+	ChallengeResponses map[string]*string `type:"map"`
+
+	// The client ID.
+	ClientId *string `min:"1" type:"string" required:"true"`
+
+	// The session.
+	Session *string `min:"20" type:"string"`
+
+	// The ID of the Amazon Cognito user pool.
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AdminRespondToAuthChallengeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminRespondToAuthChallengeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AdminRespondToAuthChallengeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AdminRespondToAuthChallengeInput"}
+	if s.ChallengeName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChallengeName"))
+	}
+	if s.ClientId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClientId"))
+	}
+	if s.ClientId != nil && len(*s.ClientId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientId", 1))
+	}
+	if s.Session != nil && len(*s.Session) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("Session", 20))
+	}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Responds to the authentication challenge, as an administrator.
+type AdminRespondToAuthChallengeOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The result type of the authentication result.
+	AuthenticationResult *AuthenticationResultType `type:"structure"`
+
+	// The name of the challenge.
+	ChallengeName *string `type:"string" enum:"ChallengeNameType"`
+
+	// The challenge parameters.
+	ChallengeParameters map[string]*string `type:"map"`
+
+	// The session.
+	Session *string `min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s AdminRespondToAuthChallengeOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminRespondToAuthChallengeOutput) GoString() string {
 	return s.String()
 }
 
@@ -1553,6 +3667,76 @@ func (s AdminSetUserSettingsOutput) GoString() string {
 	return s.String()
 }
 
+// The request to update the device status, as an administrator.
+type AdminUpdateDeviceStatusInput struct {
+	_ struct{} `type:"structure"`
+
+	// The device key.
+	DeviceKey *string `min:"1" type:"string" required:"true"`
+
+	// The status indicating whether a device has been remembered or not.
+	DeviceRememberedStatus *string `type:"string" enum:"DeviceRememberedStatusType"`
+
+	// The user pool ID>
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+
+	// The user name.
+	Username *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AdminUpdateDeviceStatusInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminUpdateDeviceStatusInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AdminUpdateDeviceStatusInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AdminUpdateDeviceStatusInput"}
+	if s.DeviceKey == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeviceKey"))
+	}
+	if s.DeviceKey != nil && len(*s.DeviceKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeviceKey", 1))
+	}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+	if s.Username == nil {
+		invalidParams.Add(request.NewErrParamRequired("Username"))
+	}
+	if s.Username != nil && len(*s.Username) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Username", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// The status response from the request to update the device, as an administrator.
+type AdminUpdateDeviceStatusOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s AdminUpdateDeviceStatusOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminUpdateDeviceStatusOutput) GoString() string {
+	return s.String()
+}
+
 // Represents the request to update the user's attributes as an administrator.
 type AdminUpdateUserAttributesInput struct {
 	_ struct{} `type:"structure"`
@@ -1628,6 +3812,64 @@ func (s AdminUpdateUserAttributesOutput) GoString() string {
 	return s.String()
 }
 
+// The request to sign out of all devices, as an administrator.
+type AdminUserGlobalSignOutInput struct {
+	_ struct{} `type:"structure"`
+
+	// The user pool ID.
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+
+	// The user name.
+	Username *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AdminUserGlobalSignOutInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminUserGlobalSignOutInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AdminUserGlobalSignOutInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AdminUserGlobalSignOutInput"}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+	if s.Username == nil {
+		invalidParams.Add(request.NewErrParamRequired("Username"))
+	}
+	if s.Username != nil && len(*s.Username) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Username", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// The global sign-out response, as an administrator.
+type AdminUserGlobalSignOutOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s AdminUserGlobalSignOutOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminUserGlobalSignOutOutput) GoString() string {
+	return s.String()
+}
+
 // Specifies whether the attribute is standard or custom.
 type AttributeType struct {
 	_ struct{} `type:"structure"`
@@ -1663,6 +3905,39 @@ func (s *AttributeType) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// The result type of the authentication result.
+type AuthenticationResultType struct {
+	_ struct{} `type:"structure"`
+
+	// The access token of the authentication result.
+	AccessToken *string `type:"string"`
+
+	// The expiration period of the authentication result.
+	ExpiresIn *int64 `type:"integer"`
+
+	// The ID token of the authentication result.
+	IdToken *string `type:"string"`
+
+	// The new device metadata from an authentication result.
+	NewDeviceMetadata *NewDeviceMetadataType `type:"structure"`
+
+	// The refresh token of the authentication result.
+	RefreshToken *string `type:"string"`
+
+	// The token type of the authentication result.
+	TokenType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AuthenticationResultType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuthenticationResultType) GoString() string {
+	return s.String()
 }
 
 // Represents the request to change a user password.
@@ -1747,6 +4022,74 @@ func (s CodeDeliveryDetailsType) String() string {
 
 // GoString returns the string representation
 func (s CodeDeliveryDetailsType) GoString() string {
+	return s.String()
+}
+
+// Confirms the device request.
+type ConfirmDeviceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The access token.
+	AccessToken *string `type:"string" required:"true"`
+
+	// The device key.
+	DeviceKey *string `min:"1" type:"string" required:"true"`
+
+	// The device name.
+	DeviceName *string `min:"1" type:"string"`
+
+	// The configuration of the device secret verifier.
+	DeviceSecretVerifierConfig *DeviceSecretVerifierConfigType `type:"structure"`
+}
+
+// String returns the string representation
+func (s ConfirmDeviceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConfirmDeviceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ConfirmDeviceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ConfirmDeviceInput"}
+	if s.AccessToken == nil {
+		invalidParams.Add(request.NewErrParamRequired("AccessToken"))
+	}
+	if s.DeviceKey == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeviceKey"))
+	}
+	if s.DeviceKey != nil && len(*s.DeviceKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeviceKey", 1))
+	}
+	if s.DeviceName != nil && len(*s.DeviceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeviceName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Confirms the device response.
+type ConfirmDeviceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether the user confirmation is necessary to confirm the device
+	// response.
+	UserConfirmationNecessary *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s ConfirmDeviceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConfirmDeviceOutput) GoString() string {
 	return s.String()
 }
 
@@ -1917,6 +4260,77 @@ func (s ConfirmSignUpOutput) GoString() string {
 	return s.String()
 }
 
+// Represents the request to create the user import job.
+type CreateUserImportJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The role ARN for the Amazon CloudWatch Logging role for the user import job.
+	CloudWatchLogsRoleArn *string `min:"20" type:"string" required:"true"`
+
+	// The job name for the user import job.
+	JobName *string `min:"1" type:"string" required:"true"`
+
+	// The user pool ID for the user pool that the users are being imported into.
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateUserImportJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateUserImportJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateUserImportJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateUserImportJobInput"}
+	if s.CloudWatchLogsRoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("CloudWatchLogsRoleArn"))
+	}
+	if s.CloudWatchLogsRoleArn != nil && len(*s.CloudWatchLogsRoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("CloudWatchLogsRoleArn", 20))
+	}
+	if s.JobName == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobName"))
+	}
+	if s.JobName != nil && len(*s.JobName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobName", 1))
+	}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the response from the server to the request to create the user
+// import job.
+type CreateUserImportJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The job object that represents the user import job.
+	UserImportJob *UserImportJobType `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateUserImportJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateUserImportJobOutput) GoString() string {
+	return s.String()
+}
+
 // Represents the request to create a user pool client.
 type CreateUserPoolClientInput struct {
 	_ struct{} `type:"structure"`
@@ -1924,12 +4338,24 @@ type CreateUserPoolClientInput struct {
 	// The client name for the user pool client you would like to create.
 	ClientName *string `min:"1" type:"string" required:"true"`
 
+	// The explicit authentication flows.
+	ExplicitAuthFlows []*string `type:"list"`
+
 	// Boolean to specify whether you want to generate a secret for the user pool
 	// client being created.
 	GenerateSecret *bool `type:"boolean"`
 
+	// The read attributes.
+	ReadAttributes []*string `type:"list"`
+
+	// Refreshes the token validity.
+	RefreshTokenValidity *int64 `type:"integer"`
+
 	// The user pool ID for the user pool where you want to create a user pool client.
 	UserPoolId *string `min:"1" type:"string" required:"true"`
+
+	// The write attributes.
+	WriteAttributes []*string `type:"list"`
 }
 
 // String returns the string representation
@@ -1993,6 +4419,12 @@ type CreateUserPoolInput struct {
 	// The attributes to be auto-verified. Possible values: email, phone_number.
 	AutoVerifiedAttributes []*string `type:"list"`
 
+	// The device configuration.
+	DeviceConfiguration *DeviceConfigurationType `type:"structure"`
+
+	// The email configuration.
+	EmailConfiguration *EmailConfigurationType `type:"structure"`
+
 	// A string representing the email verification message.
 	EmailVerificationMessage *string `min:"6" type:"string"`
 
@@ -2013,6 +4445,9 @@ type CreateUserPoolInput struct {
 
 	// A string representing the SMS authentication message.
 	SmsAuthenticationMessage *string `min:"6" type:"string"`
+
+	// The SMS configuration.
+	SmsConfiguration *SmsConfigurationType `type:"structure"`
 
 	// A string representing the SMS verification message.
 	SmsVerificationMessage *string `min:"6" type:"string"`
@@ -2049,6 +4484,11 @@ func (s *CreateUserPoolInput) Validate() error {
 	if s.SmsVerificationMessage != nil && len(*s.SmsVerificationMessage) < 6 {
 		invalidParams.Add(request.NewErrParamMinLen("SmsVerificationMessage", 6))
 	}
+	if s.EmailConfiguration != nil {
+		if err := s.EmailConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("EmailConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.LambdaConfig != nil {
 		if err := s.LambdaConfig.Validate(); err != nil {
 			invalidParams.AddNested("LambdaConfig", err.(request.ErrInvalidParams))
@@ -2057,6 +4497,11 @@ func (s *CreateUserPoolInput) Validate() error {
 	if s.Policies != nil {
 		if err := s.Policies.Validate(); err != nil {
 			invalidParams.AddNested("Policies", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.SmsConfiguration != nil {
+		if err := s.SmsConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("SmsConfiguration", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -2271,6 +4716,68 @@ func (s DeleteUserPoolOutput) GoString() string {
 	return s.String()
 }
 
+// Represents the request to describe the user import job.
+type DescribeUserImportJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The job ID for the user import job.
+	JobId *string `min:"1" type:"string" required:"true"`
+
+	// The user pool ID for the user pool that the users are being imported into.
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeUserImportJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeUserImportJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeUserImportJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeUserImportJobInput"}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 1))
+	}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the response from the server to the request to describe the user
+// import job.
+type DescribeUserImportJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The job object that represents the user import job.
+	UserImportJob *UserImportJobType `type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeUserImportJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeUserImportJobOutput) GoString() string {
+	return s.String()
+}
+
 // Represents the request to describe a user pool client.
 type DescribeUserPoolClientInput struct {
 	_ struct{} `type:"structure"`
@@ -2385,6 +4892,164 @@ func (s DescribeUserPoolOutput) GoString() string {
 	return s.String()
 }
 
+// The type of configuration for the user pool's device tracking.
+type DeviceConfigurationType struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether a challenge is required on a new device. Only applicable
+	// to a new device.
+	ChallengeRequiredOnNewDevice *bool `type:"boolean"`
+
+	// If true, a device is only remembered on user prompt.
+	DeviceOnlyRememberedOnUserPrompt *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s DeviceConfigurationType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeviceConfigurationType) GoString() string {
+	return s.String()
+}
+
+// The device verifier against which it will be authenticated.
+type DeviceSecretVerifierConfigType struct {
+	_ struct{} `type:"structure"`
+
+	// The password verifier.
+	PasswordVerifier *string `type:"string"`
+
+	// The salt.
+	Salt *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DeviceSecretVerifierConfigType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeviceSecretVerifierConfigType) GoString() string {
+	return s.String()
+}
+
+// The device type.
+type DeviceType struct {
+	_ struct{} `type:"structure"`
+
+	// The device attributes.
+	DeviceAttributes []*AttributeType `type:"list"`
+
+	// The creation date of the device.
+	DeviceCreateDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The device key.
+	DeviceKey *string `min:"1" type:"string"`
+
+	// The date in which the device was last authenticated.
+	DeviceLastAuthenticatedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The last modified date of the device.
+	DeviceLastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+}
+
+// String returns the string representation
+func (s DeviceType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeviceType) GoString() string {
+	return s.String()
+}
+
+// The email configuration type.
+type EmailConfigurationType struct {
+	_ struct{} `type:"structure"`
+
+	// The REPLY-TO email address.
+	ReplyToEmailAddress *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) of the email source.
+	SourceArn *string `min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s EmailConfigurationType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EmailConfigurationType) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EmailConfigurationType) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EmailConfigurationType"}
+	if s.SourceArn != nil && len(*s.SourceArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("SourceArn", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the request to forget the device.
+type ForgetDeviceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The access token for the forgotten device request.
+	AccessToken *string `type:"string"`
+
+	// The device key.
+	DeviceKey *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ForgetDeviceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ForgetDeviceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ForgetDeviceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ForgetDeviceInput"}
+	if s.DeviceKey == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeviceKey"))
+	}
+	if s.DeviceKey != nil && len(*s.DeviceKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeviceKey", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type ForgetDeviceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ForgetDeviceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ForgetDeviceOutput) GoString() string {
+	return s.String()
+}
+
 // Represents the request to reset a user's password.
 type ForgotPasswordInput struct {
 	_ struct{} `type:"structure"`
@@ -2452,6 +5117,118 @@ func (s ForgotPasswordOutput) String() string {
 
 // GoString returns the string representation
 func (s ForgotPasswordOutput) GoString() string {
+	return s.String()
+}
+
+// Represents the request to get the header information for the .csv file for
+// the user import job.
+type GetCSVHeaderInput struct {
+	_ struct{} `type:"structure"`
+
+	// The user pool ID for the user pool that the users are to be imported into.
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetCSVHeaderInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCSVHeaderInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCSVHeaderInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCSVHeaderInput"}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the response from the server to the request to get the header
+// information for the .csv file for the user import job.
+type GetCSVHeaderOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The header information for the .csv file for the user import job.
+	CSVHeader []*string `type:"list"`
+
+	// The user pool ID for the user pool that the users are to be imported into.
+	UserPoolId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GetCSVHeaderOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCSVHeaderOutput) GoString() string {
+	return s.String()
+}
+
+// Represents the request to get the device.
+type GetDeviceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The access token.
+	AccessToken *string `type:"string"`
+
+	// The device key.
+	DeviceKey *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetDeviceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDeviceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetDeviceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetDeviceInput"}
+	if s.DeviceKey == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeviceKey"))
+	}
+	if s.DeviceKey != nil && len(*s.DeviceKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeviceKey", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Gets the device response.
+type GetDeviceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The device.
+	Device *DeviceType `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetDeviceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDeviceOutput) GoString() string {
 	return s.String()
 }
 
@@ -2558,12 +5335,124 @@ func (s GetUserOutput) GoString() string {
 	return s.String()
 }
 
+// Represents the request to sign out all devices.
+type GlobalSignOutInput struct {
+	_ struct{} `type:"structure"`
+
+	// The access token.
+	AccessToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GlobalSignOutInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GlobalSignOutInput) GoString() string {
+	return s.String()
+}
+
+// The response to the request to sign out all devices.
+type GlobalSignOutOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s GlobalSignOutOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GlobalSignOutOutput) GoString() string {
+	return s.String()
+}
+
+// Initiates the authentication request.
+type InitiateAuthInput struct {
+	_ struct{} `type:"structure"`
+
+	// The authentication flow.
+	AuthFlow *string `type:"string" required:"true" enum:"AuthFlowType"`
+
+	// The authentication parameters.
+	AuthParameters map[string]*string `type:"map"`
+
+	// The client ID.
+	ClientId *string `min:"1" type:"string" required:"true"`
+
+	// The client app's metadata.
+	ClientMetadata map[string]*string `type:"map"`
+}
+
+// String returns the string representation
+func (s InitiateAuthInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InitiateAuthInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InitiateAuthInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InitiateAuthInput"}
+	if s.AuthFlow == nil {
+		invalidParams.Add(request.NewErrParamRequired("AuthFlow"))
+	}
+	if s.ClientId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClientId"))
+	}
+	if s.ClientId != nil && len(*s.ClientId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Initiates the authentication response.
+type InitiateAuthOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The result type of the authentication result.
+	AuthenticationResult *AuthenticationResultType `type:"structure"`
+
+	// The name of the challenge.
+	ChallengeName *string `type:"string" enum:"ChallengeNameType"`
+
+	// The challenge parameters.
+	ChallengeParameters map[string]*string `type:"map"`
+
+	// The session.
+	Session *string `min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s InitiateAuthOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InitiateAuthOutput) GoString() string {
+	return s.String()
+}
+
 // Specifies the type of configuration for AWS Lambda triggers.
 type LambdaConfigType struct {
 	_ struct{} `type:"structure"`
 
+	// Creates an authentication challenge.
+	CreateAuthChallenge *string `min:"20" type:"string"`
+
 	// A custom Message AWS Lambda trigger.
 	CustomMessage *string `min:"20" type:"string"`
+
+	// Defines the authentication challenge.
+	DefineAuthChallenge *string `min:"20" type:"string"`
 
 	// A post-authentication AWS Lambda trigger.
 	PostAuthentication *string `min:"20" type:"string"`
@@ -2576,6 +5465,9 @@ type LambdaConfigType struct {
 
 	// A pre-registration AWS Lambda trigger.
 	PreSignUp *string `min:"20" type:"string"`
+
+	// Verifies the authentication challenge response.
+	VerifyAuthChallengeResponse *string `min:"20" type:"string"`
 }
 
 // String returns the string representation
@@ -2591,8 +5483,14 @@ func (s LambdaConfigType) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *LambdaConfigType) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "LambdaConfigType"}
+	if s.CreateAuthChallenge != nil && len(*s.CreateAuthChallenge) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("CreateAuthChallenge", 20))
+	}
 	if s.CustomMessage != nil && len(*s.CustomMessage) < 20 {
 		invalidParams.Add(request.NewErrParamMinLen("CustomMessage", 20))
+	}
+	if s.DefineAuthChallenge != nil && len(*s.DefineAuthChallenge) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("DefineAuthChallenge", 20))
 	}
 	if s.PostAuthentication != nil && len(*s.PostAuthentication) < 20 {
 		invalidParams.Add(request.NewErrParamMinLen("PostAuthentication", 20))
@@ -2606,11 +5504,148 @@ func (s *LambdaConfigType) Validate() error {
 	if s.PreSignUp != nil && len(*s.PreSignUp) < 20 {
 		invalidParams.Add(request.NewErrParamMinLen("PreSignUp", 20))
 	}
+	if s.VerifyAuthChallengeResponse != nil && len(*s.VerifyAuthChallengeResponse) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("VerifyAuthChallengeResponse", 20))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// Represents the request to list the devices.
+type ListDevicesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The access tokens for the request to list devices.
+	AccessToken *string `type:"string" required:"true"`
+
+	// The limit of the device request.
+	Limit *int64 `type:"integer"`
+
+	// The pagination token for the list request.
+	PaginationToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListDevicesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDevicesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListDevicesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListDevicesInput"}
+	if s.AccessToken == nil {
+		invalidParams.Add(request.NewErrParamRequired("AccessToken"))
+	}
+	if s.PaginationToken != nil && len(*s.PaginationToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PaginationToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the response to list devices.
+type ListDevicesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The devices returned in the list devices response.
+	Devices []*DeviceType `type:"list"`
+
+	// The pagination token for the list device response.
+	PaginationToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListDevicesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDevicesOutput) GoString() string {
+	return s.String()
+}
+
+// Represents the request to list the user import jobs.
+type ListUserImportJobsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of import jobs you want the request to return.
+	MaxResults *int64 `min:"1" type:"integer" required:"true"`
+
+	// An identifier that was returned from the previous call to this operation,
+	// which can be used to return the next set of import jobs in the list.
+	PaginationToken *string `min:"1" type:"string"`
+
+	// The user pool ID for the user pool that the users are being imported into.
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListUserImportJobsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListUserImportJobsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListUserImportJobsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListUserImportJobsInput"}
+	if s.MaxResults == nil {
+		invalidParams.Add(request.NewErrParamRequired("MaxResults"))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.PaginationToken != nil && len(*s.PaginationToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PaginationToken", 1))
+	}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the response from the server to the request to list the user import
+// jobs.
+type ListUserImportJobsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An identifier that can be used to return the next set of user import jobs
+	// in the list.
+	PaginationToken *string `min:"1" type:"string"`
+
+	// The user import jobs.
+	UserImportJobs []*UserImportJobType `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s ListUserImportJobsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListUserImportJobsOutput) GoString() string {
+	return s.String()
 }
 
 // Represents the request to list the user pool clients.
@@ -2754,8 +5789,11 @@ type ListUsersInput struct {
 	// The attributes to get from the request to list users.
 	AttributesToGet []*string `type:"list"`
 
+	// The filter for the list users request.
+	Filter *string `type:"string"`
+
 	// The limit of the request to list users.
-	Limit *int64 `min:"1" type:"integer"`
+	Limit *int64 `type:"integer"`
 
 	// An identifier that was returned from the previous call to this operation,
 	// which can be used to return the next set of items in the list.
@@ -2763,14 +5801,6 @@ type ListUsersInput struct {
 
 	// The user pool ID for which you want to list users.
 	UserPoolId *string `min:"1" type:"string" required:"true"`
-
-	// The user status. Can be one of the following:
-	//
-	//  UNCONFIRMED - User has been created but not confirmed. CONFIRMED - User
-	// has been confirmed. ARCHIVED - User is no longer active. COMPROMISED - User
-	// is disabled due to a potential security threat. UNKNOWN - User status is
-	// not known.
-	UserStatus *string `type:"string" enum:"UserStatusType"`
 }
 
 // String returns the string representation
@@ -2786,9 +5816,6 @@ func (s ListUsersInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ListUsersInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListUsersInput"}
-	if s.Limit != nil && *s.Limit < 1 {
-		invalidParams.Add(request.NewErrParamMinValue("Limit", 1))
-	}
 	if s.PaginationToken != nil && len(*s.PaginationToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("PaginationToken", 1))
 	}
@@ -2859,6 +5886,27 @@ func (s *MFAOptionType) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// The new device metadata type.
+type NewDeviceMetadataType struct {
+	_ struct{} `type:"structure"`
+
+	// The device group key.
+	DeviceGroupKey *string `type:"string"`
+
+	// The device key.
+	DeviceKey *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s NewDeviceMetadataType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NewDeviceMetadataType) GoString() string {
+	return s.String()
 }
 
 // The minimum and maximum value of an attribute that is of the number data
@@ -2997,6 +6045,82 @@ func (s ResendConfirmationCodeOutput) String() string {
 
 // GoString returns the string representation
 func (s ResendConfirmationCodeOutput) GoString() string {
+	return s.String()
+}
+
+// The request to respond to an authentication challenge.
+type RespondToAuthChallengeInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the challenge.
+	ChallengeName *string `type:"string" required:"true" enum:"ChallengeNameType"`
+
+	// The responses to the authentication challenge.
+	ChallengeResponses map[string]*string `type:"map"`
+
+	// The client ID.
+	ClientId *string `min:"1" type:"string" required:"true"`
+
+	// The session.
+	Session *string `min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s RespondToAuthChallengeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RespondToAuthChallengeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RespondToAuthChallengeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RespondToAuthChallengeInput"}
+	if s.ChallengeName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChallengeName"))
+	}
+	if s.ClientId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClientId"))
+	}
+	if s.ClientId != nil && len(*s.ClientId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientId", 1))
+	}
+	if s.Session != nil && len(*s.Session) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("Session", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// The response to respond to the authentication challenge.
+type RespondToAuthChallengeOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The result type of the authentication result.
+	AuthenticationResult *AuthenticationResultType `type:"structure"`
+
+	// The challenge name.
+	ChallengeName *string `type:"string" enum:"ChallengeNameType"`
+
+	// The challenge parameters.
+	ChallengeParameters map[string]*string `type:"map"`
+
+	// The session.
+	Session *string `min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s RespondToAuthChallengeOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RespondToAuthChallengeOutput) GoString() string {
 	return s.String()
 }
 
@@ -3219,6 +6343,165 @@ func (s SignUpOutput) GoString() string {
 	return s.String()
 }
 
+// The SMS configuratoin type.
+type SmsConfigurationType struct {
+	_ struct{} `type:"structure"`
+
+	// The external ID.
+	ExternalId *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) of the Amazon Simple Notification Service
+	// (SNS) caller.
+	SnsCallerArn *string `min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s SmsConfigurationType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SmsConfigurationType) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SmsConfigurationType) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SmsConfigurationType"}
+	if s.SnsCallerArn != nil && len(*s.SnsCallerArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("SnsCallerArn", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the request to start the user import job.
+type StartUserImportJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The job ID for the user import job.
+	JobId *string `min:"1" type:"string" required:"true"`
+
+	// The user pool ID for the user pool that the users are being imported into.
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartUserImportJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartUserImportJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartUserImportJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartUserImportJobInput"}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 1))
+	}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the response from the server to the request to start the user
+// import job.
+type StartUserImportJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The job object that represents the user import job.
+	UserImportJob *UserImportJobType `type:"structure"`
+}
+
+// String returns the string representation
+func (s StartUserImportJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartUserImportJobOutput) GoString() string {
+	return s.String()
+}
+
+// Represents the request to stop the user import job.
+type StopUserImportJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The job ID for the user import job.
+	JobId *string `min:"1" type:"string" required:"true"`
+
+	// The user pool ID for the user pool that the users are being imported into.
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopUserImportJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopUserImportJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopUserImportJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopUserImportJobInput"}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 1))
+	}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the response from the server to the request to stop the user import
+// job.
+type StopUserImportJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The job object that represents the user import job.
+	UserImportJob *UserImportJobType `type:"structure"`
+}
+
+// String returns the string representation
+func (s StopUserImportJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopUserImportJobOutput) GoString() string {
+	return s.String()
+}
+
 // The type of constraints associated with an attribute of the string type.
 type StringAttributeConstraintsType struct {
 	_ struct{} `type:"structure"`
@@ -3237,6 +6520,64 @@ func (s StringAttributeConstraintsType) String() string {
 
 // GoString returns the string representation
 func (s StringAttributeConstraintsType) GoString() string {
+	return s.String()
+}
+
+// Represents the request to update the device status.
+type UpdateDeviceStatusInput struct {
+	_ struct{} `type:"structure"`
+
+	// The access token.
+	AccessToken *string `type:"string" required:"true"`
+
+	// The device key.
+	DeviceKey *string `min:"1" type:"string" required:"true"`
+
+	// The status of whether a device is remembered.
+	DeviceRememberedStatus *string `type:"string" enum:"DeviceRememberedStatusType"`
+}
+
+// String returns the string representation
+func (s UpdateDeviceStatusInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDeviceStatusInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateDeviceStatusInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateDeviceStatusInput"}
+	if s.AccessToken == nil {
+		invalidParams.Add(request.NewErrParamRequired("AccessToken"))
+	}
+	if s.DeviceKey == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeviceKey"))
+	}
+	if s.DeviceKey != nil && len(*s.DeviceKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeviceKey", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// The response to the request to update the device status.
+type UpdateDeviceStatusOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateDeviceStatusOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDeviceStatusOutput) GoString() string {
 	return s.String()
 }
 
@@ -3313,9 +6654,21 @@ type UpdateUserPoolClientInput struct {
 	// The client name from the update user pool client request.
 	ClientName *string `min:"1" type:"string"`
 
+	// Explicit authentication flows.
+	ExplicitAuthFlows []*string `type:"list"`
+
+	// The read-only attributes of the user pool.
+	ReadAttributes []*string `type:"list"`
+
+	// The validity of the refresh token.
+	RefreshTokenValidity *int64 `type:"integer"`
+
 	// The user pool ID for the user pool where you want to update the user pool
 	// client.
 	UserPoolId *string `min:"1" type:"string" required:"true"`
+
+	// The writeable attributes of the user pool.
+	WriteAttributes []*string `type:"list"`
 }
 
 // String returns the string representation
@@ -3381,6 +6734,12 @@ type UpdateUserPoolInput struct {
 	// makes a request to update user pools.
 	AutoVerifiedAttributes []*string `type:"list"`
 
+	// Device configuration.
+	DeviceConfiguration *DeviceConfigurationType `type:"structure"`
+
+	// Email configuration.
+	EmailConfiguration *EmailConfigurationType `type:"structure"`
+
 	// The contents of the email verification message.
 	EmailVerificationMessage *string `min:"6" type:"string"`
 
@@ -3404,6 +6763,9 @@ type UpdateUserPoolInput struct {
 
 	// The contents of the SMS authentication message.
 	SmsAuthenticationMessage *string `min:"6" type:"string"`
+
+	// SMS configuration.
+	SmsConfiguration *SmsConfigurationType `type:"structure"`
 
 	// A container with information about the SMS verification message.
 	SmsVerificationMessage *string `min:"6" type:"string"`
@@ -3443,6 +6805,11 @@ func (s *UpdateUserPoolInput) Validate() error {
 	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
 	}
+	if s.EmailConfiguration != nil {
+		if err := s.EmailConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("EmailConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.LambdaConfig != nil {
 		if err := s.LambdaConfig.Validate(); err != nil {
 			invalidParams.AddNested("LambdaConfig", err.(request.ErrInvalidParams))
@@ -3451,6 +6818,11 @@ func (s *UpdateUserPoolInput) Validate() error {
 	if s.Policies != nil {
 		if err := s.Policies.Validate(); err != nil {
 			invalidParams.AddNested("Policies", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.SmsConfiguration != nil {
+		if err := s.SmsConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("SmsConfiguration", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -3473,6 +6845,72 @@ func (s UpdateUserPoolOutput) String() string {
 
 // GoString returns the string representation
 func (s UpdateUserPoolOutput) GoString() string {
+	return s.String()
+}
+
+// The user import job type.
+type UserImportJobType struct {
+	_ struct{} `type:"structure"`
+
+	// The role ARN for the Amazon CloudWatch Logging role for the user import job.
+	// For more information, see "Creating the CloudWatch Logs IAM Role" in the
+	// Amazon Cognito Developer Guide.
+	CloudWatchLogsRoleArn *string `min:"20" type:"string"`
+
+	// The date when the user imoprt job was completed.
+	CompletionDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The message returned when the user import job is completed.
+	CompletionMessage *string `min:"1" type:"string"`
+
+	// The date when the user import job was created.
+	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The number of users that could not be imported.
+	FailedUsers *int64 `type:"long"`
+
+	// The number of users that were successfully imported.
+	ImportedUsers *int64 `type:"long"`
+
+	// The job ID for the user import job.
+	JobId *string `min:"1" type:"string"`
+
+	// The job name for the user import job.
+	JobName *string `min:"1" type:"string"`
+
+	// The pre-signed URL to be used to upload the .csv file.
+	PreSignedUrl *string `type:"string"`
+
+	// The number of users that were skipped.
+	SkippedUsers *int64 `type:"long"`
+
+	// The date when the user import job was started.
+	StartDate *time.Time `type:"timestamp" timestampFormat:"unix"`
+
+	// The status of the user import job. One of the following:
+	//
+	//  Created - The job was created but not started. Pending - A transition state.
+	// You have started the job, but it has not begun importing users yet. InProgress
+	// - The job has started, and users are being imported. Stopping - You have
+	// stopped the job, but the job has not stopped importing users yet. Stopped
+	// - You have stopped the job, and the job has stopped importing users. Succeeded
+	// - The job has completed successfully. Failed - The job has stopped due to
+	// an error. Expired - You created a job, but did not start the job within 24-48
+	// hours. All data associated with the job was deleted, and the job cannot be
+	// started.
+	Status *string `type:"string" enum:"UserImportJobStatusType"`
+
+	// The user pool ID for the user pool that the users are being imported into.
+	UserPoolId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s UserImportJobType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UserImportJobType) GoString() string {
 	return s.String()
 }
 
@@ -3517,11 +6955,23 @@ type UserPoolClientType struct {
 	// The creation date from the user pool request of the client type.
 	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
+	// The explicit authentication flows.
+	ExplicitAuthFlows []*string `type:"list"`
+
 	// The last modified date from the user pool request of the client type.
 	LastModifiedDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
+	// The Read-only attributes.
+	ReadAttributes []*string `type:"list"`
+
+	// The validity of the refresh token.
+	RefreshTokenValidity *int64 `type:"integer"`
+
 	// The user pool ID for the user pool client.
 	UserPoolId *string `min:"1" type:"string"`
+
+	// The writeable attributes.
+	WriteAttributes []*string `type:"list"`
 }
 
 // String returns the string representation
@@ -3613,6 +7063,15 @@ type UserPoolType struct {
 	// The creation date of a user pool.
 	CreationDate *time.Time `type:"timestamp" timestampFormat:"unix"`
 
+	// The device configuration.
+	DeviceConfiguration *DeviceConfigurationType `type:"structure"`
+
+	// The email configuration.
+	EmailConfiguration *EmailConfigurationType `type:"structure"`
+
+	// The reason why the email configuration cannot send the messages to your users.
+	EmailConfigurationFailure *string `type:"string"`
+
 	// The contents of the email verification message.
 	EmailVerificationMessage *string `min:"6" type:"string"`
 
@@ -3650,6 +7109,12 @@ type UserPoolType struct {
 
 	// The contents of the SMS authentication message.
 	SmsAuthenticationMessage *string `min:"6" type:"string"`
+
+	// The SMS configuration.
+	SmsConfiguration *SmsConfigurationType `type:"structure"`
+
+	// The reason why the SMS configuration cannot send the message(s) to your users.
+	SmsConfigurationFailure *string `type:"string"`
 
 	// The contents of the SMS verification message.
 	SmsVerificationMessage *string `min:"6" type:"string"`
@@ -3789,6 +7254,34 @@ const (
 )
 
 const (
+	// @enum AuthFlowType
+	AuthFlowTypeUserSrpAuth = "USER_SRP_AUTH"
+	// @enum AuthFlowType
+	AuthFlowTypeRefreshTokenAuth = "REFRESH_TOKEN_AUTH"
+	// @enum AuthFlowType
+	AuthFlowTypeRefreshToken = "REFRESH_TOKEN"
+	// @enum AuthFlowType
+	AuthFlowTypeCustomAuth = "CUSTOM_AUTH"
+	// @enum AuthFlowType
+	AuthFlowTypeAdminNoSrpAuth = "ADMIN_NO_SRP_AUTH"
+)
+
+const (
+	// @enum ChallengeNameType
+	ChallengeNameTypeSmsMfa = "SMS_MFA"
+	// @enum ChallengeNameType
+	ChallengeNameTypePasswordVerifier = "PASSWORD_VERIFIER"
+	// @enum ChallengeNameType
+	ChallengeNameTypeCustomChallenge = "CUSTOM_CHALLENGE"
+	// @enum ChallengeNameType
+	ChallengeNameTypeDeviceSrpAuth = "DEVICE_SRP_AUTH"
+	// @enum ChallengeNameType
+	ChallengeNameTypeDevicePasswordVerifier = "DEVICE_PASSWORD_VERIFIER"
+	// @enum ChallengeNameType
+	ChallengeNameTypeAdminNoSrpAuth = "ADMIN_NO_SRP_AUTH"
+)
+
+const (
 	// @enum DeliveryMediumType
 	DeliveryMediumTypeSms = "SMS"
 	// @enum DeliveryMediumType
@@ -3796,10 +7289,43 @@ const (
 )
 
 const (
+	// @enum DeviceRememberedStatusType
+	DeviceRememberedStatusTypeRemembered = "remembered"
+	// @enum DeviceRememberedStatusType
+	DeviceRememberedStatusTypeNotRemembered = "not_remembered"
+)
+
+const (
+	// @enum ExplicitAuthFlowsType
+	ExplicitAuthFlowsTypeAdminNoSrpAuth = "ADMIN_NO_SRP_AUTH"
+	// @enum ExplicitAuthFlowsType
+	ExplicitAuthFlowsTypeCustomAuthFlowOnly = "CUSTOM_AUTH_FLOW_ONLY"
+)
+
+const (
 	// @enum StatusType
 	StatusTypeEnabled = "Enabled"
 	// @enum StatusType
 	StatusTypeDisabled = "Disabled"
+)
+
+const (
+	// @enum UserImportJobStatusType
+	UserImportJobStatusTypeCreated = "Created"
+	// @enum UserImportJobStatusType
+	UserImportJobStatusTypePending = "Pending"
+	// @enum UserImportJobStatusType
+	UserImportJobStatusTypeInProgress = "InProgress"
+	// @enum UserImportJobStatusType
+	UserImportJobStatusTypeStopping = "Stopping"
+	// @enum UserImportJobStatusType
+	UserImportJobStatusTypeExpired = "Expired"
+	// @enum UserImportJobStatusType
+	UserImportJobStatusTypeStopped = "Stopped"
+	// @enum UserImportJobStatusType
+	UserImportJobStatusTypeFailed = "Failed"
+	// @enum UserImportJobStatusType
+	UserImportJobStatusTypeSucceeded = "Succeeded"
 )
 
 const (
@@ -3822,6 +7348,8 @@ const (
 	UserStatusTypeCompromised = "COMPROMISED"
 	// @enum UserStatusType
 	UserStatusTypeUnknown = "UNKNOWN"
+	// @enum UserStatusType
+	UserStatusTypeResetRequired = "RESET_REQUIRED"
 )
 
 const (

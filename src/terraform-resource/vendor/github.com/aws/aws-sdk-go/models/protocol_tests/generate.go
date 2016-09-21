@@ -14,7 +14,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/aws/aws-sdk-go/awstesting"
 	"github.com/aws/aws-sdk-go/private/model/api"
 	"github.com/aws/aws-sdk-go/private/util"
 )
@@ -90,7 +89,7 @@ var extraImports = []string{
 	"net/url",
 	"",
 	"github.com/aws/aws-sdk-go/awstesting",
-	"github.com/aws/aws-sdk-go/aws/session",
+	"github.com/aws/aws-sdk-go/awstesting/unit",
 	"github.com/aws/aws-sdk-go/private/protocol",
 	"github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil",
 	"github.com/aws/aws-sdk-go/private/util",
@@ -126,8 +125,7 @@ func (t *testSuite) TestSuite() string {
 
 var tplInputTestCase = template.Must(template.New("inputcase").Parse(`
 func Test{{ .OpName }}(t *testing.T) {
-	sess := session.New()
-	svc := New{{ .TestCase.TestSuite.API.StructName }}(sess, &aws.Config{Endpoint: aws.String("https://test")})
+	svc := New{{ .TestCase.TestSuite.API.StructName }}(unit.Session, &aws.Config{Endpoint: aws.String("https://test")})
 	{{ if ne .ParamsString "" }}input := {{ .ParamsString }}
 	req, _ := svc.{{ .TestCase.Given.ExportedName }}Request(input){{ else }}req, _ := svc.{{ .TestCase.Given.ExportedName }}Request(nil){{ end }}
 	r := req.HTTPRequest
@@ -198,8 +196,7 @@ func (t tplInputTestCaseData) BodyAssertions() string {
 
 var tplOutputTestCase = template.Must(template.New("outputcase").Parse(`
 func Test{{ .OpName }}(t *testing.T) {
-	sess := session.New()
-	svc := New{{ .TestCase.TestSuite.API.StructName }}(sess, &aws.Config{Endpoint: aws.String("https://test")})
+	svc := New{{ .TestCase.TestSuite.API.StructName }}(unit.Session, &aws.Config{Endpoint: aws.String("https://test")})
 
 	buf := bytes.NewReader([]byte({{ .Body }}))
 	req, out := svc.{{ .TestCase.Given.ExportedName }}Request(nil)
@@ -359,7 +356,7 @@ func findMember(shape *api.Shape, key string) string {
 func GenerateAssertions(out interface{}, shape *api.Shape, prefix string) string {
 	switch t := out.(type) {
 	case map[string]interface{}:
-		keys := awstesting.SortedKeys(t)
+		keys := util.SortedKeys(t)
 
 		code := ""
 		if shape.Type == "map" {

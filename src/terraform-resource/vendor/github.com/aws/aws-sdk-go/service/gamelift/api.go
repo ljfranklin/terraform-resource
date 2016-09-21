@@ -15,7 +15,28 @@ import (
 
 const opCreateAlias = "CreateAlias"
 
-// CreateAliasRequest generates a request for the CreateAlias operation.
+// CreateAliasRequest generates a "aws/request.Request" representing the
+// client's request for the CreateAlias operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateAlias method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateAliasRequest method.
+//    req, resp := client.CreateAliasRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) CreateAliasRequest(input *CreateAliasInput) (req *request.Request, output *CreateAliasOutput) {
 	op := &request.Operation{
 		Name:       opCreateAlias,
@@ -54,7 +75,28 @@ func (c *GameLift) CreateAlias(input *CreateAliasInput) (*CreateAliasOutput, err
 
 const opCreateBuild = "CreateBuild"
 
-// CreateBuildRequest generates a request for the CreateBuild operation.
+// CreateBuildRequest generates a "aws/request.Request" representing the
+// client's request for the CreateBuild operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateBuild method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateBuildRequest method.
+//    req, resp := client.CreateBuildRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) CreateBuildRequest(input *CreateBuildInput) (req *request.Request, output *CreateBuildOutput) {
 	op := &request.Operation{
 		Name:       opCreateBuild,
@@ -74,21 +116,22 @@ func (c *GameLift) CreateBuildRequest(input *CreateBuildInput) (req *request.Req
 
 // Initializes a new build record and generates information required to upload
 // a game build to Amazon GameLift. Once the build record has been created and
-// is in an INITIALIZED state, you can upload your game build.
+// its status is INITIALIZED, you can upload your game build.
 //
-// To create a build, use the CLI command upload-build, which creates a new
-// build record and uploads the build files in one step. (See the Amazon GameLift
-// Developer Guide (http://docs.aws.amazon.com/gamelift/latest/developerguide/)
-// for more details on the CLI and the upload process.) Call the CreateBuild
-// action only if you have your own Amazon Simple Storage Service (Amazon S3)
-// client and need to manually upload your build files.
+//  Do not use this API action unless you are using your own Amazon Simple
+// Storage Service (Amazon S3) client and need to manually upload your build
+// files. Instead, to create a build, use the CLI command upload-build, which
+// creates a new build record and uploads the build files in one step. (See
+// the Amazon GameLift Developer Guide (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-build-intro.html)
+// help on packaging and uploading your build.)
 //
-// To create a new build, optionally specify a build name and version. This
-// metadata is stored with other properties in the build record and is displayed
-// in the GameLift console (but not visible to players). If successful, this
-// action returns the newly created build record along with an Amazon S3 storage
-// location and AWS account credentials. Use the location and credentials to
-// upload your game build.
+//  To create a new build, identify the operating system of the game server
+// binaries. All game servers in a build must use the same operating system.
+// Optionally, specify a build name and version; this metadata is stored with
+// other properties in the build record and is displayed in the GameLift console
+// (it is not visible to players). If successful, this action returns the newly
+// created build record along with the Amazon S3 storage location and AWS account
+// credentials. Use the location and credentials to upload your game build.
 func (c *GameLift) CreateBuild(input *CreateBuildInput) (*CreateBuildOutput, error) {
 	req, out := c.CreateBuildRequest(input)
 	err := req.Send()
@@ -97,7 +140,28 @@ func (c *GameLift) CreateBuild(input *CreateBuildInput) (*CreateBuildOutput, err
 
 const opCreateFleet = "CreateFleet"
 
-// CreateFleetRequest generates a request for the CreateFleet operation.
+// CreateFleetRequest generates a "aws/request.Request" representing the
+// client's request for the CreateFleet operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateFleet method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateFleetRequest method.
+//    req, resp := client.CreateFleetRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) CreateFleetRequest(input *CreateFleetInput) (req *request.Request, output *CreateFleetOutput) {
 	op := &request.Operation{
 		Name:       opCreateFleet,
@@ -115,37 +179,41 @@ func (c *GameLift) CreateFleetRequest(input *CreateFleetInput) (req *request.Req
 	return
 }
 
-// Creates a new fleet to host game servers. A fleet consists of a set of Amazon
-// Elastic Compute Cloud (Amazon EC2) instances of a certain type, which defines
-// the CPU, memory, storage, and networking capacity of each host in the fleet.
-// See Amazon EC2 Instance Types (https://aws.amazon.com/ec2/instance-types/)
-// for more information. Each instance in the fleet hosts a game server created
-// from the specified game build. Once a fleet is in an ACTIVE state, it can
-// begin hosting game sessions.
+// Creates a new fleet to run your game servers. A fleet is a set of Amazon
+// Elastic Compute Cloud (Amazon EC2) instances, each of which can run multiple
+// server processes to host game sessions. You configure a fleet to create instances
+// with certain hardware specifications (see Amazon EC2 Instance Types (https://aws.amazon.com/ec2/instance-types/)
+// for more information), and deploy a specified game build to each instance.
+// A newly created fleet passes through several statuses; once it reaches the
+// ACTIVE status, it can begin hosting game sessions.
 //
-// To create a new fleet, provide a name and the EC2 instance type for the
-// new fleet, and specify the build and server launch path. Builds must be in
-// a READY state before they can be used to build fleets. When configuring the
-// new fleet, you can optionally (1) provide a set of launch parameters to be
-// passed to a game server when activated; (2) limit incoming traffic to a specified
-// range of IP addresses and port numbers; (3) set game session protection for
-// all instances in the fleet, and (4) configure Amazon GameLift to store game
-// session logs by specifying the path to the logs stored in your game server
-// files. If the call is successful, Amazon GameLift performs the following
+// To create a new fleet, provide a fleet name, an EC2 instance type, and a
+// build ID of the game build to deploy. You can also configure the new fleet
+// with the following settings: (1) a runtime configuration describing what
+// server processes to run on each instance in the fleet (required to create
+// fleet), (2) access permissions for inbound traffic, (3) fleet-wide game session
+// protection, and (4) the location of default log files for GameLift to upload
+// and store.
+//
+// If the CreateFleet call is successful, Amazon GameLift performs the following
 // tasks:
 //
-//  Creates a fleet record and sets the state to NEW. Sets the fleet's capacity
-// to 1 "desired" and 1 "active" EC2 instance count. Creates an EC2 instance
-// and begins the process of initializing the fleet and activating a game server
-// on the instance. Begins writing events to the fleet event log, which can
-// be accessed in the GameLift console.  Once a fleet is created, use the following
-// actions to change certain fleet properties (server launch parameters and
-// log paths cannot be changed):
+//  Creates a fleet record and sets the status to NEW (followed by other statuses
+// as the fleet is activated). Sets the fleet's capacity to 1 "desired", which
+// causes GameLift to start one new EC2 instance. Starts launching server processes
+// on the instance. If the fleet is configured to run multiple server processes
+// per instance, GameLift staggers each launch by a few seconds. Begins writing
+// events to the fleet event log, which can be accessed in the GameLift console.
+// Sets the fleet's status to ACTIVE once one server process in the fleet is
+// ready to host a game session.  After a fleet is created, use the following
+// actions to change fleet properties and configuration:
 //
 //   UpdateFleetAttributes -- Update fleet metadata, including name and description.
 //  UpdateFleetCapacity -- Increase or decrease the number of instances you
-// want the fleet to maintain.  UpdateFleetPortSettings -- Change the IP addresses
-// and ports that allow access to incoming traffic.
+// want the fleet to maintain.  UpdateFleetPortSettings -- Change the IP address
+// and port ranges that allow access to incoming traffic.  UpdateRuntimeConfiguration
+// -- Change how server processes are launched in the fleet, including launch
+// path, launch parameters, and the number of concurrent processes.
 func (c *GameLift) CreateFleet(input *CreateFleetInput) (*CreateFleetOutput, error) {
 	req, out := c.CreateFleetRequest(input)
 	err := req.Send()
@@ -154,7 +222,28 @@ func (c *GameLift) CreateFleet(input *CreateFleetInput) (*CreateFleetOutput, err
 
 const opCreateGameSession = "CreateGameSession"
 
-// CreateGameSessionRequest generates a request for the CreateGameSession operation.
+// CreateGameSessionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateGameSession operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateGameSession method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateGameSessionRequest method.
+//    req, resp := client.CreateGameSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) CreateGameSessionRequest(input *CreateGameSessionInput) (req *request.Request, output *CreateGameSessionOutput) {
 	op := &request.Operation{
 		Name:       opCreateGameSession,
@@ -174,8 +263,8 @@ func (c *GameLift) CreateGameSessionRequest(input *CreateGameSessionInput) (req 
 
 // Creates a multiplayer game session for players. This action creates a game
 // session record and assigns the new session to an instance in the specified
-// fleet, which activates the server initialization process in your game server.
-// A fleet must be in an ACTIVE state before a game session can be created for
+// fleet, which initializes a new server process to host the game session. A
+// fleet must be in an ACTIVE status before a game session can be created in
 // it.
 //
 // To create a game session, specify either a fleet ID or an alias ID and indicate
@@ -193,7 +282,28 @@ func (c *GameLift) CreateGameSession(input *CreateGameSessionInput) (*CreateGame
 
 const opCreatePlayerSession = "CreatePlayerSession"
 
-// CreatePlayerSessionRequest generates a request for the CreatePlayerSession operation.
+// CreatePlayerSessionRequest generates a "aws/request.Request" representing the
+// client's request for the CreatePlayerSession operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreatePlayerSession method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreatePlayerSessionRequest method.
+//    req, resp := client.CreatePlayerSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) CreatePlayerSessionRequest(input *CreatePlayerSessionInput) (req *request.Request, output *CreatePlayerSessionOutput) {
 	op := &request.Operation{
 		Name:       opCreatePlayerSession,
@@ -212,7 +322,7 @@ func (c *GameLift) CreatePlayerSessionRequest(input *CreatePlayerSessionInput) (
 }
 
 // Adds a player to a game session and creates a player session record. A game
-// session must be in an ACTIVE state, have a creation policy of ALLOW_ALL,
+// session must be in an ACTIVE status, have a creation policy of ALLOW_ALL,
 // and have an open player slot before players can be added to the session.
 //
 // To create a player session, specify a game session ID and player ID. If
@@ -226,7 +336,28 @@ func (c *GameLift) CreatePlayerSession(input *CreatePlayerSessionInput) (*Create
 
 const opCreatePlayerSessions = "CreatePlayerSessions"
 
-// CreatePlayerSessionsRequest generates a request for the CreatePlayerSessions operation.
+// CreatePlayerSessionsRequest generates a "aws/request.Request" representing the
+// client's request for the CreatePlayerSessions operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreatePlayerSessions method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreatePlayerSessionsRequest method.
+//    req, resp := client.CreatePlayerSessionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) CreatePlayerSessionsRequest(input *CreatePlayerSessionsInput) (req *request.Request, output *CreatePlayerSessionsOutput) {
 	op := &request.Operation{
 		Name:       opCreatePlayerSessions,
@@ -247,7 +378,7 @@ func (c *GameLift) CreatePlayerSessionsRequest(input *CreatePlayerSessionsInput)
 // Adds a group of players to a game session. Similar to CreatePlayerSession,
 // this action allows you to add multiple players in a single call, which is
 // useful for games that provide party and/or matchmaking features. A game session
-// must be in an ACTIVE state, have a creation policy of ALLOW_ALL, and have
+// must be in an ACTIVE status, have a creation policy of ALLOW_ALL, and have
 // an open player slot before players can be added to the session.
 //
 // To create player sessions, specify a game session ID and a list of player
@@ -261,7 +392,28 @@ func (c *GameLift) CreatePlayerSessions(input *CreatePlayerSessionsInput) (*Crea
 
 const opDeleteAlias = "DeleteAlias"
 
-// DeleteAliasRequest generates a request for the DeleteAlias operation.
+// DeleteAliasRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteAlias operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteAlias method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteAliasRequest method.
+//    req, resp := client.DeleteAliasRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DeleteAliasRequest(input *DeleteAliasInput) (req *request.Request, output *DeleteAliasOutput) {
 	op := &request.Operation{
 		Name:       opDeleteAlias,
@@ -282,8 +434,8 @@ func (c *GameLift) DeleteAliasRequest(input *DeleteAliasInput) (req *request.Req
 }
 
 // Deletes an alias. This action removes all record of the alias; game clients
-// attempting to access a game server using the deleted alias receive an error.
-// To delete an alias, specify the alias ID to be deleted.
+// attempting to access a server process using the deleted alias receive an
+// error. To delete an alias, specify the alias ID to be deleted.
 func (c *GameLift) DeleteAlias(input *DeleteAliasInput) (*DeleteAliasOutput, error) {
 	req, out := c.DeleteAliasRequest(input)
 	err := req.Send()
@@ -292,7 +444,28 @@ func (c *GameLift) DeleteAlias(input *DeleteAliasInput) (*DeleteAliasOutput, err
 
 const opDeleteBuild = "DeleteBuild"
 
-// DeleteBuildRequest generates a request for the DeleteBuild operation.
+// DeleteBuildRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteBuild operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteBuild method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteBuildRequest method.
+//    req, resp := client.DeleteBuildRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DeleteBuildRequest(input *DeleteBuildInput) (req *request.Request, output *DeleteBuildOutput) {
 	op := &request.Operation{
 		Name:       opDeleteBuild,
@@ -316,8 +489,8 @@ func (c *GameLift) DeleteBuildRequest(input *DeleteBuildInput) (req *request.Req
 // uploaded build files.
 //
 // To delete a build, specify its ID. Deleting a build does not affect the
-// status of any active fleets, but you can no longer create new fleets for
-// the deleted build.
+// status of any active fleets using the build, but you can no longer create
+// new fleets with the deleted build.
 func (c *GameLift) DeleteBuild(input *DeleteBuildInput) (*DeleteBuildOutput, error) {
 	req, out := c.DeleteBuildRequest(input)
 	err := req.Send()
@@ -326,7 +499,28 @@ func (c *GameLift) DeleteBuild(input *DeleteBuildInput) (*DeleteBuildOutput, err
 
 const opDeleteFleet = "DeleteFleet"
 
-// DeleteFleetRequest generates a request for the DeleteFleet operation.
+// DeleteFleetRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteFleet operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteFleet method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteFleetRequest method.
+//    req, resp := client.DeleteFleetRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DeleteFleetRequest(input *DeleteFleetInput) (req *request.Request, output *DeleteFleetOutput) {
 	op := &request.Operation{
 		Name:       opDeleteFleet,
@@ -359,7 +553,28 @@ func (c *GameLift) DeleteFleet(input *DeleteFleetInput) (*DeleteFleetOutput, err
 
 const opDeleteScalingPolicy = "DeleteScalingPolicy"
 
-// DeleteScalingPolicyRequest generates a request for the DeleteScalingPolicy operation.
+// DeleteScalingPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteScalingPolicy operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteScalingPolicy method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteScalingPolicyRequest method.
+//    req, resp := client.DeleteScalingPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DeleteScalingPolicyRequest(input *DeleteScalingPolicyInput) (req *request.Request, output *DeleteScalingPolicyOutput) {
 	op := &request.Operation{
 		Name:       opDeleteScalingPolicy,
@@ -390,7 +605,28 @@ func (c *GameLift) DeleteScalingPolicy(input *DeleteScalingPolicyInput) (*Delete
 
 const opDescribeAlias = "DescribeAlias"
 
-// DescribeAliasRequest generates a request for the DescribeAlias operation.
+// DescribeAliasRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAlias operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeAlias method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeAliasRequest method.
+//    req, resp := client.DescribeAliasRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DescribeAliasRequest(input *DescribeAliasInput) (req *request.Request, output *DescribeAliasOutput) {
 	op := &request.Operation{
 		Name:       opDescribeAlias,
@@ -418,7 +654,28 @@ func (c *GameLift) DescribeAlias(input *DescribeAliasInput) (*DescribeAliasOutpu
 
 const opDescribeBuild = "DescribeBuild"
 
-// DescribeBuildRequest generates a request for the DescribeBuild operation.
+// DescribeBuildRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeBuild operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeBuild method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeBuildRequest method.
+//    req, resp := client.DescribeBuildRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DescribeBuildRequest(input *DescribeBuildInput) (req *request.Request, output *DescribeBuildOutput) {
 	op := &request.Operation{
 		Name:       opDescribeBuild,
@@ -446,7 +703,28 @@ func (c *GameLift) DescribeBuild(input *DescribeBuildInput) (*DescribeBuildOutpu
 
 const opDescribeEC2InstanceLimits = "DescribeEC2InstanceLimits"
 
-// DescribeEC2InstanceLimitsRequest generates a request for the DescribeEC2InstanceLimits operation.
+// DescribeEC2InstanceLimitsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeEC2InstanceLimits operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeEC2InstanceLimits method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeEC2InstanceLimitsRequest method.
+//    req, resp := client.DescribeEC2InstanceLimitsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DescribeEC2InstanceLimitsRequest(input *DescribeEC2InstanceLimitsInput) (req *request.Request, output *DescribeEC2InstanceLimitsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeEC2InstanceLimits,
@@ -478,7 +756,28 @@ func (c *GameLift) DescribeEC2InstanceLimits(input *DescribeEC2InstanceLimitsInp
 
 const opDescribeFleetAttributes = "DescribeFleetAttributes"
 
-// DescribeFleetAttributesRequest generates a request for the DescribeFleetAttributes operation.
+// DescribeFleetAttributesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeFleetAttributes operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeFleetAttributes method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeFleetAttributesRequest method.
+//    req, resp := client.DescribeFleetAttributesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DescribeFleetAttributesRequest(input *DescribeFleetAttributesInput) (req *request.Request, output *DescribeFleetAttributesOutput) {
 	op := &request.Operation{
 		Name:       opDescribeFleetAttributes,
@@ -498,13 +797,13 @@ func (c *GameLift) DescribeFleetAttributesRequest(input *DescribeFleetAttributes
 
 // Retrieves fleet properties, including metadata, status, and configuration,
 // for one or more fleets. You can request attributes for all fleets, or specify
-// a list of one or more fleet IDs. When requesting all fleets, use the pagination
-// parameters to retrieve results as a set of sequential pages. If successful,
-// a FleetAttributes object is returned for each requested fleet ID. When specifying
-// a list of fleet IDs, attribute objects are returned only for fleets that
-// currently exist.
+// a list of one or more fleet IDs. When requesting multiple fleets, use the
+// pagination parameters to retrieve results as a set of sequential pages. If
+// successful, a FleetAttributes object is returned for each requested fleet
+// ID. When specifying a list of fleet IDs, attribute objects are returned only
+// for fleets that currently exist.
 //
-// Some API actions may limit the number of fleet IDs allowed in one request.
+//  Some API actions may limit the number of fleet IDs allowed in one request.
 // If a request exceeds this limit, the request fails and the error message
 // includes the maximum allowed.
 func (c *GameLift) DescribeFleetAttributes(input *DescribeFleetAttributesInput) (*DescribeFleetAttributesOutput, error) {
@@ -515,7 +814,28 @@ func (c *GameLift) DescribeFleetAttributes(input *DescribeFleetAttributesInput) 
 
 const opDescribeFleetCapacity = "DescribeFleetCapacity"
 
-// DescribeFleetCapacityRequest generates a request for the DescribeFleetCapacity operation.
+// DescribeFleetCapacityRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeFleetCapacity operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeFleetCapacity method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeFleetCapacityRequest method.
+//    req, resp := client.DescribeFleetCapacityRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DescribeFleetCapacityRequest(input *DescribeFleetCapacityInput) (req *request.Request, output *DescribeFleetCapacityOutput) {
 	op := &request.Operation{
 		Name:       opDescribeFleetCapacity,
@@ -536,13 +856,13 @@ func (c *GameLift) DescribeFleetCapacityRequest(input *DescribeFleetCapacityInpu
 // Retrieves the current status of fleet capacity for one or more fleets. This
 // information includes the number of instances that have been requested for
 // the fleet and the number currently active. You can request capacity for all
-// fleets, or specify a list of one or more fleet IDs. When requesting all fleets,
-// use the pagination parameters to retrieve results as a set of sequential
+// fleets, or specify a list of one or more fleet IDs. When requesting multiple
+// fleets, use the pagination parameters to retrieve results as a set of sequential
 // pages. If successful, a FleetCapacity object is returned for each requested
 // fleet ID. When specifying a list of fleet IDs, attribute objects are returned
 // only for fleets that currently exist.
 //
-// Some API actions may limit the number of fleet IDs allowed in one request.
+//  Some API actions may limit the number of fleet IDs allowed in one request.
 // If a request exceeds this limit, the request fails and the error message
 // includes the maximum allowed.
 func (c *GameLift) DescribeFleetCapacity(input *DescribeFleetCapacityInput) (*DescribeFleetCapacityOutput, error) {
@@ -553,7 +873,28 @@ func (c *GameLift) DescribeFleetCapacity(input *DescribeFleetCapacityInput) (*De
 
 const opDescribeFleetEvents = "DescribeFleetEvents"
 
-// DescribeFleetEventsRequest generates a request for the DescribeFleetEvents operation.
+// DescribeFleetEventsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeFleetEvents operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeFleetEvents method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeFleetEventsRequest method.
+//    req, resp := client.DescribeFleetEventsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DescribeFleetEventsRequest(input *DescribeFleetEventsInput) (req *request.Request, output *DescribeFleetEventsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeFleetEvents,
@@ -571,10 +912,10 @@ func (c *GameLift) DescribeFleetEventsRequest(input *DescribeFleetEventsInput) (
 	return
 }
 
-// Retrieves entries from the fleet event log. You can specify a time range
-// to limit the result set. Use the pagination parameters to retrieve results
-// as a set of sequential pages. If successful, a collection of event log entries
-// matching the request are returned.
+// Retrieves entries from the specified fleet's event log. You can specify a
+// time range to limit the result set. Use the pagination parameters to retrieve
+// results as a set of sequential pages. If successful, a collection of event
+// log entries matching the request are returned.
 func (c *GameLift) DescribeFleetEvents(input *DescribeFleetEventsInput) (*DescribeFleetEventsOutput, error) {
 	req, out := c.DescribeFleetEventsRequest(input)
 	err := req.Send()
@@ -583,7 +924,28 @@ func (c *GameLift) DescribeFleetEvents(input *DescribeFleetEventsInput) (*Descri
 
 const opDescribeFleetPortSettings = "DescribeFleetPortSettings"
 
-// DescribeFleetPortSettingsRequest generates a request for the DescribeFleetPortSettings operation.
+// DescribeFleetPortSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeFleetPortSettings operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeFleetPortSettings method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeFleetPortSettingsRequest method.
+//    req, resp := client.DescribeFleetPortSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DescribeFleetPortSettingsRequest(input *DescribeFleetPortSettingsInput) (req *request.Request, output *DescribeFleetPortSettingsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeFleetPortSettings,
@@ -601,11 +963,12 @@ func (c *GameLift) DescribeFleetPortSettingsRequest(input *DescribeFleetPortSett
 	return
 }
 
-// Retrieves the port settings for a fleet. Port settings are used to limit
-// incoming traffic access to game servers in the fleet. To get a fleet's port
-// settings, specify a fleet ID. If successful, an IpPermission object is returned
-// for the requested fleet ID. If the requested fleet has been deleted, the
-// result set will be empty.
+// Retrieves the inbound connection permissions for a fleet. Connection permissions
+// include a range of IP addresses and port settings that incoming traffic can
+// use to access server processes in the fleet. To get a fleet's inbound connection
+// permissions, specify a fleet ID. If successful, a collection of IpPermission
+// objects is returned for the requested fleet ID. If the requested fleet has
+// been deleted, the result set is empty.
 func (c *GameLift) DescribeFleetPortSettings(input *DescribeFleetPortSettingsInput) (*DescribeFleetPortSettingsOutput, error) {
 	req, out := c.DescribeFleetPortSettingsRequest(input)
 	err := req.Send()
@@ -614,7 +977,28 @@ func (c *GameLift) DescribeFleetPortSettings(input *DescribeFleetPortSettingsInp
 
 const opDescribeFleetUtilization = "DescribeFleetUtilization"
 
-// DescribeFleetUtilizationRequest generates a request for the DescribeFleetUtilization operation.
+// DescribeFleetUtilizationRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeFleetUtilization operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeFleetUtilization method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeFleetUtilizationRequest method.
+//    req, resp := client.DescribeFleetUtilizationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DescribeFleetUtilizationRequest(input *DescribeFleetUtilizationInput) (req *request.Request, output *DescribeFleetUtilizationOutput) {
 	op := &request.Operation{
 		Name:       opDescribeFleetUtilization,
@@ -634,12 +1018,12 @@ func (c *GameLift) DescribeFleetUtilizationRequest(input *DescribeFleetUtilizati
 
 // Retrieves utilization statistics for one or more fleets. You can request
 // utilization data for all fleets, or specify a list of one or more fleet IDs.
-// When requesting all fleets, use the pagination parameters to retrieve results
-// as a set of sequential pages. If successful, a FleetUtilization object is
-// returned for each requested fleet ID. When specifying a list of fleet IDs,
-// utilization objects are returned only for fleets that currently exist.
+// When requesting multiple fleets, use the pagination parameters to retrieve
+// results as a set of sequential pages. If successful, a FleetUtilization object
+// is returned for each requested fleet ID. When specifying a list of fleet
+// IDs, utilization objects are returned only for fleets that currently exist.
 //
-// Some API actions may limit the number of fleet IDs allowed in one request.
+//  Some API actions may limit the number of fleet IDs allowed in one request.
 // If a request exceeds this limit, the request fails and the error message
 // includes the maximum allowed.
 func (c *GameLift) DescribeFleetUtilization(input *DescribeFleetUtilizationInput) (*DescribeFleetUtilizationOutput, error) {
@@ -650,7 +1034,28 @@ func (c *GameLift) DescribeFleetUtilization(input *DescribeFleetUtilizationInput
 
 const opDescribeGameSessionDetails = "DescribeGameSessionDetails"
 
-// DescribeGameSessionDetailsRequest generates a request for the DescribeGameSessionDetails operation.
+// DescribeGameSessionDetailsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeGameSessionDetails operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeGameSessionDetails method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeGameSessionDetailsRequest method.
+//    req, resp := client.DescribeGameSessionDetailsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DescribeGameSessionDetailsRequest(input *DescribeGameSessionDetailsInput) (req *request.Request, output *DescribeGameSessionDetailsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeGameSessionDetails,
@@ -687,7 +1092,28 @@ func (c *GameLift) DescribeGameSessionDetails(input *DescribeGameSessionDetailsI
 
 const opDescribeGameSessions = "DescribeGameSessions"
 
-// DescribeGameSessionsRequest generates a request for the DescribeGameSessions operation.
+// DescribeGameSessionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeGameSessions operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeGameSessions method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeGameSessionsRequest method.
+//    req, resp := client.DescribeGameSessionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DescribeGameSessionsRequest(input *DescribeGameSessionsInput) (req *request.Request, output *DescribeGameSessionsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeGameSessions,
@@ -723,7 +1149,28 @@ func (c *GameLift) DescribeGameSessions(input *DescribeGameSessionsInput) (*Desc
 
 const opDescribePlayerSessions = "DescribePlayerSessions"
 
-// DescribePlayerSessionsRequest generates a request for the DescribePlayerSessions operation.
+// DescribePlayerSessionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribePlayerSessions operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribePlayerSessions method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribePlayerSessionsRequest method.
+//    req, resp := client.DescribePlayerSessionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DescribePlayerSessionsRequest(input *DescribePlayerSessionsInput) (req *request.Request, output *DescribePlayerSessionsOutput) {
 	op := &request.Operation{
 		Name:       opDescribePlayerSessions,
@@ -759,9 +1206,80 @@ func (c *GameLift) DescribePlayerSessions(input *DescribePlayerSessionsInput) (*
 	return out, err
 }
 
+const opDescribeRuntimeConfiguration = "DescribeRuntimeConfiguration"
+
+// DescribeRuntimeConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeRuntimeConfiguration operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeRuntimeConfiguration method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeRuntimeConfigurationRequest method.
+//    req, resp := client.DescribeRuntimeConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *GameLift) DescribeRuntimeConfigurationRequest(input *DescribeRuntimeConfigurationInput) (req *request.Request, output *DescribeRuntimeConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opDescribeRuntimeConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeRuntimeConfigurationInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &DescribeRuntimeConfigurationOutput{}
+	req.Data = output
+	return
+}
+
+// Retrieves the current runtime configuration for the specified fleet. The
+// runtime configuration tells GameLift how to launch server processes on instances
+// in the fleet.
+func (c *GameLift) DescribeRuntimeConfiguration(input *DescribeRuntimeConfigurationInput) (*DescribeRuntimeConfigurationOutput, error) {
+	req, out := c.DescribeRuntimeConfigurationRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opDescribeScalingPolicies = "DescribeScalingPolicies"
 
-// DescribeScalingPoliciesRequest generates a request for the DescribeScalingPolicies operation.
+// DescribeScalingPoliciesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeScalingPolicies operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeScalingPolicies method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeScalingPoliciesRequest method.
+//    req, resp := client.DescribeScalingPoliciesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) DescribeScalingPoliciesRequest(input *DescribeScalingPoliciesInput) (req *request.Request, output *DescribeScalingPoliciesOutput) {
 	op := &request.Operation{
 		Name:       opDescribeScalingPolicies,
@@ -793,7 +1311,28 @@ func (c *GameLift) DescribeScalingPolicies(input *DescribeScalingPoliciesInput) 
 
 const opGetGameSessionLogUrl = "GetGameSessionLogUrl"
 
-// GetGameSessionLogUrlRequest generates a request for the GetGameSessionLogUrl operation.
+// GetGameSessionLogUrlRequest generates a "aws/request.Request" representing the
+// client's request for the GetGameSessionLogUrl operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetGameSessionLogUrl method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetGameSessionLogUrlRequest method.
+//    req, resp := client.GetGameSessionLogUrlRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) GetGameSessionLogUrlRequest(input *GetGameSessionLogUrlInput) (req *request.Request, output *GetGameSessionLogUrlOutput) {
 	op := &request.Operation{
 		Name:       opGetGameSessionLogUrl,
@@ -815,7 +1354,7 @@ func (c *GameLift) GetGameSessionLogUrlRequest(input *GetGameSessionLogUrlInput)
 // When a game session is terminated, Amazon GameLift automatically stores the
 // logs in Amazon S3. Use this URL to download the logs.
 //
-// See the AWS Service Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_gamelift)
+//  See the AWS Service Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_gamelift)
 // page for maximum log file sizes. Log files that exceed this limit are not
 // saved.
 func (c *GameLift) GetGameSessionLogUrl(input *GetGameSessionLogUrlInput) (*GetGameSessionLogUrlOutput, error) {
@@ -826,7 +1365,28 @@ func (c *GameLift) GetGameSessionLogUrl(input *GetGameSessionLogUrlInput) (*GetG
 
 const opListAliases = "ListAliases"
 
-// ListAliasesRequest generates a request for the ListAliases operation.
+// ListAliasesRequest generates a "aws/request.Request" representing the
+// client's request for the ListAliases operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListAliases method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListAliasesRequest method.
+//    req, resp := client.ListAliasesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) ListAliasesRequest(input *ListAliasesInput) (req *request.Request, output *ListAliasesOutput) {
 	op := &request.Operation{
 		Name:       opListAliases,
@@ -848,7 +1408,7 @@ func (c *GameLift) ListAliasesRequest(input *ListAliasesInput) (req *request.Req
 // the result set by alias name and/or routing strategy type. Use the pagination
 // parameters to retrieve results in sequential pages.
 //
-// Aliases are not listed in any particular order.
+//  Aliases are not listed in any particular order.
 func (c *GameLift) ListAliases(input *ListAliasesInput) (*ListAliasesOutput, error) {
 	req, out := c.ListAliasesRequest(input)
 	err := req.Send()
@@ -857,7 +1417,28 @@ func (c *GameLift) ListAliases(input *ListAliasesInput) (*ListAliasesOutput, err
 
 const opListBuilds = "ListBuilds"
 
-// ListBuildsRequest generates a request for the ListBuilds operation.
+// ListBuildsRequest generates a "aws/request.Request" representing the
+// client's request for the ListBuilds operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListBuilds method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListBuildsRequest method.
+//    req, resp := client.ListBuildsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) ListBuildsRequest(input *ListBuildsInput) (req *request.Request, output *ListBuildsOutput) {
 	op := &request.Operation{
 		Name:       opListBuilds,
@@ -875,11 +1456,12 @@ func (c *GameLift) ListBuildsRequest(input *ListBuildsInput) (req *request.Reque
 	return
 }
 
-// Retrieves build records for all builds associated with an AWS account. You
-// can filter the result set by build status. Use the pagination parameters
-// to retrieve results in a set of sequential pages.
+// Retrieves build records for all builds associated with the AWS account in
+// use. You can limit results to builds that are in a specific status by using
+// the Status parameter. Use the pagination parameters to retrieve results in
+// a set of sequential pages.
 //
-// Build records are not listed in any particular order.
+//  Build records are not listed in any particular order.
 func (c *GameLift) ListBuilds(input *ListBuildsInput) (*ListBuildsOutput, error) {
 	req, out := c.ListBuildsRequest(input)
 	err := req.Send()
@@ -888,7 +1470,28 @@ func (c *GameLift) ListBuilds(input *ListBuildsInput) (*ListBuildsOutput, error)
 
 const opListFleets = "ListFleets"
 
-// ListFleetsRequest generates a request for the ListFleets operation.
+// ListFleetsRequest generates a "aws/request.Request" representing the
+// client's request for the ListFleets operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListFleets method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListFleetsRequest method.
+//    req, resp := client.ListFleetsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) ListFleetsRequest(input *ListFleetsInput) (req *request.Request, output *ListFleetsOutput) {
 	op := &request.Operation{
 		Name:       opListFleets,
@@ -910,7 +1513,7 @@ func (c *GameLift) ListFleetsRequest(input *ListFleetsInput) (req *request.Reque
 // the result set by build ID. Use the pagination parameters to retrieve results
 // in sequential pages.
 //
-// Fleet records are not listed in any particular order.
+//  Fleet records are not listed in any particular order.
 func (c *GameLift) ListFleets(input *ListFleetsInput) (*ListFleetsOutput, error) {
 	req, out := c.ListFleetsRequest(input)
 	err := req.Send()
@@ -919,7 +1522,28 @@ func (c *GameLift) ListFleets(input *ListFleetsInput) (*ListFleetsOutput, error)
 
 const opPutScalingPolicy = "PutScalingPolicy"
 
-// PutScalingPolicyRequest generates a request for the PutScalingPolicy operation.
+// PutScalingPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the PutScalingPolicy operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the PutScalingPolicy method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the PutScalingPolicyRequest method.
+//    req, resp := client.PutScalingPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) PutScalingPolicyRequest(input *PutScalingPolicyInput) (req *request.Request, output *PutScalingPolicyOutput) {
 	op := &request.Operation{
 		Name:       opPutScalingPolicy,
@@ -938,7 +1562,7 @@ func (c *GameLift) PutScalingPolicyRequest(input *PutScalingPolicyInput) (req *r
 }
 
 // Creates or updates a scaling policy for a fleet. An active scaling policy
-// prompts GameLift to track a certain metric for a fleet and automatically
+// prompts Amazon GameLift to track a certain metric for a fleet and automatically
 // change the fleet's capacity in specific circumstances. Each scaling policy
 // contains one rule statement. Fleets can have multiple scaling policies in
 // force simultaneously.
@@ -967,7 +1591,28 @@ func (c *GameLift) PutScalingPolicy(input *PutScalingPolicyInput) (*PutScalingPo
 
 const opRequestUploadCredentials = "RequestUploadCredentials"
 
-// RequestUploadCredentialsRequest generates a request for the RequestUploadCredentials operation.
+// RequestUploadCredentialsRequest generates a "aws/request.Request" representing the
+// client's request for the RequestUploadCredentials operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the RequestUploadCredentials method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the RequestUploadCredentialsRequest method.
+//    req, resp := client.RequestUploadCredentialsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) RequestUploadCredentialsRequest(input *RequestUploadCredentialsInput) (req *request.Request, output *RequestUploadCredentialsOutput) {
 	op := &request.Operation{
 		Name:       opRequestUploadCredentials,
@@ -989,14 +1634,14 @@ func (c *GameLift) RequestUploadCredentialsRequest(input *RequestUploadCredentia
 // location for a specific build. Valid credentials are required to upload your
 // game build files to Amazon S3.
 //
-// Call this action only if you need credentials for a build created with CreateBuild.
-// This is a rare situation; in most cases, builds are created using the CLI
-// command upload-build, which creates a build record and also uploads build
-// files.
+//  Call this action only if you need credentials for a build created with
+// CreateBuild. This is a rare situation; in most cases, builds are created
+// using the CLI command upload-build, which creates a build record and also
+// uploads build files.
 //
-// Upload credentials are returned when you create the build, but they have
+//  Upload credentials are returned when you create the build, but they have
 // a limited lifespan. You can get fresh credentials and use them to re-upload
-// game files until the state of that build changes to READY. Once this happens,
+// game files until the status of that build changes to READY. Once this happens,
 // you must create a brand new build.
 func (c *GameLift) RequestUploadCredentials(input *RequestUploadCredentialsInput) (*RequestUploadCredentialsOutput, error) {
 	req, out := c.RequestUploadCredentialsRequest(input)
@@ -1006,7 +1651,28 @@ func (c *GameLift) RequestUploadCredentials(input *RequestUploadCredentialsInput
 
 const opResolveAlias = "ResolveAlias"
 
-// ResolveAliasRequest generates a request for the ResolveAlias operation.
+// ResolveAliasRequest generates a "aws/request.Request" representing the
+// client's request for the ResolveAlias operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ResolveAlias method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ResolveAliasRequest method.
+//    req, resp := client.ResolveAliasRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) ResolveAliasRequest(input *ResolveAliasInput) (req *request.Request, output *ResolveAliasOutput) {
 	op := &request.Operation{
 		Name:       opResolveAlias,
@@ -1031,9 +1697,109 @@ func (c *GameLift) ResolveAlias(input *ResolveAliasInput) (*ResolveAliasOutput, 
 	return out, err
 }
 
+const opSearchGameSessions = "SearchGameSessions"
+
+// SearchGameSessionsRequest generates a "aws/request.Request" representing the
+// client's request for the SearchGameSessions operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the SearchGameSessions method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the SearchGameSessionsRequest method.
+//    req, resp := client.SearchGameSessionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *GameLift) SearchGameSessionsRequest(input *SearchGameSessionsInput) (req *request.Request, output *SearchGameSessionsOutput) {
+	op := &request.Operation{
+		Name:       opSearchGameSessions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &SearchGameSessionsInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &SearchGameSessionsOutput{}
+	req.Data = output
+	return
+}
+
+// Retrieves a list of game sessions in a fleet that match a set of search criteria
+// and sorts them in a specified order. Currently game session searches are
+// limited to a single fleet. Search results include only game sessions that
+// are in ACTIVE status.
+//
+// You can search or sort by the following game session attributes:
+//
+//   gameSessionId -- ID value assigned to a game session. This unique value
+// is returned in a GameSession object when a new game session is created.
+//  gameSessionName -- Name assigned to a game session. This value is set when
+// requesting a new game session with CreateGameSession or updating with UpdateGameSession.
+// Game session names do not need to be unique to a game session.  creationTimeMillis
+// -- Value indicating when a game session was created. It is expressed in Unix
+// time as milliseconds.  playerSessionCount -- Number of players currently
+// connected to a game session. This value changes rapidly as players join the
+// session or drop out.  maximumSessions -- Maximum number of player sessions
+// allowed for a game session. This value is set when requesting a new game
+// session with CreateGameSession or updating with UpdateGameSession.  hasAvailablePlayerSessions
+// -- Boolean value indicating whether or not a game session has reached its
+// maximum number of players. When searching with this attribute, the search
+// value must be true or false. It is highly recommended that all search requests
+// include this filter attribute to optimize search performance and return only
+// sessions that players can join.   To search or sort, specify either a fleet
+// ID or an alias ID, and provide a search filter expression, a sort expression,
+// or both. Use the pagination parameters to retrieve results as a set of sequential
+// pages. If successful, a collection of GameSession objects matching the request
+// is returned.
+//
+//  Returned values for playerSessionCount and hasAvailablePlayerSessions change
+// quickly as players join sessions and others drop out. Results should be considered
+// a snapshot in time. Be sure to refresh search results often, and handle sessions
+// that fill up before a player can join.
+func (c *GameLift) SearchGameSessions(input *SearchGameSessionsInput) (*SearchGameSessionsOutput, error) {
+	req, out := c.SearchGameSessionsRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 const opUpdateAlias = "UpdateAlias"
 
-// UpdateAliasRequest generates a request for the UpdateAlias operation.
+// UpdateAliasRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateAlias operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateAlias method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateAliasRequest method.
+//    req, resp := client.UpdateAliasRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) UpdateAliasRequest(input *UpdateAliasInput) (req *request.Request, output *UpdateAliasOutput) {
 	op := &request.Operation{
 		Name:       opUpdateAlias,
@@ -1063,7 +1829,28 @@ func (c *GameLift) UpdateAlias(input *UpdateAliasInput) (*UpdateAliasOutput, err
 
 const opUpdateBuild = "UpdateBuild"
 
-// UpdateBuildRequest generates a request for the UpdateBuild operation.
+// UpdateBuildRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateBuild operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateBuild method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateBuildRequest method.
+//    req, resp := client.UpdateBuildRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) UpdateBuildRequest(input *UpdateBuildInput) (req *request.Request, output *UpdateBuildOutput) {
 	op := &request.Operation{
 		Name:       opUpdateBuild,
@@ -1093,7 +1880,28 @@ func (c *GameLift) UpdateBuild(input *UpdateBuildInput) (*UpdateBuildOutput, err
 
 const opUpdateFleetAttributes = "UpdateFleetAttributes"
 
-// UpdateFleetAttributesRequest generates a request for the UpdateFleetAttributes operation.
+// UpdateFleetAttributesRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateFleetAttributes operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateFleetAttributes method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateFleetAttributesRequest method.
+//    req, resp := client.UpdateFleetAttributesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) UpdateFleetAttributesRequest(input *UpdateFleetAttributesInput) (req *request.Request, output *UpdateFleetAttributesOutput) {
 	op := &request.Operation{
 		Name:       opUpdateFleetAttributes,
@@ -1122,7 +1930,28 @@ func (c *GameLift) UpdateFleetAttributes(input *UpdateFleetAttributesInput) (*Up
 
 const opUpdateFleetCapacity = "UpdateFleetCapacity"
 
-// UpdateFleetCapacityRequest generates a request for the UpdateFleetCapacity operation.
+// UpdateFleetCapacityRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateFleetCapacity operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateFleetCapacity method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateFleetCapacityRequest method.
+//    req, resp := client.UpdateFleetCapacityRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) UpdateFleetCapacityRequest(input *UpdateFleetCapacityInput) (req *request.Request, output *UpdateFleetCapacityOutput) {
 	op := &request.Operation{
 		Name:       opUpdateFleetCapacity,
@@ -1141,21 +1970,20 @@ func (c *GameLift) UpdateFleetCapacityRequest(input *UpdateFleetCapacityInput) (
 }
 
 // Updates capacity settings for a fleet. Use this action to specify the number
-// of EC2 instances (hosts) you want this fleet to contain. Before calling this
-// action, you may want to call DescribeEC2InstanceLimits to get the maximum
+// of EC2 instances (hosts) that you want this fleet to contain. Before calling
+// this action, you may want to call DescribeEC2InstanceLimits to get the maximum
 // capacity based on the fleet's EC2 instance type.
 //
-// If you're using auto-scaling (see PutScalingPolicy), you may want to specify
-// a minimum and/or maximum capacity. If you don't provide these boundaries,
-// auto-scaling can set capacity anywhere between zero and the service limits
-// (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_gamelift).
+// If you're using autoscaling (see PutScalingPolicy), you may want to specify
+// a minimum and/or maximum capacity. If you don't provide these, autoscaling
+// can set capacity anywhere between zero and the service limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_gamelift).
 //
-// To update fleet capacity, specify the fleet ID and the desired number of
-// instances. If successful, Amazon GameLift starts or terminates instances
-// so that the fleet's active instance count matches the desired instance count.
-// You can view a fleet's current capacity information by calling DescribeFleetCapacity.
+// To update fleet capacity, specify the fleet ID and the number of instances
+// you want the fleet to host. If successful, Amazon GameLift starts or terminates
+// instances so that the fleet's active instance count matches the desired instance
+// count. You can view a fleet's current capacity information by calling DescribeFleetCapacity.
 // If the desired instance count is higher than the instance type's limit, the
-// "Limit Exceeded" exception will occur.
+// "Limit Exceeded" exception occurs.
 func (c *GameLift) UpdateFleetCapacity(input *UpdateFleetCapacityInput) (*UpdateFleetCapacityOutput, error) {
 	req, out := c.UpdateFleetCapacityRequest(input)
 	err := req.Send()
@@ -1164,7 +1992,28 @@ func (c *GameLift) UpdateFleetCapacity(input *UpdateFleetCapacityInput) (*Update
 
 const opUpdateFleetPortSettings = "UpdateFleetPortSettings"
 
-// UpdateFleetPortSettingsRequest generates a request for the UpdateFleetPortSettings operation.
+// UpdateFleetPortSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateFleetPortSettings operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateFleetPortSettings method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateFleetPortSettingsRequest method.
+//    req, resp := client.UpdateFleetPortSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) UpdateFleetPortSettingsRequest(input *UpdateFleetPortSettingsInput) (req *request.Request, output *UpdateFleetPortSettingsOutput) {
 	op := &request.Operation{
 		Name:       opUpdateFleetPortSettings,
@@ -1196,7 +2045,28 @@ func (c *GameLift) UpdateFleetPortSettings(input *UpdateFleetPortSettingsInput) 
 
 const opUpdateGameSession = "UpdateGameSession"
 
-// UpdateGameSessionRequest generates a request for the UpdateGameSession operation.
+// UpdateGameSessionRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateGameSession operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateGameSession method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateGameSessionRequest method.
+//    req, resp := client.UpdateGameSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *GameLift) UpdateGameSessionRequest(input *UpdateGameSessionInput) (req *request.Request, output *UpdateGameSessionOutput) {
 	op := &request.Operation{
 		Name:       opUpdateGameSession,
@@ -1227,6 +2097,68 @@ func (c *GameLift) UpdateGameSession(input *UpdateGameSessionInput) (*UpdateGame
 	return out, err
 }
 
+const opUpdateRuntimeConfiguration = "UpdateRuntimeConfiguration"
+
+// UpdateRuntimeConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateRuntimeConfiguration operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateRuntimeConfiguration method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateRuntimeConfigurationRequest method.
+//    req, resp := client.UpdateRuntimeConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *GameLift) UpdateRuntimeConfigurationRequest(input *UpdateRuntimeConfigurationInput) (req *request.Request, output *UpdateRuntimeConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opUpdateRuntimeConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateRuntimeConfigurationInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &UpdateRuntimeConfigurationOutput{}
+	req.Data = output
+	return
+}
+
+// Updates the current runtime configuration for the specified fleet, which
+// tells GameLift how to launch server processes on instances in the fleet.
+// You can update a fleet's runtime configuration at any time after the fleet
+// is created; it does not need to be in an ACTIVE status.
+//
+// To update runtime configuration, specify the fleet ID and provide a RuntimeConfiguration
+// object with the updated collection of server process configurations.
+//
+// Each instance in a GameLift fleet checks regularly for an updated runtime
+// configuration and changes how it launches server processes to comply with
+// the latest version. Existing server processes are not affected by the update;
+// they continue to run until they end, while GameLift simply adds new server
+// processes to fit the current runtime configuration. As a result, the runtime
+// configuration changes are applied gradually as existing processes shut down
+// and new processes are launched in GameLift's normal process recycling activity.
+func (c *GameLift) UpdateRuntimeConfiguration(input *UpdateRuntimeConfigurationInput) (*UpdateRuntimeConfigurationOutput, error) {
+	req, out := c.UpdateRuntimeConfigurationRequest(input)
+	err := req.Send()
+	return out, err
+}
+
 // Properties describing a fleet alias.
 type Alias struct {
 	_ struct{} `type:"structure"`
@@ -1234,19 +2166,19 @@ type Alias struct {
 	// Unique identifier for a fleet alias.
 	AliasId *string `type:"string"`
 
-	// Time stamp indicating when this object was created. Format is an integer
-	// representing the number of seconds since the Unix epoch (Unix time).
+	// Time stamp indicating when this data object was created. Format is a number
+	// expressed in Unix time as milliseconds (ex: "1469498468.057".
 	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// Human-readable description of the alias.
+	// Human-readable description of an alias.
 	Description *string `type:"string"`
 
-	// Time stamp indicating when this object was last modified. Format is an integer
-	// representing the number of seconds since the Unix epoch (Unix time).
+	// Time stamp indicating when this data object was last modified. Format is
+	// a number expressed in Unix time as milliseconds (ex: "1469498468.057".
 	LastUpdatedTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// Descriptive label associated with this alias. Alias names do not need to
-	// be unique.
+	// Descriptive label associated with an alias. Alias names do not need to be
+	// unique.
 	Name *string `type:"string"`
 
 	// Routing configuration for a fleet alias.
@@ -1297,24 +2229,32 @@ type Build struct {
 	// Unique identifier for a build.
 	BuildId *string `type:"string"`
 
-	// Time stamp indicating when this object was created. Format is an integer
-	// representing the number of seconds since the Unix epoch (Unix time).
+	// Time stamp indicating when this data object was created. Format is a number
+	// expressed in Unix time as milliseconds (ex: "1469498468.057".
 	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
-	// Descriptive label associated with this build. Build names do not need to
-	// be unique. It can be set using CreateBuild or UpdateBuild.
+	// Descriptive label associated with a build. Build names do not need to be
+	// unique. It can be set using CreateBuild or UpdateBuild.
 	Name *string `type:"string"`
 
+	// Operating system that the game server binaries are built to run on. This
+	// value determines the type of fleet resources that you can use for this build.
+	OperatingSystem *string `type:"string" enum:"OperatingSystem"`
+
 	// File size of the uploaded game build, expressed in bytes. When the build
-	// state is INITIALIZED, this value is 0.
+	// status is INITIALIZED, this value is 0.
 	SizeOnDisk *int64 `min:"1" type:"long"`
 
-	// Current status of the build. Possible build states include: INITIALIZED:
-	// A new build has been defined, but no files have been uploaded. You cannot
-	// create fleets for builds that are in this state. When a build is successfully
-	// created, the build state is set to this value. READY: The game build has
-	// been successfully uploaded. You can now create new fleets for this build.FAILED:
-	// The game build upload failed. You cannot create new fleets for this build.
+	// Current status of the build.
+	//
+	// Possible build statuses include the following:
+	//
+	// INITIALIZED – A new build has been defined, but no files have been uploaded.
+	// You cannot create fleets for builds that are in this status. When a build
+	// is successfully created, the build status is set to this value. READY – The
+	// game build has been successfully uploaded. You can now create new fleets
+	// for this build.FAILED – The game build upload failed. You cannot create new
+	// fleets for this build.
 	Status *string `type:"string" enum:"BuildStatus"`
 
 	// Version associated with this build. Version strings do not need to be unique
@@ -1336,11 +2276,11 @@ func (s Build) GoString() string {
 type CreateAliasInput struct {
 	_ struct{} `type:"structure"`
 
-	// Human-readable description of the alias.
+	// Human-readable description of an alias.
 	Description *string `min:"1" type:"string"`
 
-	// Descriptive label associated with this alias. Alias names do not need to
-	// be unique.
+	// Descriptive label associated with an alias. Alias names do not need to be
+	// unique.
 	Name *string `min:"1" type:"string" required:"true"`
 
 	// Object specifying the fleet and routing type to use for the alias.
@@ -1401,9 +2341,13 @@ func (s CreateAliasOutput) GoString() string {
 type CreateBuildInput struct {
 	_ struct{} `type:"structure"`
 
-	// Descriptive label associated with this build. Build names do not need to
-	// be unique. A build name can be changed later using UpdateBuild.
+	// Descriptive label associated with a build. Build names do not need to be
+	// unique. A build name can be changed later using UpdateBuild.
 	Name *string `min:"1" type:"string"`
+
+	// Operating system that the game server binaries are built to run on. This
+	// value determines the type of fleet resources that you can use for this build.
+	OperatingSystem *string `type:"string" enum:"OperatingSystem"`
 
 	// Location in Amazon Simple Storage Service (Amazon S3) where a build's files
 	// are stored. This location is assigned in response to a CreateBuild call,
@@ -1477,52 +2421,76 @@ func (s CreateBuildOutput) GoString() string {
 type CreateFleetInput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique identifier for the build you want the new fleet to use.
+	// Unique identifier of the build to be deployed on the new fleet. The build
+	// must have been successfully uploaded to GameLift and be in a READY status.
+	// This fleet setting cannot be changed once the fleet is created.
 	BuildId *string `type:"string" required:"true"`
 
-	// Human-readable description of the fleet.
+	// Human-readable description of a fleet.
 	Description *string `min:"1" type:"string"`
 
-	// Access limits for incoming traffic. Setting these values limits game server
-	// access to incoming traffic using specified IP ranges and port numbers. Some
-	// ports in a range may be restricted. You can provide one or more sets of permissions
-	// for the fleet.
+	// Range of IP addresses and port settings that permit inbound traffic to access
+	// server processes running on the fleet. If no inbound permissions are set,
+	// including both IP address range and port range, the server processes in the
+	// fleet cannot accept connections. You can specify one or more sets of permissions
+	// for a fleet.
 	EC2InboundPermissions []*IpPermission `type:"list"`
 
-	// Type of EC2 instances used in the fleet. EC2 instance types define the CPU,
-	// memory, storage, and networking capacity of the fleetaposs hosts. Amazon
-	// GameLift supports the EC2 instance types listed below. See Amazon EC2 Instance
-	// Types (https://aws.amazon.com/ec2/instance-types/) for detailed descriptions
-	// of each.
+	// Name of an EC2 instance type that is supported in Amazon GameLift. A fleet
+	// instance type determines the computing resources of each instance in the
+	// fleet, including CPU, memory, storage, and networking capacity. GameLift
+	// supports the following EC2 instance types. See Amazon EC2 Instance Types
+	// (https://aws.amazon.com/ec2/instance-types/) for detailed descriptions.
 	EC2InstanceType *string `type:"string" required:"true" enum:"EC2InstanceType"`
 
-	// Path to game-session log files generated by your game server. Once a game
-	// session has been terminated, Amazon GameLift captures and stores the logs
-	// on Amazon S3. Use the GameLift console to access the stored logs.
+	// Location of default log files. When a server process is shut down, Amazon
+	// GameLift captures and stores any log files in this location. These logs are
+	// in addition to game session logs; see more on game session logs in the Amazon
+	// GameLift Developer Guide (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-api-server-code).
+	// If no default log path for a fleet is specified, GameLift will automatically
+	// upload logs stored on each instance at C:\game\logs. Use the GameLift console
+	// to access stored logs.
 	LogPaths []*string `type:"list"`
 
-	// Descriptive label associated with this fleet. Fleet names do not need to
-	// be unique.
+	// Descriptive label associated with a fleet. Fleet names do not need to be
+	// unique.
 	Name *string `min:"1" type:"string" required:"true"`
 
-	// Game session protection policy to apply to all instances created in this
-	// fleet. If this parameter is not set, new instances in this fleet will default
-	// to no protection. Protection can be set for individual instances using UpdateGameSession.
-	// NoProtection: The game session can be terminated during a scale-down event.
-	// FullProtection: If the game session is in an ACTIVE status, it cannot be
+	// Game session protection policy to apply to all instances in this fleet. If
+	// this parameter is not set, instances in this fleet default to no protection.
+	// You can change a fleet's protection policy using UpdateFleetAttributes, but
+	// this change will only affect sessions created after the policy change. You
+	// can also set protection for individual instances using UpdateGameSession.
+	//
+	// NoProtection – The game session can be terminated during a scale-down event.
+	// FullProtection – If the game session is in an ACTIVE status, it cannot be
 	// terminated during a scale-down event.
 	NewGameSessionProtectionPolicy *string `type:"string" enum:"ProtectionPolicy"`
 
-	// Parameters required to launch your game server. These parameters should be
-	// expressed as a string of command-line parameters. Example: "+sv_port 33435
-	// +start_lobby".
+	// Instructions for launching server processes on each instance in the fleet.
+	// The runtime configuration for a fleet has a collection of server process
+	// configurations, one for each type of server process to run on an instance.
+	// A server process configuration specifies the location of the server executable,
+	// launch parameters, and the number of concurrent processes with that configuration
+	// to maintain on each instance. A CreateFleet request must include a runtime
+	// configuration with at least one server process configuration; otherwise the
+	// request will fail with an invalid request exception. (This parameter replaces
+	// the parameters ServerLaunchPath and ServerLaunchParameters; requests that
+	// contain values for these parameters instead of a runtime configuration will
+	// continue to work.)
+	RuntimeConfiguration *RuntimeConfiguration `type:"structure"`
+
+	// This parameter is no longer used. Instead, specify server launch parameters
+	// in the RuntimeConfiguration parameter. (Requests that specify a server launch
+	// path and launch parameters instead of a runtime configuration will continue
+	// to work.)
 	ServerLaunchParameters *string `min:"1" type:"string"`
 
-	// Path to the launch executable for the game server. A game server is built
-	// into a C:\game drive. This value must be expressed as C:\game\[launchpath].
-	// Example: If, when built, your game server files are in a folder called "MyGame",
-	// your log path should be C:\game\MyGame\server.exe.
-	ServerLaunchPath *string `min:"1" type:"string" required:"true"`
+	// This parameter is no longer used. Instead, specify a server launch path using
+	// the RuntimeConfiguration parameter. (Requests that specify a server launch
+	// path and launch parameters instead of a runtime configuration will continue
+	// to work.)
+	ServerLaunchPath *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -1556,9 +2524,6 @@ func (s *CreateFleetInput) Validate() error {
 	if s.ServerLaunchParameters != nil && len(*s.ServerLaunchParameters) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ServerLaunchParameters", 1))
 	}
-	if s.ServerLaunchPath == nil {
-		invalidParams.Add(request.NewErrParamRequired("ServerLaunchPath"))
-	}
 	if s.ServerLaunchPath != nil && len(*s.ServerLaunchPath) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ServerLaunchPath", 1))
 	}
@@ -1570,6 +2535,11 @@ func (s *CreateFleetInput) Validate() error {
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "EC2InboundPermissions", i), err.(request.ErrInvalidParams))
 			}
+		}
+	}
+	if s.RuntimeConfiguration != nil {
+		if err := s.RuntimeConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("RuntimeConfiguration", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -1610,15 +2580,15 @@ type CreateGameSessionInput struct {
 	FleetId *string `type:"string"`
 
 	// Set of properties used to administer a game session. These properties are
-	// passed to your game server.
+	// passed to the server process hosting it.
 	GameProperties []*GameProperty `type:"list"`
 
 	// Maximum number of players that can be connected simultaneously to the game
 	// session.
 	MaximumPlayerSessionCount *int64 `type:"integer" required:"true"`
 
-	// Descriptive label associated with this game session. Session names do not
-	// need to be unique.
+	// Descriptive label associated with a game session. Session names do not need
+	// to be unique.
 	Name *string `min:"1" type:"string"`
 }
 
@@ -1935,8 +2905,8 @@ type DeleteScalingPolicyInput struct {
 	// Unique identifier for a fleet.
 	FleetId *string `type:"string" required:"true"`
 
-	// Descriptive label associated with this scaling policy. Policy names do not
-	// need to be unique.
+	// Descriptive label associated with a scaling policy. Policy names do not need
+	// to be unique.
 	Name *string `min:"1" type:"string" required:"true"`
 }
 
@@ -2036,7 +3006,7 @@ func (s DescribeAliasOutput) GoString() string {
 type DescribeBuildInput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique identifier for the build you want to retrieve properties for.
+	// Unique identifier of the build that you want to retrieve properties for.
 	BuildId *string `type:"string" required:"true"`
 }
 
@@ -2085,11 +3055,12 @@ func (s DescribeBuildOutput) GoString() string {
 type DescribeEC2InstanceLimitsInput struct {
 	_ struct{} `type:"structure"`
 
-	// Type of EC2 instances used in the fleet. EC2 instance types define the CPU,
-	// memory, storage, and networking capacity of the fleetaposs hosts. Amazon
-	// GameLift supports the EC2 instance types listed below. See Amazon EC2 Instance
-	// Types (https://aws.amazon.com/ec2/instance-types/) for detailed descriptions
-	// of each. Leave this parameter blank to retrieve limits for all types.
+	// Name of an EC2 instance type that is supported in Amazon GameLift. A fleet
+	// instance type determines the computing resources of each instance in the
+	// fleet, including CPU, memory, storage, and networking capacity. GameLift
+	// supports the following EC2 instance types. See Amazon EC2 Instance Types
+	// (https://aws.amazon.com/ec2/instance-types/) for detailed descriptions. Leave
+	// this parameter blank to retrieve limits for all types.
 	EC2InstanceType *string `type:"string" enum:"EC2InstanceType"`
 }
 
@@ -2127,11 +3098,11 @@ type DescribeFleetAttributesInput struct {
 	_ struct{} `type:"structure"`
 
 	// Unique identifiers for the fleet(s) that you want to retrieve attributes
-	// for. Leave this parameter empty to retrieve attributes for all fleets.
+	// for. To request attributes for all fleets, leave this parameter empty.
 	FleetIds []*string `min:"1" type:"list"`
 
-	// Maximum number of results to return. You can use this parameter with NextToken
-	// to get results as a set of sequential pages. This parameter is ignored when
+	// Maximum number of results to return. Use this parameter with NextToken to
+	// get results as a set of sequential pages. This parameter is ignored when
 	// the request specifies one or a list of fleet IDs.
 	Limit *int64 `min:"1" type:"integer"`
 
@@ -2182,7 +3153,7 @@ type DescribeFleetAttributesOutput struct {
 	// Token indicating where to resume retrieving results on the next call to this
 	// action. If no token is returned, these results represent the end of the list.
 	//
-	// If a request has a limit that exactly matches the number of remaining results,
+	//  If a request has a limit that exactly matches the number of remaining results,
 	// a token is returned even though there are no more results to retrieve.
 	NextToken *string `min:"1" type:"string"`
 }
@@ -2202,11 +3173,12 @@ type DescribeFleetCapacityInput struct {
 	_ struct{} `type:"structure"`
 
 	// Unique identifier for the fleet(s) you want to retrieve capacity information
-	// for.
+	// for. To request capacity information for all fleets, leave this parameter
+	// empty.
 	FleetIds []*string `min:"1" type:"list"`
 
-	// Maximum number of results to return. You can use this parameter with NextToken
-	// to get results as a set of sequential pages. This parameter is ignored when
+	// Maximum number of results to return. Use this parameter with NextToken to
+	// get results as a set of sequential pages. This parameter is ignored when
 	// the request specifies one or a list of fleet IDs.
 	Limit *int64 `min:"1" type:"integer"`
 
@@ -2258,7 +3230,7 @@ type DescribeFleetCapacityOutput struct {
 	// Token indicating where to resume retrieving results on the next call to this
 	// action. If no token is returned, these results represent the end of the list.
 	//
-	// If a request has a limit that exactly matches the number of remaining results,
+	//  If a request has a limit that exactly matches the number of remaining results,
 	// a token is returned even though there are no more results to retrieve.
 	NextToken *string `min:"1" type:"string"`
 }
@@ -2279,15 +3251,14 @@ type DescribeFleetEventsInput struct {
 
 	// Most recent date to retrieve event logs for. If no end time is specified,
 	// this call returns entries from the specified start time up to the present.
-	// Format is an integer representing the number of seconds since the Unix epoch
-	// (Unix time).
+	// Format is a number expressed in Unix time as milliseconds (ex: "1469498468.057".
 	EndTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Unique identifier for the fleet to get event logs for.
 	FleetId *string `type:"string" required:"true"`
 
-	// Maximum number of results to return. You can use this parameter with NextToken
-	// to get results as a set of sequential pages.
+	// Maximum number of results to return. Use this parameter with NextToken to
+	// get results as a set of sequential pages.
 	Limit *int64 `min:"1" type:"integer"`
 
 	// Token indicating the start of the next sequential page of results. Use the
@@ -2297,8 +3268,8 @@ type DescribeFleetEventsInput struct {
 
 	// Earliest date to retrieve event logs for. If no start time is specified,
 	// this call returns entries starting from when the fleet was created to the
-	// specified end time. Format is an integer representing the number of seconds
-	// since the Unix epoch (Unix time).
+	// specified end time. Format is a number expressed in Unix time as milliseconds
+	// (ex: "1469498468.057".
 	StartTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
@@ -2341,7 +3312,7 @@ type DescribeFleetEventsOutput struct {
 	// Token indicating where to resume retrieving results on the next call to this
 	// action. If no token is returned, these results represent the end of the list.
 	//
-	// If a request has a limit that exactly matches the number of remaining results,
+	//  If a request has a limit that exactly matches the number of remaining results,
 	// a token is returned even though there are no more results to retrieve.
 	NextToken *string `min:"1" type:"string"`
 }
@@ -2410,11 +3381,11 @@ type DescribeFleetUtilizationInput struct {
 	_ struct{} `type:"structure"`
 
 	// Unique identifier for the fleet(s) you want to retrieve utilization data
-	// for. Leave this parameter empty to retrieve utilization data for all fleets.
+	// for. To request utilization data for all fleets, leave this parameter empty.
 	FleetIds []*string `min:"1" type:"list"`
 
-	// Maximum number of results to return. You can use this parameter with NextToken
-	// to get results as a set of sequential pages. This parameter is ignored when
+	// Maximum number of results to return. Use this parameter with NextToken to
+	// get results as a set of sequential pages. This parameter is ignored when
 	// the request specifies one or a list of fleet IDs.
 	Limit *int64 `min:"1" type:"integer"`
 
@@ -2465,7 +3436,7 @@ type DescribeFleetUtilizationOutput struct {
 	// Token indicating where to resume retrieving results on the next call to this
 	// action. If no token is returned, these results represent the end of the list.
 	//
-	// If a request has a limit that exactly matches the number of remaining results,
+	//  If a request has a limit that exactly matches the number of remaining results,
 	// a token is returned even though there are no more results to retrieve.
 	NextToken *string `min:"1" type:"string"`
 }
@@ -2496,8 +3467,8 @@ type DescribeGameSessionDetailsInput struct {
 	// information on.
 	GameSessionId *string `type:"string"`
 
-	// Maximum number of results to return. You can use this parameter with NextToken
-	// to get results as a set of sequential pages.
+	// Maximum number of results to return. Use this parameter with NextToken to
+	// get results as a set of sequential pages.
 	Limit *int64 `min:"1" type:"integer"`
 
 	// Token indicating the start of the next sequential page of results. Use the
@@ -2505,8 +3476,9 @@ type DescribeGameSessionDetailsInput struct {
 	// start of the result set, do not specify a value.
 	NextToken *string `min:"1" type:"string"`
 
-	// Game session status to filter results on. Possible game session states include
-	// ACTIVE, TERMINATED, ACTIVATING and TERMINATING (the last two are transitory).
+	// Game session status to filter results on. Possible game session statuses
+	// include ACTIVE, TERMINATED, ACTIVATING and TERMINATING (the last two are
+	// transitory).
 	StatusFilter *string `min:"1" type:"string"`
 }
 
@@ -2550,7 +3522,7 @@ type DescribeGameSessionDetailsOutput struct {
 	// Token indicating where to resume retrieving results on the next call to this
 	// action. If no token is returned, these results represent the end of the list.
 	//
-	// If a request has a limit that exactly matches the number of remaining results,
+	//  If a request has a limit that exactly matches the number of remaining results,
 	// a token is returned even though there are no more results to retrieve.
 	NextToken *string `min:"1" type:"string"`
 }
@@ -2581,8 +3553,8 @@ type DescribeGameSessionsInput struct {
 	// information on.
 	GameSessionId *string `type:"string"`
 
-	// Maximum number of results to return. You can use this parameter with NextToken
-	// to get results as a set of sequential pages.
+	// Maximum number of results to return. Use this parameter with NextToken to
+	// get results as a set of sequential pages.
 	Limit *int64 `min:"1" type:"integer"`
 
 	// Token indicating the start of the next sequential page of results. Use the
@@ -2590,8 +3562,9 @@ type DescribeGameSessionsInput struct {
 	// start of the result set, do not specify a value.
 	NextToken *string `min:"1" type:"string"`
 
-	// Game session status to filter results on. Possible game session states include
-	// ACTIVE, TERMINATED, ACTIVATING and TERMINATING (the last two are transitory).
+	// Game session status to filter results on. Possible game session statuses
+	// include ACTIVE, TERMINATED, ACTIVATING, and TERMINATING (the last two are
+	// transitory).
 	StatusFilter *string `min:"1" type:"string"`
 }
 
@@ -2635,7 +3608,7 @@ type DescribeGameSessionsOutput struct {
 	// Token indicating where to resume retrieving results on the next call to this
 	// action. If no token is returned, these results represent the end of the list.
 	//
-	// If a request has a limit that exactly matches the number of remaining results,
+	//  If a request has a limit that exactly matches the number of remaining results,
 	// a token is returned even though there are no more results to retrieve.
 	NextToken *string `min:"1" type:"string"`
 }
@@ -2657,8 +3630,8 @@ type DescribePlayerSessionsInput struct {
 	// Unique identifier for a game session.
 	GameSessionId *string `type:"string"`
 
-	// Maximum number of results to return. You can use this parameter with NextToken
-	// to get results as a set of sequential pages. If a player session ID is specified,
+	// Maximum number of results to return. Use this parameter with NextToken to
+	// get results as a set of sequential pages. If a player session ID is specified,
 	// this parameter is ignored.
 	Limit *int64 `min:"1" type:"integer"`
 
@@ -2674,11 +3647,14 @@ type DescribePlayerSessionsInput struct {
 	// Unique identifier for a player session.
 	PlayerSessionId *string `type:"string"`
 
-	// Player session status to filter results on. Possible player session states
-	// include: RESERVED: The player session request has been received, but the
-	// player has not yet connected to the game server and/or been validated. ACTIVE:
-	// The player has been validated by the game server and is currently connected.COMPLETED:
-	// The player connection has been dropped.TIMEDOUT: A player session request
+	// Player session status to filter results on.
+	//
+	// Possible player session statuses include the following:
+	//
+	// RESERVED – The player session request has been received, but the player
+	// has not yet connected to the server process and/or been validated. ACTIVE
+	// – The player has been validated by the server process and is currently connected.COMPLETED
+	// – The player connection has been dropped.TIMEDOUT – A player session request
 	// was received, but the player did not connect and/or was not validated within
 	// the time-out limit (60 seconds).
 	PlayerSessionStatusFilter *string `min:"1" type:"string"`
@@ -2723,7 +3699,7 @@ type DescribePlayerSessionsOutput struct {
 	// Token indicating where to resume retrieving results on the next call to this
 	// action. If no token is returned, these results represent the end of the list.
 	//
-	// If a request has a limit that exactly matches the number of remaining results,
+	//  If a request has a limit that exactly matches the number of remaining results,
 	// a token is returned even though there are no more results to retrieve.
 	NextToken *string `min:"1" type:"string"`
 
@@ -2743,6 +3719,56 @@ func (s DescribePlayerSessionsOutput) GoString() string {
 }
 
 // Represents the input for a request action.
+type DescribeRuntimeConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique identifier of the fleet to get the runtime configuration for.
+	FleetId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeRuntimeConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeRuntimeConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeRuntimeConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeRuntimeConfigurationInput"}
+	if s.FleetId == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the returned data in response to a request action.
+type DescribeRuntimeConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Instructions describing how server processes should be launched and maintained
+	// on each instance in the fleet.
+	RuntimeConfiguration *RuntimeConfiguration `type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeRuntimeConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeRuntimeConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// Represents the input for a request action.
 type DescribeScalingPoliciesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2750,8 +3776,8 @@ type DescribeScalingPoliciesInput struct {
 	// for.
 	FleetId *string `type:"string" required:"true"`
 
-	// Maximum number of results to return. You can use this parameter with NextToken
-	// to get results as a set of sequential pages.
+	// Maximum number of results to return. Use this parameter with NextToken to
+	// get results as a set of sequential pages.
 	Limit *int64 `min:"1" type:"integer"`
 
 	// Token indicating the start of the next sequential page of results. Use the
@@ -2759,13 +3785,15 @@ type DescribeScalingPoliciesInput struct {
 	// start of the result set, do not specify a value.
 	NextToken *string `min:"1" type:"string"`
 
-	// Game session status to filter results on. A scaling policy is only in force
-	// when in an Active state.  ACTIVE: The scaling policy is currently in force.
-	// UPDATEREQUESTED: A request to update the scaling policy has been received.
-	// UPDATING: A change is being made to the scaling policy. DELETEREQUESTED:
-	// A request to delete the scaling policy has been received. DELETING: The scaling
-	// policy is being deleted. DELETED: The scaling policy has been deleted. ERROR:
-	// An error occurred in creating the policy. It should be removed and recreated.
+	// Scaling policy status to filter results on. A scaling policy is only in force
+	// when in an ACTIVE status.
+	//
+	//   ACTIVE – The scaling policy is currently in force.  UPDATEREQUESTED –
+	// A request to update the scaling policy has been received.  UPDATING – A change
+	// is being made to the scaling policy.  DELETEREQUESTED – A request to delete
+	// the scaling policy has been received.  DELETING – The scaling policy is being
+	// deleted.  DELETED – The scaling policy has been deleted.  ERROR – An error
+	// occurred in creating the policy. It should be removed and recreated.
 	StatusFilter *string `type:"string" enum:"ScalingStatusType"`
 }
 
@@ -2805,7 +3833,7 @@ type DescribeScalingPoliciesOutput struct {
 	// Token indicating where to resume retrieving results on the next call to this
 	// action. If no token is returned, these results represent the end of the list.
 	//
-	// If a request has a limit that exactly matches the number of remaining results,
+	//  If a request has a limit that exactly matches the number of remaining results,
 	// a token is returned even though there are no more results to retrieve.
 	NextToken *string `min:"1" type:"string"`
 
@@ -2874,11 +3902,11 @@ type EC2InstanceLimit struct {
 	// AWS account.
 	CurrentInstances *int64 `type:"integer"`
 
-	// Type of EC2 instances used in the fleet. EC2 instance types define the CPU,
-	// memory, storage, and networking capacity of the fleetaposs hosts. Amazon
-	// GameLift supports the EC2 instance types listed below. See Amazon EC2 Instance
-	// Types (https://aws.amazon.com/ec2/instance-types/) for detailed descriptions
-	// of each.
+	// Name of an EC2 instance type that is supported in Amazon GameLift. A fleet
+	// instance type determines the computing resources of each instance in the
+	// fleet, including CPU, memory, storage, and networking capacity. GameLift
+	// supports the following EC2 instance types. See Amazon EC2 Instance Types
+	// (https://aws.amazon.com/ec2/instance-types/) for detailed descriptions.
 	EC2InstanceType *string `type:"string" enum:"EC2InstanceType"`
 
 	// Number of instances allowed.
@@ -2906,8 +3934,8 @@ type Event struct {
 	// Unique identifier for a fleet event.
 	EventId *string `min:"1" type:"string"`
 
-	// Time stamp indicating when this event occurred. Format is an integer representing
-	// the number of seconds since the Unix epoch (Unix time).
+	// Time stamp indicating when this event occurred. Format is a number expressed
+	// in Unix time as milliseconds (ex: "1469498468.057".
 	EventTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Additional information related to the event.
@@ -2934,8 +3962,8 @@ type FleetAttributes struct {
 	// Unique identifier for a build.
 	BuildId *string `type:"string"`
 
-	// Time stamp indicating when this object was created. Format is an integer
-	// representing the number of seconds since the Unix epoch (Unix time).
+	// Time stamp indicating when this data object was created. Format is a number
+	// expressed in Unix time as milliseconds (ex: "1469498468.057".
 	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Human-readable description of the fleet.
@@ -2944,43 +3972,56 @@ type FleetAttributes struct {
 	// Unique identifier for a fleet.
 	FleetId *string `type:"string"`
 
-	// Path to game-session log files generated by your game server. Once a game
-	// session has been terminated, Amazon GameLift captures and stores the logs
-	// on Amazon S3. Use the GameLift console to access the stored logs.
+	// Location of default log files. When a server process is shut down, Amazon
+	// GameLift captures and stores any log files in this location. These logs are
+	// in addition to game session logs; see more on game session logs in the Amazon
+	// GameLift Developer Guide (http://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-sdk-server-api.html#gamelift-sdk-server-api-server-code).
+	// If no default log path for a fleet is specified, GameLift will automatically
+	// upload logs stored on each instance at C:\game\logs. Use the GameLift console
+	// to access stored logs.
 	LogPaths []*string `type:"list"`
 
-	// Descriptive label associated with this fleet. Fleet names do not need to
-	// be unique.
+	// Descriptive label associated with a fleet. Fleet names do not need to be
+	// unique.
 	Name *string `min:"1" type:"string"`
 
 	// Type of game session protection to set for all new instances started in the
-	// fleet. NoProtection: The game session can be terminated during a scale-down
-	// event. FullProtection: If the game session is in an ACTIVE status, it cannot
-	// be terminated during a scale-down event.
+	// fleet.
+	//
+	// NoProtection – The game session can be terminated during a scale-down event.
+	// FullProtection – If the game session is in an ACTIVE status, it cannot be
+	// terminated during a scale-down event.
 	NewGameSessionProtectionPolicy *string `type:"string" enum:"ProtectionPolicy"`
 
-	// Parameters required to launch your game server. These parameters should be
-	// expressed as a string of command-line parameters. Example: "+sv_port 33435
-	// +start_lobby".
+	// Operating system of the fleet's computing resources. A fleet's operating
+	// system depends on the OS specified for the build that is deployed on this
+	// fleet.
+	OperatingSystem *string `type:"string" enum:"OperatingSystem"`
+
+	// Game server launch parameters specified for fleets created prior to 2016-08-04
+	// (or AWS SDK v. 0.12.16). Server launch parameters for fleets created after
+	// this date are specified in the fleet's RuntimeConfiguration.
 	ServerLaunchParameters *string `min:"1" type:"string"`
 
-	// Path to the launch executable for the game server. A game server is built
-	// into a C:\game drive. This value must be expressed as C:\game\[launchpath].
-	// Example: If, when built, your game server files are in a folder called "MyGame",
-	// your log path should be C:\game\MyGame\server.exe.
+	// Path to a game server executable in the fleet's build, specified for fleets
+	// created prior to 2016-08-04 (or AWS SDK v. 0.12.16). Server launch paths
+	// for fleets created after this date are specified in the fleet's RuntimeConfiguration.
 	ServerLaunchPath *string `min:"1" type:"string"`
 
-	// Current status of the fleet. Possible fleet states include: NEW: A new fleet
-	// has been defined and hosts allocated.DOWNLOADING/VALIDATING/BUILDING/ACTIVATING:
-	// The new fleet is being set up with the game build, and new hosts are being
-	// started.ACTIVE: Hosts can now accept game sessions.ERROR: An error occurred
-	// when downloading, validating, building, or activating the fleet.DELETING:
-	// Hosts are responding to a delete fleet request.TERMINATED: The fleet no longer
-	// exists.
+	// Current status of the fleet.
+	//
+	// Possible fleet statuses include the following:
+	//
+	// NEW – A new fleet has been defined and desired instances is set to 1. DOWNLOADING/VALIDATING/BUILDING/ACTIVATING
+	// – GameLift is setting up the new fleet, creating new instances with the game
+	// build and starting server processes.ACTIVE – Hosts can now accept game sessions.ERROR
+	// – An error occurred when downloading, validating, building, or activating
+	// the fleet.DELETING – Hosts are responding to a delete fleet request.TERMINATED
+	// – The fleet no longer exists.
 	Status *string `type:"string" enum:"FleetStatus"`
 
-	// Time stamp indicating when this fleet was terminated. Format is an integer
-	// representing the number of seconds since the Unix epoch (Unix time).
+	// Time stamp indicating when this data object was terminated. Format is a number
+	// expressed in Unix time as milliseconds (ex: "1469498468.057".
 	TerminationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
@@ -3007,11 +4048,11 @@ type FleetCapacity struct {
 	// Current status of fleet capacity.
 	InstanceCounts *EC2InstanceCounts `type:"structure"`
 
-	// Type of EC2 instances used in the fleet. EC2 instance types define the CPU,
-	// memory, storage, and networking capacity of the fleetaposs hosts. Amazon
-	// GameLift supports the EC2 instance types listed below. See Amazon EC2 Instance
-	// Types (https://aws.amazon.com/ec2/instance-types/) for detailed descriptions
-	// of each.
+	// Name of an EC2 instance type that is supported in Amazon GameLift. A fleet
+	// instance type determines the computing resources of each instance in the
+	// fleet, including CPU, memory, storage, and networking capacity. GameLift
+	// supports the following EC2 instance types. See Amazon EC2 Instance Types
+	// (https://aws.amazon.com/ec2/instance-types/) for detailed descriptions.
 	InstanceType *string `type:"string" enum:"EC2InstanceType"`
 }
 
@@ -3030,17 +4071,23 @@ func (s FleetCapacity) GoString() string {
 type FleetUtilization struct {
 	_ struct{} `type:"structure"`
 
-	// Number of active game sessions currently being hosted on fleet game servers.
+	// Number of active game sessions currently being hosted on all instances in
+	// the fleet.
 	ActiveGameSessionCount *int64 `type:"integer"`
 
-	// Number of active player sessions currently being hosted on fleet game servers.
+	// Number of server processes in an ACTIVE status currently running across all
+	// instances in the fleet
+	ActiveServerProcessCount *int64 `type:"integer"`
+
+	// Number of active player sessions currently being hosted on all instances
+	// in the fleet.
 	CurrentPlayerSessionCount *int64 `type:"integer"`
 
 	// Unique identifier for a fleet.
 	FleetId *string `type:"string"`
 
-	// Maximum players allowed across all game sessions currently hosted in the
-	// fleet.
+	// Maximum players allowed across all game sessions currently being hosted on
+	// all instances in the fleet.
 	MaximumPlayerSessionCount *int64 `type:"integer"`
 }
 
@@ -3054,10 +4101,10 @@ func (s FleetUtilization) GoString() string {
 	return s.String()
 }
 
-// Set of key-value pairs containing information your game server requires to
-// set up sessions. This object allows you to pass in any set of data needed
-// for your game. For more information, see the Amazon GameLift Developer Guide
-// (http://docs.aws.amazon.com/gamelift/latest/developerguide/).
+// Set of key-value pairs containing information a server process requires to
+// set up a game session. This object allows you to pass in any set of data
+// needed for your game. For more information, see the Amazon GameLift Developer
+// Guide (http://docs.aws.amazon.com/gamelift/latest/developerguide/).
 type GameProperty struct {
 	_ struct{} `type:"structure"`
 
@@ -3096,8 +4143,8 @@ func (s *GameProperty) Validate() error {
 type GameSession struct {
 	_ struct{} `type:"structure"`
 
-	// Time stamp indicating when this object was created. Format is an integer
-	// representing the number of seconds since the Unix epoch (Unix time).
+	// Time stamp indicating when this data object was created. Format is a number
+	// expressed in Unix time as milliseconds (ex: "1469498468.057".
 	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Number of players currently in the game session.
@@ -3112,25 +4159,30 @@ type GameSession struct {
 	// Unique identifier for a game session.
 	GameSessionId *string `type:"string"`
 
-	// IP address of the game session.
+	// IP address of the game session. To connect to a GameLift server process,
+	// an app needs both the IP address and port number.
 	IpAddress *string `type:"string"`
 
 	// Maximum number of players allowed in the game session.
 	MaximumPlayerSessionCount *int64 `type:"integer"`
 
-	// Descriptive label associated with this game session. Session names do not
-	// need to be unique.
+	// Descriptive label associated with a game session. Session names do not need
+	// to be unique.
 	Name *string `min:"1" type:"string"`
 
 	// Indicates whether or not the game session is accepting new players.
 	PlayerSessionCreationPolicy *string `type:"string" enum:"PlayerSessionCreationPolicy"`
 
-	// Current status of the game session. A game session must be in an ACTIVE state
+	// Port number for the game session. To connect to a GameLift server process,
+	// an app needs both the IP address and port number.
+	Port *int64 `min:"1025" type:"integer"`
+
+	// Current status of the game session. A game session must be in an ACTIVE status
 	// to have player sessions.
 	Status *string `type:"string" enum:"GameSessionStatus"`
 
-	// Time stamp indicating when this fleet was terminated. Format is an integer
-	// representing the number of seconds since the Unix epoch (Unix time).
+	// Time stamp indicating when this data object was terminated. Format is a number
+	// expressed in Unix time as milliseconds (ex: "1469498468.057".
 	TerminationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
@@ -3151,10 +4203,11 @@ type GameSessionDetail struct {
 	// Properties describing a game session.
 	GameSession *GameSession `type:"structure"`
 
-	// Current status of protection for the game session. NoProtection: The game
-	// session can be terminated during a scale-down event. FullProtection: If the
-	// game session is in an ACTIVE status, it cannot be terminated during a scale-down
-	// event.
+	// Current status of protection for the game session.
+	//
+	// NoProtection – The game session can be terminated during a scale-down event.
+	// FullProtection – If the game session is in an ACTIVE status, it cannot be
+	// terminated during a scale-down event.
 	ProtectionPolicy *string `type:"string" enum:"ProtectionPolicy"`
 }
 
@@ -3218,9 +4271,11 @@ func (s GetGameSessionLogUrlOutput) GoString() string {
 	return s.String()
 }
 
-// IP addresses and port settings used to limit access by incoming traffic (players)
-// to a fleet. Permissions specify a range of IP addresses and port settings
-// that must be used to gain access to a game server on a fleet machine.
+// A range of IP addresses and port settings that allow inbound traffic to connect
+// to server processes on GameLift. Each game session hosted on a fleet is assigned
+// a unique combination of IP address and port number, which must fall into
+// the fleet's allowed ranges. This combination is included in the GameSession
+// object.
 type IpPermission struct {
 	_ struct{} `type:"structure"`
 
@@ -3282,12 +4337,12 @@ func (s *IpPermission) Validate() error {
 type ListAliasesInput struct {
 	_ struct{} `type:"structure"`
 
-	// Maximum number of results to return. You can use this parameter with NextToken
-	// to get results as a set of sequential pages.
+	// Maximum number of results to return. Use this parameter with NextToken to
+	// get results as a set of sequential pages.
 	Limit *int64 `min:"1" type:"integer"`
 
-	// Descriptive label associated with this alias. Alias names do not need to
-	// be unique.
+	// Descriptive label associated with an alias. Alias names do not need to be
+	// unique.
 	Name *string `min:"1" type:"string"`
 
 	// Token indicating the start of the next sequential page of results. Use the
@@ -3297,11 +4352,14 @@ type ListAliasesInput struct {
 
 	// Type of routing to filter results on. Use this parameter to retrieve only
 	// aliases of a certain type. To retrieve all aliases, leave this parameter
-	// empty. Possible routing types include: SIMPLE: The alias resolves to one
-	// specific fleet. Use this type when routing to active fleets.TERMINAL: The
-	// alias does not resolve to a fleet but instead can be used to display a message
-	// to the user. A terminal alias throws a TerminalRoutingStrategyException with
-	// the RoutingStrategy message embedded.
+	// empty.
+	//
+	// Possible routing types include the following:
+	//
+	// SIMPLE – The alias resolves to one specific fleet. Use this type when routing
+	// to active fleets.TERMINAL – The alias does not resolve to a fleet but instead
+	// can be used to display a message to the user. A terminal alias throws a TerminalRoutingStrategyException
+	// with the RoutingStrategy message embedded.
 	RoutingStrategyType *string `type:"string" enum:"RoutingStrategyType"`
 }
 
@@ -3344,7 +4402,7 @@ type ListAliasesOutput struct {
 	// Token indicating where to resume retrieving results on the next call to this
 	// action. If no token is returned, these results represent the end of the list.
 	//
-	// If a request has a limit that exactly matches the number of remaining results,
+	//  If a request has a limit that exactly matches the number of remaining results,
 	// a token is returned even though there are no more results to retrieve.
 	NextToken *string `min:"1" type:"string"`
 }
@@ -3363,8 +4421,8 @@ func (s ListAliasesOutput) GoString() string {
 type ListBuildsInput struct {
 	_ struct{} `type:"structure"`
 
-	// Maximum number of results to return. You can use this parameter with NextToken
-	// to get results as a set of sequential pages.
+	// Maximum number of results to return. Use this parameter with NextToken to
+	// get results as a set of sequential pages.
 	Limit *int64 `min:"1" type:"integer"`
 
 	// Token indicating the start of the next sequential page of results. Use the
@@ -3372,14 +4430,17 @@ type ListBuildsInput struct {
 	// start of the result set, do not specify a value.
 	NextToken *string `min:"1" type:"string"`
 
-	// Build state to filter results on. Use this parameter to retrieve builds in
-	// a certain state. To retrieve all builds, leave this parameter empty. Possible
-	// build states include: INITIALIZED: A new build has been defined, but no files
-	// have been uploaded. You cannot create fleets for builds that are in this
-	// state. When a build is successfully created, the build state is set to this
-	// value. READY: The game build has been successfully uploaded. You can now
-	// create new fleets for this build.FAILED: The game build upload failed. You
-	// cannot create new fleets for this build.
+	// Build status to filter results by. To retrieve all builds, leave this parameter
+	// empty.
+	//
+	// Possible build statuses include the following:
+	//
+	// INITIALIZED – A new build has been defined, but no files have been uploaded.
+	// You cannot create fleets for builds that are in this status. When a build
+	// is successfully created, the build status is set to this value. READY – The
+	// game build has been successfully uploaded. You can now create new fleets
+	// for this build.FAILED – The game build upload failed. You cannot create new
+	// fleets for this build.
 	Status *string `type:"string" enum:"BuildStatus"`
 }
 
@@ -3419,7 +4480,7 @@ type ListBuildsOutput struct {
 	// Token indicating where to resume retrieving results on the next call to this
 	// action. If no token is returned, these results represent the end of the list.
 	//
-	// If a request has a limit that exactly matches the number of remaining results,
+	//  If a request has a limit that exactly matches the number of remaining results,
 	// a token is returned even though there are no more results to retrieve.
 	NextToken *string `min:"1" type:"string"`
 }
@@ -3443,8 +4504,8 @@ type ListFleetsInput struct {
 	// this parameter empty.
 	BuildId *string `type:"string"`
 
-	// Maximum number of results to return. You can use this parameter with NextToken
-	// to get results as a set of sequential pages.
+	// Maximum number of results to return. Use this parameter with NextToken to
+	// get results as a set of sequential pages.
 	Limit *int64 `min:"1" type:"integer"`
 
 	// Token indicating the start of the next sequential page of results. Use the
@@ -3491,7 +4552,7 @@ type ListFleetsOutput struct {
 	// Token indicating where to resume retrieving results on the next call to this
 	// action. If no token is returned, these results represent the end of the list.
 	//
-	// If a request has a limit that exactly matches the number of remaining results,
+	//  If a request has a limit that exactly matches the number of remaining results,
 	// a token is returned even though there are no more results to retrieve.
 	NextToken *string `min:"1" type:"string"`
 }
@@ -3510,8 +4571,8 @@ func (s ListFleetsOutput) GoString() string {
 type PlayerSession struct {
 	_ struct{} `type:"structure"`
 
-	// Time stamp indicating when this object was created. Format is an integer
-	// representing the number of seconds since the Unix epoch (Unix time).
+	// Time stamp indicating when this data object was created. Format is a number
+	// expressed in Unix time as milliseconds (ex: "1469498468.057".
 	CreationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 
 	// Unique identifier for a fleet.
@@ -3529,17 +4590,24 @@ type PlayerSession struct {
 	// Unique identifier for a player session.
 	PlayerSessionId *string `type:"string"`
 
-	// Current status of the player session. Possible player session states include:
-	// RESERVED: The player session request has been received, but the player has
-	// not yet connected to the game server and/or been validated. ACTIVE: The player
-	// has been validated by the game server and is currently connected.COMPLETED:
-	// The player connection has been dropped.TIMEDOUT: A player session request
+	// Port number for the game session. To connect to a GameLift server process,
+	// an app needs both the IP address and port number.
+	Port *int64 `min:"1025" type:"integer"`
+
+	// Current status of the player session.
+	//
+	// Possible player session statuses include the following:
+	//
+	// RESERVED – The player session request has been received, but the player
+	// has not yet connected to the server process and/or been validated. ACTIVE
+	// – The player has been validated by the server process and is currently connected.COMPLETED
+	// – The player connection has been dropped.TIMEDOUT – A player session request
 	// was received, but the player did not connect and/or was not validated within
 	// the time-out limit (60 seconds).
 	Status *string `type:"string" enum:"PlayerSessionStatus"`
 
-	// Time stamp indicating when this fleet was terminated. Format is an integer
-	// representing the number of seconds since the Unix epoch (Unix time).
+	// Time stamp indicating when this data object was terminated. Format is a number
+	// expressed in Unix time as milliseconds (ex: "1469498468.057".
 	TerminationTime *time.Time `type:"timestamp" timestampFormat:"unix"`
 }
 
@@ -3568,36 +4636,37 @@ type PutScalingPolicyInput struct {
 	// Unique identity for the fleet to scale with this policy.
 	FleetId *string `type:"string" required:"true"`
 
-	// Name of the Service-defined metric that is used to trigger an adjustment.
-	//  ActivatingGameSessions: number of game sessions in the process of being
-	// created (game session status = ACTIVATING). ActiveGameSessions: number of
-	// game sessions currently running (game session status = ACTIVE). CurrentPlayerSessions:
-	// number of active or reserved player sessions (player session status = ACTIVE
-	// or RESERVED).  AvailablePlayerSessions: number of player session slots currently
-	// available in active game sessions across the fleet, calculated by subtracting
-	// a game session's current player session count from its maximum player session
-	// count. This number includes game sessions that are not currently accepting
-	// players (game session PlayerSessionCreationPolicy = DENY_ALL). ActiveInstances:
-	// number of instances currently running a game session. IdleInstances: number
-	// of instances not currently running a game session.
+	// Name of the Amazon GameLift-defined metric that is used to trigger an adjustment.
+	//
+	//   ActivatingGameSessions – number of game sessions in the process of being
+	// created (game session status = ACTIVATING).  ActiveGameSessions – number
+	// of game sessions currently running (game session status = ACTIVE).  CurrentPlayerSessions
+	// – number of active or reserved player sessions (player session status = ACTIVE
+	// or RESERVED).   AvailablePlayerSessions – number of player session slots
+	// currently available in active game sessions across the fleet, calculated
+	// by subtracting a game session's current player session count from its maximum
+	// player session count. This number includes game sessions that are not currently
+	// accepting players (game session PlayerSessionCreationPolicy = DENY_ALL).
+	//  ActiveInstances – number of instances currently running a game session.
+	//  IdleInstances – number of instances not currently running a game session.
 	MetricName *string `type:"string" required:"true" enum:"MetricName"`
 
-	// Descriptive label associated with this scaling policy. Policy names do not
-	// need to be unique. A fleet can have only one scaling policy with the same
-	// name.
+	// Descriptive label associated with a scaling policy. Policy names do not need
+	// to be unique. A fleet can have only one scaling policy with the same name.
 	Name *string `min:"1" type:"string" required:"true"`
 
 	// Amount of adjustment to make, based on the scaling adjustment type.
 	ScalingAdjustment *int64 `type:"integer" required:"true"`
 
 	// Type of adjustment to make to a fleet's instance count (see FleetCapacity):
-	//  ChangeInCapacity: add (or subtract) the scaling adjustment value from the
-	// current instance count. Positive values scale up while negative values scale
-	// down. ExactCapacity: set the instance count to the scaling adjustment value.
-	// PercentChangeInCapacity: increase or reduce the current instance count by
-	// the scaling adjustment, read as a percentage. Positive values scale up while
-	// negative values scale down; for example, a value of "-10" scales the fleet
-	// down by 10%.
+	//
+	//   ChangeInCapacity – add (or subtract) the scaling adjustment value from
+	// the current instance count. Positive values scale up while negative values
+	// scale down.  ExactCapacity – set the instance count to the scaling adjustment
+	// value.  PercentChangeInCapacity – increase or reduce the current instance
+	// count by the scaling adjustment, read as a percentage. Positive values scale
+	// up while negative values scale down; for example, a value of "-10" scales
+	// the fleet down by 10%.
 	ScalingAdjustmentType *string `type:"string" required:"true" enum:"ScalingAdjustmentType"`
 
 	// Metric value used to trigger a scaling event.
@@ -3658,8 +4727,8 @@ func (s *PutScalingPolicyInput) Validate() error {
 type PutScalingPolicyOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Descriptive label associated with this scaling policy. Policy names do not
-	// need to be unique.
+	// Descriptive label associated with a scaling policy. Policy names do not need
+	// to be unique.
 	Name *string `min:"1" type:"string"`
 }
 
@@ -3786,10 +4855,13 @@ type RoutingStrategy struct {
 	// Message text to be used with a terminal routing strategy.
 	Message *string `type:"string"`
 
-	// Type of routing strategy. Possible routing types include: SIMPLE: The alias
-	// resolves to one specific fleet. Use this type when routing to active fleets.TERMINAL:
-	// The alias does not resolve to a fleet but instead can be used to display
-	// a message to the user. A terminal alias throws a TerminalRoutingStrategyException
+	// Type of routing strategy.
+	//
+	// Possible routing types include the following:
+	//
+	// SIMPLE – The alias resolves to one specific fleet. Use this type when routing
+	// to active fleets.TERMINAL – The alias does not resolve to a fleet but instead
+	// can be used to display a message to the user. A terminal alias throws a TerminalRoutingStrategyException
 	// with the RoutingStrategy message embedded.
 	Type *string `type:"string" enum:"RoutingStrategyType"`
 }
@@ -3802,6 +4874,65 @@ func (s RoutingStrategy) String() string {
 // GoString returns the string representation
 func (s RoutingStrategy) GoString() string {
 	return s.String()
+}
+
+// Collection of server process configurations that describe what processes
+// should be run on each instance in a fleet. An instance can launch and maintain
+// multiple server processes based on the runtime configuration; it regularly
+// checks for an updated runtime configuration and starts new server processes
+// to match the latest version.
+//
+// The key purpose of a runtime configuration with multiple server process
+// configurations is to be able to run more than one kind of game server in
+// a single fleet. You can include configurations for more than one server executable
+// in order to run two or more different programs to run on the same instance.
+// This option might be useful, for example, to run more than one version of
+// your game server on the same fleet. Another option is to specify configurations
+// for the same server executable but with different launch parameters.
+//
+// A GameLift instance is limited to 50 processes running simultaneously. To
+// calculate the total number of processes specified in a runtime configuration,
+// add the values of the ConcurrentExecutions parameter for each ServerProcess
+// object in the runtime configuration.
+type RuntimeConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Collection of server process configurations describing what server processes
+	// to run on each instance in a fleet
+	ServerProcesses []*ServerProcess `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s RuntimeConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RuntimeConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RuntimeConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RuntimeConfiguration"}
+	if s.ServerProcesses != nil && len(s.ServerProcesses) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerProcesses", 1))
+	}
+	if s.ServerProcesses != nil {
+		for i, v := range s.ServerProcesses {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ServerProcesses", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // Location in Amazon Simple Storage Service (Amazon S3) where a build's files
@@ -3817,6 +4948,8 @@ type S3Location struct {
 	// Amazon S3 bucket key.
 	Key *string `min:"1" type:"string"`
 
+	// Amazon resource number for the cross-account access role that allows GameLift
+	// access to the S3 bucket.
 	RoleArn *string `min:"1" type:"string"`
 }
 
@@ -3866,42 +4999,46 @@ type ScalingPolicy struct {
 	FleetId *string `type:"string"`
 
 	// Name of the GameLift-defined metric that is used to trigger an adjustment.
-	//  ActivatingGameSessions: number of game sessions in the process of being
-	// created (game session status = ACTIVATING). ActiveGameSessions: number of
-	// game sessions currently running (game session status = ACTIVE). CurrentPlayerSessions:
-	// number of active or reserved player sessions (player session status = ACTIVE
-	// or RESERVED).  AvailablePlayerSessions: number of player session slots currently
-	// available in active game sessions across the fleet, calculated by subtracting
-	// a game session's current player session count from its maximum player session
-	// count. This number does include game sessions that are not currently accepting
-	// players (game session PlayerSessionCreationPolicy = DENY_ALL). ActiveInstances:
-	// number of instances currently running a game session. IdleInstances: number
-	// of instances not currently running a game session.
+	//
+	//   ActivatingGameSessions – number of game sessions in the process of being
+	// created (game session status = ACTIVATING).  ActiveGameSessions – number
+	// of game sessions currently running (game session status = ACTIVE).  CurrentPlayerSessions
+	// – number of active or reserved player sessions (player session status = ACTIVE
+	// or RESERVED).   AvailablePlayerSessions – number of player session slots
+	// currently available in active game sessions across the fleet, calculated
+	// by subtracting a game session's current player session count from its maximum
+	// player session count. This number does include game sessions that are not
+	// currently accepting players (game session PlayerSessionCreationPolicy = DENY_ALL).
+	//  ActiveInstances – number of instances currently running a game session.
+	//  IdleInstances – number of instances not currently running a game session.
 	MetricName *string `type:"string" enum:"MetricName"`
 
-	// Descriptive label associated with this scaling policy. Policy names do not
-	// need to be unique.
+	// Descriptive label associated with a scaling policy. Policy names do not need
+	// to be unique.
 	Name *string `min:"1" type:"string"`
 
 	// Amount of adjustment to make, based on the scaling adjustment type.
 	ScalingAdjustment *int64 `type:"integer"`
 
 	// Type of adjustment to make to a fleet's instance count (see FleetCapacity):
-	//  ChangeInCapacity: add (or subtract) the scaling adjustment value from the
-	// current instance count. Positive values scale up while negative values scale
-	// down. ExactCapacity: set the instance count to the scaling adjustment value.
-	// PercentChangeInCapacity: increase or reduce the current instance count by
-	// the scaling adjustment, read as a percentage. Positive values scale up while
-	// negative values scale down.
+	//
+	//   ChangeInCapacity – add (or subtract) the scaling adjustment value from
+	// the current instance count. Positive values scale up while negative values
+	// scale down.  ExactCapacity – set the instance count to the scaling adjustment
+	// value.  PercentChangeInCapacity – increase or reduce the current instance
+	// count by the scaling adjustment, read as a percentage. Positive values scale
+	// up while negative values scale down.
 	ScalingAdjustmentType *string `type:"string" enum:"ScalingAdjustmentType"`
 
 	// Current status of the scaling policy. The scaling policy is only in force
-	// when in an Active state.  ACTIVE: The scaling policy is currently in force.
-	// UPDATEREQUESTED: A request to update the scaling policy has been received.
-	// UPDATING: A change is being made to the scaling policy. DELETEREQUESTED:
-	// A request to delete the scaling policy has been received. DELETING: The scaling
-	// policy is being deleted. DELETED: The scaling policy has been deleted. ERROR:
-	// An error occurred in creating the policy. It should be removed and recreated.
+	// when in an ACTIVE status.
+	//
+	//   ACTIVE – The scaling policy is currently in force.  UPDATE_REQUESTED –
+	// A request to update the scaling policy has been received.  UPDATING – A change
+	// is being made to the scaling policy.  DELETE_REQUESTED – A request to delete
+	// the scaling policy has been received.  DELETING – The scaling policy is being
+	// deleted.  DELETED – The scaling policy has been deleted.  ERROR – An error
+	// occurred in creating the policy. It should be removed and recreated.
 	Status *string `type:"string" enum:"ScalingStatusType"`
 
 	// Metric value used to trigger a scaling event.
@@ -3919,17 +5056,193 @@ func (s ScalingPolicy) GoString() string {
 }
 
 // Represents the input for a request action.
+type SearchGameSessionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique identifier for a fleet alias. Each request must reference either a
+	// fleet ID or alias ID, but not both.
+	AliasId *string `type:"string"`
+
+	// String containing the search criteria for the session search. If no filter
+	// expression is included, the request returns results for all game sessions
+	// in the fleet that are in ACTIVE status.
+	//
+	// A filter expression can contain one or multiple conditions. Each condition
+	// consists of the following:
+	//
+	//   Operand -- Name of a game session attribute. Valid values are gameSessionName,
+	// gameSessionId, creationTimeMillis, playerSessionCount, maximumSessions, hasAvailablePlayerSessions.
+	//  Comparator -- Valid comparators are: =, &lt;&gt;, &lt;, &gt;, &lt;=, &gt;=.
+	//   Value -- Value to be searched for. Values can be numbers, boolean values
+	// (true/false) or strings. String values are case sensitive, enclosed in single
+	// quotes. Special characters must be escaped. Boolean and string values can
+	// only be used with the comparators = and &lt;&gt;. For example, the following
+	// filter expression searches on gameSessionName: "FilterExpression": "gameSessionName
+	// = 'Matt\\'s Awesome Game 1'".   To chain multiple conditions in a single
+	// expression, use the logical keywords AND, OR, and NOT and parentheses as
+	// needed. For example: x AND y AND NOT z, NOT (x OR y).
+	//
+	//  Session search evaluates conditions from left to right using the following
+	// precedence rules:
+	//
+	//   =, &lt;&gt;, &lt;, &gt;, &lt;=, &gt;=  Parentheses  NOT AND OR  For example,
+	// this filter expression retrieves game sessions hosting at least ten players
+	// that have an open player slot: "maximumSessions&gt;=10 AND hasAvailablePlayerSessions=true".
+	FilterExpression *string `min:"1" type:"string"`
+
+	// Unique identifier for a fleet. Each request must reference either a fleet
+	// ID or alias ID, but not both.
+	FleetId *string `type:"string"`
+
+	// Maximum number of results to return. Use this parameter with NextToken to
+	// get results as a set of sequential pages. The maximum number of results returned
+	// is 20, even if this value is not set or is set higher than 20.
+	Limit *int64 `min:"1" type:"integer"`
+
+	// Token indicating the start of the next sequential page of results. Use the
+	// token that is returned with a previous call to this action. To specify the
+	// start of the result set, do not specify a value.
+	NextToken *string `min:"1" type:"string"`
+
+	// Instructions on how to sort the search results. If no sort expression is
+	// included, the request returns results in random order. A sort expression
+	// consists of the following elements:
+	//
+	//   Operand -- Name of a game session attribute. Valid values are gameSessionName,
+	// gameSessionId, creationTimeMillis, playerSessionCount, maximumSessions, hasAvailablePlayerSessions.
+	//  Order -- Valid sort orders are ASC (ascending) and DESC (descending).  For
+	// example, this sort expression returns the oldest active sessions first: "SortExpression":
+	// "creationTimeMillis ASC". Results with a null value for the sort operand
+	// are returned at the end of the list.
+	SortExpression *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s SearchGameSessionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SearchGameSessionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SearchGameSessionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SearchGameSessionsInput"}
+	if s.FilterExpression != nil && len(*s.FilterExpression) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FilterExpression", 1))
+	}
+	if s.Limit != nil && *s.Limit < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Limit", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+	if s.SortExpression != nil && len(*s.SortExpression) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SortExpression", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the returned data in response to a request action.
+type SearchGameSessionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Collection of objects containing game session properties for each session
+	// matching the request.
+	GameSessions []*GameSession `type:"list"`
+
+	// Token indicating where to resume retrieving results on the next call to this
+	// action. If no token is returned, these results represent the end of the list.
+	//
+	//  If a request has a limit that exactly matches the number of remaining results,
+	// a token is returned even though there are no more results to retrieve.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s SearchGameSessionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SearchGameSessionsOutput) GoString() string {
+	return s.String()
+}
+
+// A set of instructions for launching server processes on each instance in
+// a fleet. Each instruction set identifies the location of the server executable,
+// optional launch parameters, and the number of server processes with this
+// configuration to maintain concurrently on the instance. Server process configurations
+// make up a fleet's RuntimeConfiguration.
+type ServerProcess struct {
+	_ struct{} `type:"structure"`
+
+	// Number of server processes using this configuration to run concurrently on
+	// an instance.
+	ConcurrentExecutions *int64 `min:"1" type:"integer" required:"true"`
+
+	// Location in the game build of the server executable. All game builds are
+	// installed on instances at the root C:\game\..., so an executable file located
+	// at MyGame\latest\server.exe has a launch path of "C:\game\MyGame\latest\server.exe".
+	LaunchPath *string `min:"1" type:"string" required:"true"`
+
+	// Optional list of parameters to pass to the server executable on launch.
+	Parameters *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ServerProcess) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServerProcess) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ServerProcess) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ServerProcess"}
+	if s.ConcurrentExecutions == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConcurrentExecutions"))
+	}
+	if s.ConcurrentExecutions != nil && *s.ConcurrentExecutions < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ConcurrentExecutions", 1))
+	}
+	if s.LaunchPath == nil {
+		invalidParams.Add(request.NewErrParamRequired("LaunchPath"))
+	}
+	if s.LaunchPath != nil && len(*s.LaunchPath) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LaunchPath", 1))
+	}
+	if s.Parameters != nil && len(*s.Parameters) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Parameters", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the input for a request action.
 type UpdateAliasInput struct {
 	_ struct{} `type:"structure"`
 
 	// Unique identifier for a fleet alias. Specify the alias you want to update.
 	AliasId *string `type:"string" required:"true"`
 
-	// Human-readable description of the alias.
+	// Human-readable description of an alias.
 	Description *string `min:"1" type:"string"`
 
-	// Descriptive label associated with this alias. Alias names do not need to
-	// be unique.
+	// Descriptive label associated with an alias. Alias names do not need to be
+	// unique.
 	Name *string `min:"1" type:"string"`
 
 	// Object specifying the fleet and routing type to use for the alias.
@@ -3987,11 +5300,11 @@ func (s UpdateAliasOutput) GoString() string {
 type UpdateBuildInput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique identifier for the build you want to update.
+	// Unique identifier of the build you want to update.
 	BuildId *string `type:"string" required:"true"`
 
-	// Descriptive label associated with this build. Build names do not need to
-	// be unique.
+	// Descriptive label associated with a build. Build names do not need to be
+	// unique.
 	Name *string `min:"1" type:"string"`
 
 	// Version associated with this build. Version strings do not need to be unique
@@ -4050,22 +5363,23 @@ func (s UpdateBuildOutput) GoString() string {
 type UpdateFleetAttributesInput struct {
 	_ struct{} `type:"structure"`
 
-	// Human-readable description of the fleet.
+	// Human-readable description of a fleet.
 	Description *string `min:"1" type:"string"`
 
 	// Unique identifier for the fleet you want to update attribute metadata for.
 	FleetId *string `type:"string" required:"true"`
 
-	// Descriptive label associated with this fleet. Fleet names do not need to
-	// be unique.
+	// Descriptive label associated with a fleet. Fleet names do not need to be
+	// unique.
 	Name *string `min:"1" type:"string"`
 
 	// Game session protection policy to apply to all new instances created in this
-	// fleet. Instances that already exist will not be affected. You can set protection
-	// for individual instances using UpdateGameSession. NoProtection: The game
-	// session can be terminated during a scale-down event. FullProtection: If the
-	// game session is in an ACTIVE status, it cannot be terminated during a scale-down
-	// event.
+	// fleet. Instances that already exist are not affected. You can set protection
+	// for individual instances using UpdateGameSession.
+	//
+	// NoProtection – The game session can be terminated during a scale-down event.
+	// FullProtection – If the game session is in an ACTIVE status, it cannot be
+	// terminated during a scale-down event.
 	NewGameSessionProtectionPolicy *string `type:"string" enum:"ProtectionPolicy"`
 }
 
@@ -4263,17 +5577,18 @@ type UpdateGameSessionInput struct {
 	// session.
 	MaximumPlayerSessionCount *int64 `type:"integer"`
 
-	// Descriptive label associated with this game session. Session names do not
-	// need to be unique.
+	// Descriptive label associated with a game session. Session names do not need
+	// to be unique.
 	Name *string `min:"1" type:"string"`
 
 	// Policy determining whether or not the game session accepts new players.
 	PlayerSessionCreationPolicy *string `type:"string" enum:"PlayerSessionCreationPolicy"`
 
-	// Game session protection policy to apply to this game session only. NoProtection:
-	// The game session can be terminated during a scale-down event. FullProtection:
-	// If the game session is in an ACTIVE status, it cannot be terminated during
-	// a scale-down event.
+	// Game session protection policy to apply to this game session only.
+	//
+	// NoProtection – The game session can be terminated during a scale-down event.
+	// FullProtection – If the game session is in an ACTIVE status, it cannot be
+	// terminated during a scale-down event.
 	ProtectionPolicy *string `type:"string" enum:"ProtectionPolicy"`
 }
 
@@ -4318,6 +5633,72 @@ func (s UpdateGameSessionOutput) String() string {
 
 // GoString returns the string representation
 func (s UpdateGameSessionOutput) GoString() string {
+	return s.String()
+}
+
+// Represents the input for a request action.
+type UpdateRuntimeConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique identifier of the fleet to update runtime configuration for.
+	FleetId *string `type:"string" required:"true"`
+
+	// Instructions for launching server processes on each instance in the fleet.
+	// The runtime configuration for a fleet has a collection of server process
+	// configurations, one for each type of server process to run on an instance.
+	// A server process configuration specifies the location of the server executable,
+	// launch parameters, and the number of concurrent processes with that configuration
+	// to maintain on each instance.
+	RuntimeConfiguration *RuntimeConfiguration `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateRuntimeConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateRuntimeConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateRuntimeConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateRuntimeConfigurationInput"}
+	if s.FleetId == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetId"))
+	}
+	if s.RuntimeConfiguration == nil {
+		invalidParams.Add(request.NewErrParamRequired("RuntimeConfiguration"))
+	}
+	if s.RuntimeConfiguration != nil {
+		if err := s.RuntimeConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("RuntimeConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Represents the returned data in response to a request action.
+type UpdateRuntimeConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The runtime configuration currently in force. If the update was successful,
+	// this object matches the one in the request.
+	RuntimeConfiguration *RuntimeConfiguration `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateRuntimeConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateRuntimeConfigurationOutput) GoString() string {
 	return s.String()
 }
 
@@ -4491,6 +5872,13 @@ const (
 	MetricNameCurrentPlayerSessions = "CurrentPlayerSessions"
 	// @enum MetricName
 	MetricNameIdleInstances = "IdleInstances"
+)
+
+const (
+	// @enum OperatingSystem
+	OperatingSystemWindows2012 = "WINDOWS_2012"
+	// @enum OperatingSystem
+	OperatingSystemAmazonLinux = "AMAZON_LINUX"
 )
 
 const (
