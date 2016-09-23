@@ -1,1 +1,0 @@
-{"env_name":"pepper-weed","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-df7b8bf2","tag_hash":{"EnvName":"pepper-weed","Name":"terraform-resource-test"},"tag_list":["pepper-weed","terraform-resource-test"],"tag_name":"terraform-resource-test","vpc_id":"vpc-a63717c1"}
