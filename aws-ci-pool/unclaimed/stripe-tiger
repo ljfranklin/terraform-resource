@@ -1,0 +1,1 @@
+{"env_name":"stripe-tiger","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-c17c8cec","tag_hash":{"EnvName":"stripe-tiger","Name":"terraform-resource-test"},"tag_list":["stripe-tiger","terraform-resource-test"],"tag_name":"terraform-resource-test","vpc_id":"vpc-a63717c1"}
