@@ -40,6 +40,15 @@ func (s StateFile) ConvertToTainted() StateFile {
 	}
 }
 
+func (s StateFile) ConvertFromTainted() StateFile {
+	return StateFile{
+		LocalPath:     s.LocalPath,
+		RemotePath:    s.untaintedRemotePath(),
+		StorageDriver: s.StorageDriver,
+		isTainted:     false,
+	}
+}
+
 func (s StateFile) LatestVersion() (storage.Version, error) {
 	return s.StorageDriver.LatestVersion(`.*\.tfstate$`)
 }
@@ -116,9 +125,17 @@ func (s StateFile) Delete() (storage.Version, error) {
 	return version, nil
 }
 
+func (s StateFile) IsTainted() bool {
+	return s.isTainted
+}
+
 func (s StateFile) taintedRemotePath() string {
 	if strings.HasSuffix(s.RemotePath, ".tainted") {
 		return s.RemotePath
 	}
 	return fmt.Sprintf("%s.tainted", s.RemotePath)
+}
+
+func (s StateFile) untaintedRemotePath() string {
+	return strings.TrimSuffix(s.RemotePath, ".tainted")
 }

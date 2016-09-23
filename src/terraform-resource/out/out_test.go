@@ -623,6 +623,28 @@ var _ = Describe("Out", func() {
 			awsVerifier.ExpectS3FileToNotExist(bucket, stateFilePath)
 		})
 
+		It("untaints the state file after the next successful put", func() {
+			var logWriter bytes.Buffer
+			runner := out.Runner{
+				SourceDir: workingDir,
+				LogWriter: &logWriter,
+			}
+			_, err := runner.Run(req)
+			Expect(err).To(HaveOccurred())
+			Expect(logWriter.String()).To(ContainSubstring("invalid-action"))
+
+			taintedStateFilePath := path.Join(bucketPath, fmt.Sprintf("%s.tfstate.tainted", envName))
+			awsVerifier.ExpectS3FileToNotExist(bucket, stateFilePath)
+			awsVerifier.ExpectS3FileToExist(bucket, taintedStateFilePath)
+
+			req.Params.Terraform.Vars["acl_action"] = "allow"
+			_, err = runner.Run(req)
+			Expect(err).ToNot(HaveOccurred())
+			awsVerifier.ExpectSubnetWithCIDRToExist(subnetCIDR, vpcID)
+			awsVerifier.ExpectS3FileToExist(bucket, stateFilePath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, taintedStateFilePath)
+		})
+
 		It("deletes all resources on failure if delete_on_failure is true", func() {
 			req.Params.Terraform.DeleteOnFailure = true
 

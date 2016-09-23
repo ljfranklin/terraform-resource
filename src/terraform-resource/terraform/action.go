@@ -67,6 +67,14 @@ func (a Action) attemptApply() (Result, error) {
 		return Result{}, err
 	}
 
+	if a.StateFile.IsTainted() {
+		_, err := a.StateFile.Delete()
+		if err != nil {
+			return Result{}, err
+		}
+		a.StateFile = a.StateFile.ConvertFromTainted()
+	}
+
 	storageVersion, err := a.StateFile.Upload()
 	if err != nil {
 		return Result{}, err
