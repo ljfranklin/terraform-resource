@@ -1,0 +1,1 @@
+{"env_name":"harvest-bear","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-d8dc2a83","tag_hash":{"EnvName":"harvest-bear","Name":"terraform-resource-test"},"tag_list":["harvest-bear","terraform-resource-test"],"tag_name":"terraform-resource-test","vpc_id":"vpc-a63717c1"}
