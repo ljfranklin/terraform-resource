@@ -122,6 +122,8 @@ var _ = Describe("Out Lifecycle", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(createOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
 
+		time.Sleep(1 * time.Second) // ensure LastModified changes
+
 		By("running 'out' to update the VPC")
 
 		// omits vpc_id and subnet_cidr to ensure the resource feeds
@@ -149,6 +151,8 @@ var _ = Describe("Out Lifecycle", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(updatedVersion).To(BeTemporally(">", createVersion))
 		Expect(updateOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
+
+		time.Sleep(1 * time.Second) // ensure LastModified changes
 
 		By("running 'out' to delete the VPC")
 
