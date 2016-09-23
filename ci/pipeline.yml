@@ -243,7 +243,7 @@ resources:
       access_key_id:     {{storage_access_key}}
       secret_access_key: {{storage_secret_key}}
       bucket:            {{storage_bucket}}
-      bucket_path:       {{storage_bucket_path}}
+      bucket_path:       ci-pipeline
     terraform_source: resource-src/fixtures/aws
     vars:
       access_key:  {{ec2_access_key}}
