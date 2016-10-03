@@ -70,8 +70,8 @@ resources:
 
 ## Behavior
 
-This resource should always be used with the `put` action rather than a `get`.
-This ensures the output always reflects the current state of the IaaS and allows management of multiple environments as shown below.
+This resource should usually be used with the `put` action rather than a `get`.
+This ensures the output always reflects the current state of the IaaS and allows management of multiple environments as shown below. A `get` step takes no parameters and outputs the same `metadata` file format shown below for `put`.
 
 Depending on the context, the `put` step will perform one of three actions:
 
