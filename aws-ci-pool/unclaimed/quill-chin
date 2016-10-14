@@ -1,0 +1,1 @@
+{"env_name":"quill-chin","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-faf64db3","tag_hash":{"EnvName":"quill-chin","Name":"terraform-resource-test"},"tag_list":["quill-chin","terraform-resource-test"],"tag_name":"terraform-resource-test","vpc_id":"vpc-a63717c1"}
