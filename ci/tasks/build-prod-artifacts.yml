@@ -14,6 +14,3 @@ outputs:
 
 run:
   path: resource-src/docker-prod/build-artifacts
-
-params:
-  TERRAFORM_VERSION: ""

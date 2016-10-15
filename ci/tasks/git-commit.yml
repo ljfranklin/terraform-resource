@@ -1,0 +1,25 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+    tag: dev
+
+inputs:
+  - name: input-src
+  - name: resource-src
+
+outputs:
+  - name: output-src
+
+params:
+  GIT_ADD_ARGS: ""
+  GIT_COMMIT_MSG: ""
+  GIT_COMMIT_USERNAME: ""
+  GIT_COMMIT_EMAIL: ""
+  GIT_SUCCEED_ON_NO_CHANGES: false
+
+run:
+  path: resource-src/ci/tasks/git-commit

@@ -1,12 +1,32 @@
 jobs:
+  - name: auto-bump-terraform
+    plan:
+      - get: terraform-github
+        trigger: true
+      - get: resource-src
+      - task: bump-terraform-cli
+        file: resource-src/ci/tasks/bump-terraform-cli.yml
+      - task: git-commit
+        file: resource-src/ci/tasks/git-commit.yml
+        input_mapping: {input-src: updated-resource-src}
+        output_mapping: {output-src: committed-resource-src}
+        params:
+          GIT_ADD_ARGS: ./config/terraform-version
+          GIT_COMMIT_MSG: ":airplane: Auto-commit: Bumping Terraform CLI version"
+          GIT_COMMIT_USERNAME: friendly-ci
+          GIT_COMMIT_EMAIL: {{git_commit_email}}
+          GIT_SUCCEED_ON_NO_CHANGES: true
+      - put: resource-src
+        params:
+          repository: committed-resource-src/
+          rebase: true
+
   - name: push-dev-image
     plan:
       - get: resource-src
         trigger: true
       - task: build-artifacts
         file: resource-src/ci/tasks/build-dev-artifacts.yml
-        params:
-          TERRAFORM_VERSION: &terraform-version 0.7.6
       - put: terraform-dev-image
         params:
           build: build-artifacts/
@@ -38,8 +58,6 @@ jobs:
         passed: [test-unit]
       - task: build-artifacts
         file: resource-src/ci/tasks/build-prod-artifacts.yml
-        params:
-          TERRAFORM_VERSION: *terraform-version
       - put: terraform-test-image
         params:
           build: build-artifacts/
@@ -127,7 +145,7 @@ jobs:
       - get: resource-src
         trigger: true
         passed: [push-test-image]
-      - put: terraform-github
+      - put: terraform-remote-src
         params:
           # generate a random env_name for the lock file
           generate_random_name: true
@@ -137,7 +155,7 @@ jobs:
       # create a new lock containing the terraform output
       - put: locks
         params:
-          add: terraform-github/
+          add: terraform-remote-src/
 
   - name: lock-env
     plan:
@@ -169,7 +187,7 @@ jobs:
       - get: locks
         passed: [lock-env]
       # destroy the IaaS resources
-      - put: terraform-github
+      - put: terraform-remote-src
         params:
           env_name_file: locks/name
           action: destroy
@@ -202,8 +220,14 @@ resources:
 - name: resource-src
   type: git
   source:
-    uri: https://github.com/ljfranklin/terraform-resource
+    uri: git@github.com:ljfranklin/terraform-resource.git
     branch: master
+    private_key: {{git_private_key}}
+- name: terraform-github
+  type: github-release
+  source:
+    user: concourse
+    repository: concourse
 - name: terraform-dev-image
   type: docker-image
   source:
@@ -234,7 +258,7 @@ resources:
     uri: git@github.com:ljfranklin/terraform-resource.git
     branch: ci-pool-test
     pool: aws-ci-pool
-    private_key: {{pool_git_private_key}}
+    private_key: {{git_private_key}}
 - name: terraform
   type: terraform
   source: &terraform-source
@@ -249,7 +273,7 @@ resources:
       access_key:  {{ec2_access_key}}
       secret_key:  {{ec2_secret_key}}
       vpc_id:      {{test_vpc_id}}
-- name: terraform-github
+- name: terraform-remote-src
   type: terraform
   source:
     <<: *terraform-source

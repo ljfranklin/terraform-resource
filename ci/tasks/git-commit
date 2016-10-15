@@ -1,0 +1,44 @@
+#!/bin/bash
+
+set -eu
+
+src_dir="$( cd "$( dirname "$0" )" && cd ../.. && pwd )"
+workspace_dir="$( cd "${src_dir}/.." && pwd )"
+
+# env
+: ${GIT_ADD_ARGS:?}
+: ${GIT_COMMIT_MSG:?}
+: ${GIT_COMMIT_USERNAME:?}
+: ${GIT_COMMIT_EMAIL:?}
+: ${GIT_SUCCEED_ON_NO_CHANGES:?}
+
+# inputs
+input_dir="$( cd "${workspace_dir}/input-src" && pwd )"
+
+# outputs
+output_dir="$( cd "${workspace_dir}/output-src" && pwd )"
+
+pushd "${input_dir}" > /dev/null
+  echo "Committing file changes matching glob '${GIT_ADD_ARGS}'..."
+  git add ${GIT_ADD_ARGS}
+  git config --global user.email "${GIT_COMMIT_EMAIL}"
+  git config --global user.name "${GIT_COMMIT_USERNAME}"
+
+  set +e
+  git commit -m "${GIT_COMMIT_MSG}"
+  commit_exit_code="$?"
+  set -e
+
+  if [ "${commit_exit_code}" != "0" ]; then
+    if [ "${GIT_SUCCEED_ON_NO_CHANGES}" == "true" ]; then
+      echo "No changes, skipping commit."
+    else
+      echo "Commit failed due to no file changes!"
+      exit 1
+    fi
+  else
+    echo "Successfully committed changes!"
+  fi
+popd > /dev/null
+
+git clone "${input_dir}" "${output_dir}"

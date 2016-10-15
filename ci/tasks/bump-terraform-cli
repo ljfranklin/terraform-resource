@@ -1,0 +1,49 @@
+#!/bin/bash
+
+set -eux -o pipefail
+
+my_dir="$( cd "$( dirname "$0" )" && pwd )"
+release_dir="$( cd "${my_dir}" && cd ../.. && pwd )"
+workspace_dir="$( cd "${release_dir}" && cd .. && pwd )"
+
+source "${release_dir}/.envrc"
+
+# inputs
+github_dir="$( cd "${workspace_dir}/terraform-github" && pwd )"
+
+# outputs
+output_dir="$( cd "${workspace_dir}/updated-resource-src" && pwd )"
+
+git clone "${release_dir}" "${output_dir}"
+
+echo "Comparing Upstream and Downstream Terraform versions..."
+
+upstream_version="$( cat ${github_dir}/version )"
+downstream_version="$( cat ${release_dir}/config/terraform-version )"
+semver_regex='^([0-9]+\.[0-9]+)\.([0-9]+)$'
+
+if [[ "${upstream_version}" =~ ${semver_regex} ]]; then
+  upstream_major_minor="${BASH_REMATCH[1]}"
+  upstream_patch="${BASH_REMATCH[2]}"
+else
+  echo "Non-semver format for upstream version '${upstream_version}'."
+  exit 1
+fi
+
+if [[ "${downstream_version}" =~ ${semver_regex} ]]; then
+  downstream_major_minor="${BASH_REMATCH[1]}"
+  downstream_patch="${BASH_REMATCH[2]}"
+else
+  echo "Non-semver format for downstream version '${downstream_version}'."
+  exit 1
+fi
+
+if [[ "${upstream_major_minor}" != "${downstream_major_minor}" ]]; then
+  echo "Refusing to perform an automatic major or minor version bump to '${upstream_version}'."
+  exit 0
+fi
+
+if [[ "${upstream_patch}" -gt "${downstream_patch}" ]]; then
+  echo "Bumping to new patch version '${upstream_version}'!"
+  echo -n "${upstream_version}" > "${output_dir}/config/terraform-version"
+fi
