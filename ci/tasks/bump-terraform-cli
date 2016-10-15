@@ -46,4 +46,6 @@ fi
 if [[ "${upstream_patch}" -gt "${downstream_patch}" ]]; then
   echo "Bumping to new patch version '${upstream_version}'!"
   echo -n "${upstream_version}" > "${output_dir}/config/terraform-version"
+else
+  echo "Downstream version '${downstream_version}' is up-to-date!"
 fi
