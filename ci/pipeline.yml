@@ -226,8 +226,8 @@ resources:
 - name: terraform-github
   type: github-release
   source:
-    user: concourse
-    repository: concourse
+    user: hashicorp
+    repository: terraform
 - name: terraform-dev-image
   type: docker-image
   source:

@@ -9,7 +9,7 @@ image_resource:
 
 inputs:
 - name: resource-src
-- name: terraform-github
+- name: terraform-github-release
 
 outputs:
 - name: updated-resource-src
