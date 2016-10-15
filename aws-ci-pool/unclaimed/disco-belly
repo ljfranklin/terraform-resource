@@ -1,0 +1,1 @@
+{"env_name":"disco-belly","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-420db60b","tag_hash":{"EnvName":"disco-belly","Name":"terraform-resource-test"},"tag_list":["disco-belly","terraform-resource-test"],"tag_name":"terraform-resource-test","vpc_id":"vpc-a63717c1"}
