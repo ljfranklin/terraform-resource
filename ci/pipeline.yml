@@ -228,6 +228,7 @@ resources:
   source:
     user: hashicorp
     repository: terraform
+    access_token: {{github_access_token}}
 - name: terraform-dev-image
   type: docker-image
   source:
