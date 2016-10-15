@@ -1,7 +1,7 @@
 jobs:
   - name: auto-bump-terraform
     plan:
-      - get: terraform-github
+      - get: terraform-github-release
         trigger: true
       - get: resource-src
       - task: bump-terraform-cli
@@ -223,7 +223,7 @@ resources:
     uri: git@github.com:ljfranklin/terraform-resource.git
     branch: master
     private_key: {{git_private_key}}
-- name: terraform-github
+- name: terraform-github-release
   type: github-release
   source:
     user: hashicorp
