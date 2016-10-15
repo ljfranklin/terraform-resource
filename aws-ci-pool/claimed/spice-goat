@@ -1,1 +1,0 @@
-{"env_name":"spice-goat","subnet_cidr":"10.0.1.0/24","subnet_id":"subnet-24cb0009","tag_hash":{"EnvName":"spice-goat","Name":"terraform-resource-test"},"tag_list":["spice-goat","terraform-resource-test"],"tag_name":"terraform-resource-test","vpc_id":"vpc-a63717c1"}
