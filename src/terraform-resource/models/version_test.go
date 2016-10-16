@@ -3,9 +3,9 @@ package models_test
 import (
 	"time"
 
-	"terraform-resource/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"terraform-resource/models"
 )
 
 var _ = Describe("Version", func() {

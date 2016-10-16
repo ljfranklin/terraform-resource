@@ -1,9 +1,9 @@
 package namer_test
 
 import (
-	"terraform-resource/namer"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"terraform-resource/namer"
 )
 
 var _ = Describe("Namer", func() {

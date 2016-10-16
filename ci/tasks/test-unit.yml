@@ -18,7 +18,6 @@ params:
   AWS_SECRET_KEY:           ""
   AWS_BUCKET:               ""
   AWS_BUCKET_PATH:          ""
-  AWS_TEST_VPC_ID:          ""
   S3_COMPATIBLE_BUCKET:     ""
   S3_COMPATIBLE_ENDPOINT:   ""
   S3_COMPATIBLE_ACCESS_KEY: ""

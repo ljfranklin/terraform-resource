@@ -2,14 +2,13 @@ package out_test
 
 import (
 	"bytes"
+	"crypto/md5"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"os/exec"
 	"path"
 	"strings"
-	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -31,7 +30,7 @@ var _ = Describe("Out", func() {
 		storageModel      storage.Model
 		envName           string
 		stateFilePath     string
-		subnetCIDR        string
+		s3ObjectPath      string
 		workingDir        string
 		fixtureEnvName    string
 		pathToS3Fixture   string
@@ -40,12 +39,9 @@ var _ = Describe("Out", func() {
 	)
 
 	BeforeEach(func() {
-		// TODO: avoid random clashes here
-		rand.Seed(time.Now().UnixNano())
-		subnetCIDR = fmt.Sprintf("10.0.%d.0/24", rand.Intn(256))
-
 		envName = randomString("out-test")
 		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
+		s3ObjectPath = path.Join(bucketPath, randomString("out-test"))
 
 		storageModel = storage.Model{
 			Bucket:          bucket,
@@ -74,7 +70,7 @@ var _ = Describe("Out", func() {
 
 	AfterEach(func() {
 		_ = os.RemoveAll(workingDir)
-		awsVerifier.DeleteSubnetWithCIDR(subnetCIDR, vpcID)
+		awsVerifier.DeleteObjectFromS3(bucket, s3ObjectPath)
 		awsVerifier.DeleteObjectFromS3(bucket, stateFilePath)
 	})
 
@@ -88,18 +84,18 @@ var _ = Describe("Out", func() {
 				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
-						"access_key":  accessKey,
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
 					},
 				},
 			},
 		}
 		expectedMetadata := map[string]string{
-			"vpc_id":      vpcID,
-			"subnet_cidr": subnetCIDR,
-			"tag_name":    "terraform-resource-test", // template default
+			"env_name":    envName,
+			"content_md5": calculateMD5("terraform-is-neat"),
 		}
 
 		assertOutBehavior(req, expectedMetadata)
@@ -116,18 +112,18 @@ var _ = Describe("Out", func() {
 					// Note: changes to fixture must be pushed before running this test
 					Source: "github.com/ljfranklin/terraform-resource//fixtures/aws/",
 					Vars: map[string]interface{}{
-						"access_key":  accessKey,
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
 					},
 				},
 			},
 		}
 		expectedMetadata := map[string]string{
-			"vpc_id":      vpcID,
-			"subnet_cidr": subnetCIDR,
-			"tag_name":    "terraform-resource-test", // template default
+			"env_name":    envName,
+			"content_md5": calculateMD5("terraform-is-neat"),
 		}
 
 		assertOutBehavior(req, expectedMetadata)
@@ -143,18 +139,18 @@ var _ = Describe("Out", func() {
 				Terraform: models.Terraform{
 					Source: "fixtures/module/",
 					Vars: map[string]interface{}{
-						"access_key":  accessKey,
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
 					},
 				},
 			},
 		}
 		expectedMetadata := map[string]string{
-			"vpc_id":      vpcID,
-			"subnet_cidr": subnetCIDR,
-			"tag_name":    "terraform-resource-module-test", // module default
+			"env_name":    envName,
+			"content_md5": calculateMD5("terraform-is-neat"),
 		}
 
 		assertOutBehavior(req, expectedMetadata)
@@ -167,11 +163,11 @@ var _ = Describe("Out", func() {
 				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
-						"access_key":  accessKey,
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
-						"tag_name":    "terraform-resource-source-test",
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
 					},
 				},
 			},
@@ -180,9 +176,8 @@ var _ = Describe("Out", func() {
 			},
 		}
 		expectedMetadata := map[string]string{
-			"vpc_id":      vpcID,
-			"subnet_cidr": subnetCIDR,
-			"tag_name":    "terraform-resource-source-test",
+			"env_name":    envName,
+			"content_md5": calculateMD5("terraform-is-neat"),
 		}
 
 		assertOutBehavior(req, expectedMetadata)
@@ -205,18 +200,17 @@ var _ = Describe("Out", func() {
 				EnvName: envName,
 				Terraform: models.Terraform{
 					Vars: map[string]interface{}{
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
-						"tag_name":    "terraform-resource-options-test",
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
 					},
 				},
 			},
 		}
 		expectedMetadata := map[string]string{
-			"vpc_id":      vpcID,
-			"subnet_cidr": subnetCIDR,
-			"tag_name":    "terraform-resource-options-test",
+			"env_name":    envName,
+			"content_md5": calculateMD5("terraform-is-neat"),
 		}
 
 		assertOutBehavior(req, expectedMetadata)
@@ -227,8 +221,9 @@ var _ = Describe("Out", func() {
 
 		BeforeEach(func() {
 			fileParams := map[string]interface{}{
-				"vpc_id":   vpcID,
-				"tag_name": "terraform-resource-file-test",
+				"bucket":         bucket,
+				"object_key":     s3ObjectPath,
+				"object_content": "terraform-files-are-neat",
 			}
 			fileContent, err := yaml.Marshal(fileParams)
 			Expect(err).ToNot(HaveOccurred())
@@ -261,10 +256,9 @@ var _ = Describe("Out", func() {
 					EnvName: envName,
 					Terraform: models.Terraform{
 						Vars: map[string]interface{}{
-							"secret_key":  secretKey,
-							"subnet_cidr": subnetCIDR,
+							"secret_key": secretKey,
 							// will be overridden
-							"tag_name": "terraform-resource-test-original",
+							"object_content": "to-be-overridden",
 						},
 						// var file overrides put.params
 						VarFile: varFileName,
@@ -272,9 +266,8 @@ var _ = Describe("Out", func() {
 				},
 			}
 			expectedMetadata := map[string]string{
-				"vpc_id":      vpcID,
-				"subnet_cidr": subnetCIDR,
-				"tag_name":    "terraform-resource-file-test",
+				"env_name":    envName,
+				"content_md5": calculateMD5("terraform-files-are-neat"),
 			}
 
 			assertOutBehavior(req, expectedMetadata)
@@ -291,18 +284,18 @@ var _ = Describe("Out", func() {
 				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
-						"access_key":  accessKey,
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
-						"tag_name":    "terraform-resource-test-tags",
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
 					},
 				},
 			},
 		}
 		expectedMetadata := map[string]string{
-			"tag_hash": fmt.Sprintf(`{"EnvName":"%s","Name":"terraform-resource-test-tags"}`, envName),
-			"tag_list": fmt.Sprintf(`["%s","terraform-resource-test-tags"]`, envName),
+			"map":  `{"key-1":"value-1","key-2":"value-2"}`,
+			"list": `["item-1","item-2"]`,
 		}
 
 		assertOutBehavior(req, expectedMetadata)
@@ -319,18 +312,18 @@ var _ = Describe("Out", func() {
 				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
-						"access_key":  accessKey,
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
 					},
 				},
 			},
 		}
 		expectedMetadata := map[string]string{
-			"vpc_id":      vpcID,
-			"subnet_cidr": subnetCIDR,
-			"tag_name":    "terraform-resource-test", // template default
+			"env_name":    envName,
+			"content_md5": calculateMD5("terraform-is-neat"),
 		}
 
 		assertOutBehavior(req, expectedMetadata)
@@ -347,43 +340,18 @@ var _ = Describe("Out", func() {
 				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
-						"access_key":  accessKey,
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
 					},
 				},
 			},
 		}
 		expectedMetadata := map[string]string{
-			"vpc_id":      vpcID,
-			"subnet_cidr": subnetCIDR,
-			"tag_name":    "terraform-resource-test", // template default
-		}
-
-		assertOutBehavior(req, expectedMetadata)
-	})
-
-	It("automatically sets env_name as an input", func() {
-		req := models.OutRequest{
-			Source: models.Source{
-				Storage: storageModel,
-			},
-			Params: models.OutParams{
-				EnvName: envName,
-				Terraform: models.Terraform{
-					Source: "fixtures/aws/",
-					Vars: map[string]interface{}{
-						"access_key":  accessKey,
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
-					},
-				},
-			},
-		}
-		expectedMetadata := map[string]string{
-			"env_name": envName,
+			"env_name":    envName,
+			"content_md5": calculateMD5("terraform-is-neat"),
 		}
 
 		assertOutBehavior(req, expectedMetadata)
@@ -416,10 +384,11 @@ var _ = Describe("Out", func() {
 					Terraform: models.Terraform{
 						Source: "fixtures/aws/",
 						Vars: map[string]interface{}{
-							"access_key":  accessKey,
-							"secret_key":  secretKey,
-							"vpc_id":      vpcID,
-							"subnet_cidr": subnetCIDR,
+							"access_key":     accessKey,
+							"secret_key":     secretKey,
+							"bucket":         bucket,
+							"object_key":     s3ObjectPath,
+							"object_content": "terraform-is-neat",
 						},
 					},
 				},
@@ -444,10 +413,11 @@ var _ = Describe("Out", func() {
 				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
-						"access_key":  accessKey,
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
 					},
 				},
 			},
@@ -472,18 +442,18 @@ var _ = Describe("Out", func() {
 				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
-						"access_key":  accessKey,
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
 					},
 				},
 			},
 		}
 		expectedMetadata := map[string]string{
-			"vpc_id":      vpcID,
-			"subnet_cidr": subnetCIDR,
-			"tag_name":    "terraform-resource-test", // template default
+			"env_name":    envName,
+			"content_md5": calculateMD5("terraform-is-neat"),
 		}
 
 		assertOutBehavior(req, expectedMetadata)
@@ -506,18 +476,18 @@ var _ = Describe("Out", func() {
 				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
-						"access_key":  accessKey,
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
 					},
 				},
 			},
 		}
 		expectedMetadata := map[string]string{
-			"vpc_id":      vpcID,
-			"subnet_cidr": subnetCIDR,
-			"tag_name":    "terraform-resource-test", // template default
+			"env_name":    envName,
+			"content_md5": calculateMD5("terraform-is-neat"),
 		}
 
 		assertOutBehavior(req, expectedMetadata)
@@ -550,10 +520,11 @@ var _ = Describe("Out", func() {
 					Terraform: models.Terraform{
 						Source: "fixtures/aws/",
 						Vars: map[string]interface{}{
-							"access_key":  accessKey,
-							"secret_key":  secretKey,
-							"vpc_id":      vpcID,
-							"subnet_cidr": subnetCIDR,
+							"access_key":     accessKey,
+							"secret_key":     secretKey,
+							"bucket":         bucket,
+							"object_key":     s3ObjectPath,
+							"object_content": "terraform-is-neat",
 						},
 					},
 				},
@@ -585,12 +556,12 @@ var _ = Describe("Out", func() {
 					Terraform: models.Terraform{
 						Source: "fixtures/aws/",
 						Vars: map[string]interface{}{
-							"access_key":  accessKey,
-							"secret_key":  secretKey,
-							"vpc_id":      vpcID,
-							"subnet_cidr": subnetCIDR,
-							"acl_count":   "1",
-							"acl_action":  "invalid-action",
+							"access_key":           accessKey,
+							"secret_key":           secretKey,
+							"bucket":               bucket,
+							"object_key":           s3ObjectPath,
+							"object_content":       "terraform-is-neat",
+							"invalid_object_count": "1",
 						},
 					},
 				},
@@ -606,8 +577,8 @@ var _ = Describe("Out", func() {
 			_, err := runner.Run(req)
 
 			Expect(err).To(HaveOccurred())
-			Expect(logWriter.String()).To(ContainSubstring("invalid-action"))
-			awsVerifier.ExpectSubnetWithCIDRToExist(subnetCIDR, vpcID)
+			Expect(logWriter.String()).To(ContainSubstring("invalid_object"))
+			awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
 
 			originalStateFilePath := stateFilePath
 			stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate.tainted", envName))
@@ -618,7 +589,7 @@ var _ = Describe("Out", func() {
 			req.Params.Action = models.DestroyAction
 			_, err = runner.Run(req)
 			Expect(err).ToNot(HaveOccurred())
-			awsVerifier.ExpectSubnetWithCIDRToNotExist(subnetCIDR, vpcID)
+			awsVerifier.ExpectS3FileToNotExist(bucket, s3ObjectPath)
 			awsVerifier.ExpectS3FileToNotExist(bucket, originalStateFilePath)
 			awsVerifier.ExpectS3FileToNotExist(bucket, stateFilePath)
 		})
@@ -631,16 +602,16 @@ var _ = Describe("Out", func() {
 			}
 			_, err := runner.Run(req)
 			Expect(err).To(HaveOccurred())
-			Expect(logWriter.String()).To(ContainSubstring("invalid-action"))
+			Expect(logWriter.String()).To(ContainSubstring("invalid_object"))
 
 			taintedStateFilePath := path.Join(bucketPath, fmt.Sprintf("%s.tfstate.tainted", envName))
 			awsVerifier.ExpectS3FileToNotExist(bucket, stateFilePath)
 			awsVerifier.ExpectS3FileToExist(bucket, taintedStateFilePath)
 
-			req.Params.Terraform.Vars["acl_action"] = "allow"
+			req.Params.Terraform.Vars["invalid_object_count"] = "0"
 			_, err = runner.Run(req)
 			Expect(err).ToNot(HaveOccurred())
-			awsVerifier.ExpectSubnetWithCIDRToExist(subnetCIDR, vpcID)
+			awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
 			awsVerifier.ExpectS3FileToExist(bucket, stateFilePath)
 			awsVerifier.ExpectS3FileToNotExist(bucket, taintedStateFilePath)
 		})
@@ -656,8 +627,8 @@ var _ = Describe("Out", func() {
 			_, err := runner.Run(req)
 
 			Expect(err).To(HaveOccurred())
-			Expect(logWriter.String()).To(ContainSubstring("invalid-action"))
-			awsVerifier.ExpectSubnetWithCIDRToNotExist(subnetCIDR, vpcID)
+			Expect(logWriter.String()).To(ContainSubstring("invalid_object"))
+			awsVerifier.ExpectS3FileToNotExist(bucket, s3ObjectPath)
 
 			originalStateFilePath := stateFilePath
 			stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate.tainted", envName))
@@ -700,18 +671,18 @@ var _ = Describe("Out", func() {
 					Terraform: models.Terraform{
 						Source: "fixtures/aws/",
 						Vars: map[string]interface{}{
-							"access_key":  accessKey,
-							"secret_key":  secretKey,
-							"vpc_id":      vpcID,
-							"subnet_cidr": subnetCIDR,
+							"access_key":     accessKey,
+							"secret_key":     secretKey,
+							"bucket":         bucket,
+							"object_key":     s3ObjectPath,
+							"object_content": "terraform-is-neat",
 						},
 					},
 				},
 			}
 			expectedMetadata := map[string]string{
-				"vpc_id":      vpcID,
-				"subnet_cidr": subnetCIDR,
-				"tag_name":    "terraform-resource-test", // template default
+				"env_name":    envName,
+				"content_md5": calculateMD5("terraform-is-neat"),
 			}
 
 			assertOutBehavior(req, expectedMetadata)
@@ -744,18 +715,12 @@ var _ = Describe("Out", func() {
 			Expect(fields[key]).To(Equal(value))
 		}
 
-		Expect(fields["subnet_id"]).ToNot(BeEmpty())
-		subnetID := fields["subnet_id"].(string)
-		awsVerifier.ExpectSubnetToExist(subnetID)
-		awsVerifier.ExpectSubnetToHaveTags(subnetID, map[string]string{
-			"Name": fields["tag_name"].(string),
-		})
+		Expect(fields["object_key"]).ToNot(BeEmpty())
+		objectKey := fields["object_key"].(string)
+		awsVerifier.ExpectS3FileToExist(bucket, objectKey)
 	}
 })
 
-func randomString(prefix string) string {
-	b := make([]byte, 4)
-	_, err := rand.Read(b)
-	Expect(err).ToNot(HaveOccurred())
-	return fmt.Sprintf("%s-%x", prefix, b)
+func calculateMD5(content string) string {
+	return fmt.Sprintf("%x", md5.Sum([]byte(content)))
 }

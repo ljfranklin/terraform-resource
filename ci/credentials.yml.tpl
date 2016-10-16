@@ -1,7 +1,6 @@
 # AWS creds
 ec2_access_key:
 ec2_secret_key:
-test_vpc_id:
 storage_access_key:
 storage_secret_key:
 storage_bucket:

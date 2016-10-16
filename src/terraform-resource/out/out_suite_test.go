@@ -1,6 +1,8 @@
 package out_test
 
 import (
+	"fmt"
+	"math/rand"
 	"os"
 
 	"terraform-resource/test/helpers"
@@ -25,7 +27,6 @@ var (
 	s3CompatibleSecretKey string
 	s3CompatibleBucket    string
 	s3CompatibleEndpoint  string
-	vpcID                 string
 	bucketPath            string
 	region                string
 	kmsKeyID              string
@@ -40,8 +41,6 @@ var _ = BeforeSuite(func() {
 	Expect(bucket).ToNot(BeEmpty(), "AWS_BUCKET must be set")
 	bucketPath = os.Getenv("AWS_BUCKET_PATH")
 	Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_PATH must be set")
-	vpcID = os.Getenv("AWS_TEST_VPC_ID")
-	Expect(vpcID).ToNot(BeEmpty(), "AWS_TEST_VPC_ID must be set")
 
 	s3CompatibleAccessKey = os.Getenv("S3_COMPATIBLE_ACCESS_KEY")
 	Expect(s3CompatibleAccessKey).ToNot(BeEmpty(), "S3_COMPATIBLE_ACCESS_KEY must be set")
@@ -64,6 +63,11 @@ var _ = BeforeSuite(func() {
 		region,
 		"",
 	)
-
-	awsVerifier.ExpectVPCToExist(vpcID)
 })
+
+func randomString(prefix string) string {
+	b := make([]byte, 4)
+	_, err := rand.Read(b)
+	Expect(err).ToNot(HaveOccurred())
+	return fmt.Sprintf("%s-%x", prefix, b)
+}

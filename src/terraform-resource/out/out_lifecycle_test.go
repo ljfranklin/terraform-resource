@@ -1,9 +1,9 @@
 package out_test
 
 import (
+	"crypto/md5"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"os/exec"
 	"path"
@@ -21,19 +21,16 @@ import (
 var _ = Describe("Out Lifecycle", func() {
 
 	var (
-		subnetCIDR    string
 		envName       string
 		stateFilePath string
+		s3ObjectPath  string
 		workingDir    string
 	)
 
 	BeforeEach(func() {
-		// TODO: avoid random clashes here
-		rand.Seed(time.Now().UnixNano())
-		subnetCIDR = fmt.Sprintf("10.0.%d.0/24", rand.Intn(256))
-
 		envName = randomString("out-test")
 		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
+		s3ObjectPath = path.Join(bucketPath, randomString("out-lifecycle"))
 
 		var err error
 		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test")
@@ -50,7 +47,7 @@ var _ = Describe("Out Lifecycle", func() {
 
 	AfterEach(func() {
 		_ = os.RemoveAll(workingDir)
-		awsVerifier.DeleteSubnetWithCIDR(subnetCIDR, vpcID)
+		awsVerifier.DeleteObjectFromS3(bucket, s3ObjectPath)
 		awsVerifier.DeleteObjectFromS3(bucket, stateFilePath)
 	})
 
@@ -69,10 +66,11 @@ var _ = Describe("Out Lifecycle", func() {
 				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
-						"access_key":  accessKey,
-						"secret_key":  secretKey,
-						"vpc_id":      vpcID,
-						"subnet_cidr": subnetCIDR,
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
 					},
 				},
 			},
@@ -85,7 +83,7 @@ var _ = Describe("Out Lifecycle", func() {
 			stateFilePath,
 		)
 
-		By("running 'out' to create an AWS subnet")
+		By("running 'out' to create the S3 file")
 
 		runner := out.Runner{
 			SourceDir: workingDir,
@@ -99,17 +97,14 @@ var _ = Describe("Out Lifecycle", func() {
 		for _, field := range createOutput.Metadata {
 			fields[field.Name] = field.Value
 		}
-		Expect(fields["vpc_id"]).To(Equal(vpcID))
-		Expect(fields["subnet_cidr"]).To(Equal(subnetCIDR))
-		Expect(fields["tag_name"]).To(Equal("terraform-resource-test")) // template default tag
+		Expect(fields["env_name"]).To(Equal(envName))
+		expectedMD5 := fmt.Sprintf("%x", md5.Sum([]byte("terraform-is-neat")))
+		Expect(fields["content_md5"]).To(Equal(expectedMD5))
 
-		Expect(fields["subnet_id"]).ToNot(BeEmpty())
-		subnetID := fields["subnet_id"].(string)
-
-		awsVerifier.ExpectSubnetToExist(subnetID)
-		awsVerifier.ExpectSubnetToHaveTags(subnetID, map[string]string{
-			"Name": "terraform-resource-test",
-		})
+		awsVerifier.ExpectS3FileToExist(
+			outRequest.Source.Storage.Bucket,
+			s3ObjectPath,
+		)
 
 		By("ensuring that state file exists with valid version (LastModified)")
 
@@ -124,21 +119,24 @@ var _ = Describe("Out Lifecycle", func() {
 
 		time.Sleep(1 * time.Second) // ensure LastModified changes
 
-		By("running 'out' to update the VPC")
+		By("running 'out' to update the S3 file")
 
-		// omits vpc_id and subnet_cidr to ensure the resource feeds
-		// previous output back in as input
+		// omits some fields to ensure the resource feeds previous output back in as input
 		outRequest.Params.Terraform.Vars = map[string]interface{}{
-			"access_key": accessKey,
-			"secret_key": secretKey,
-			"tag_name":   "terraform-resource-test-updated",
+			"access_key":     accessKey,
+			"secret_key":     secretKey,
+			"object_content": "terraform-is-still-neat",
 		}
 		updateOutput, err := runner.Run(outRequest)
 		Expect(err).ToNot(HaveOccurred())
 
-		awsVerifier.ExpectSubnetToHaveTags(subnetID, map[string]string{
-			"Name": "terraform-resource-test-updated",
-		})
+		Expect(updateOutput.Metadata).ToNot(BeEmpty())
+		fields = map[string]interface{}{}
+		for _, field := range updateOutput.Metadata {
+			fields[field.Name] = field.Value
+		}
+		expectedMD5 = fmt.Sprintf("%x", md5.Sum([]byte("terraform-is-still-neat")))
+		Expect(fields["content_md5"]).To(Equal(expectedMD5))
 
 		By("ensuring that state file has been updated")
 
@@ -154,13 +152,16 @@ var _ = Describe("Out Lifecycle", func() {
 
 		time.Sleep(1 * time.Second) // ensure LastModified changes
 
-		By("running 'out' to delete the VPC")
+		By("running 'out' to delete the S3 file")
 
 		outRequest.Params.Action = models.DestroyAction
 		deleteOutput, err := runner.Run(outRequest)
 		Expect(err).ToNot(HaveOccurred())
 
-		awsVerifier.ExpectSubnetToNotExist(subnetID)
+		awsVerifier.ExpectS3FileToNotExist(
+			outRequest.Source.Storage.Bucket,
+			s3ObjectPath,
+		)
 
 		By("ensuring that state file no longer exists")
 

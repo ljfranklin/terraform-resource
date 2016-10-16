@@ -128,15 +128,14 @@ var _ = Describe("In", func() {
 			err = json.NewDecoder(outputFile).Decode(&outputContents)
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(outputContents["vpc_id"]).ToNot(BeNil())
-			Expect(outputContents["tag_name"]).To(Equal("previous"))
-			Expect(outputContents["tag_hash"]).To(Equal(map[string]interface{}{
-				"EnvName": "terraform-resource-test",
-				"Name":    "previous",
+			Expect(outputContents["env_name"]).To(Equal("previous"))
+			Expect(outputContents["map"]).To(Equal(map[string]interface{}{
+				"key-1": "value-1",
+				"key-2": "value-2",
 			}))
-			Expect(outputContents["tag_list"]).To(Equal([]interface{}{
-				"terraform-resource-test",
-				"previous",
+			Expect(outputContents["list"]).To(Equal([]interface{}{
+				"item-1",
+				"item-2",
 			}))
 
 			expectedNamePath := path.Join(tmpDir, "name")

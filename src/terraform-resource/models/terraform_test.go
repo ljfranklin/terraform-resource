@@ -6,9 +6,9 @@ import (
 	"os"
 	"path"
 
-	"terraform-resource/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"terraform-resource/models"
 )
 
 var _ = Describe("Terraform Models", func() {

@@ -8,5 +8,16 @@ resource "aws_s3_bucket_object" "s3_object" {
   key        = "${var.object_key}"
   bucket     = "${var.bucket}"
   content    = "${var.object_content}"
-  acl        = "${var.object_acl}"
+}
+
+# used to verify error handling
+resource "aws_s3_bucket_object" "invalid_object" {
+  count      = "${var.invalid_object_count}"
+  # ensure partially created resources
+  depends_on = ["aws_s3_bucket_object.s3_object"]
+
+  key        = "${var.object_key}-acl"
+  bucket     = "${var.bucket}"
+  content    = "${var.object_content}"
+  kms_key_id = "invalid-key"
 }

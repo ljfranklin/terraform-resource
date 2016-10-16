@@ -46,7 +46,6 @@ jobs:
           AWS_SECRET_KEY:           {{ec2_secret_key}}
           AWS_BUCKET:               {{storage_bucket}}
           AWS_BUCKET_PATH:          terraform-test-unit
-          AWS_TEST_VPC_ID:          {{test_vpc_id}}
           S3_COMPATIBLE_BUCKET:     {{s3_compatible_bucket}}
           S3_COMPATIBLE_ENDPOINT:   {{s3_compatible_endpoint}}
           S3_COMPATIBLE_ACCESS_KEY: {{s3_compatible_access_key}}
@@ -76,7 +75,8 @@ jobs:
         params:
           env_name: terraform-ci
           vars:
-            subnet_cidr: 10.0.0.0/24
+            object_key: ci-pipeline/track1
+            object_content: "terraform is neat!"
       - &show-outputs
         task: show-outputs
         config:
@@ -106,8 +106,8 @@ jobs:
         params:
           env_name: terraform-ci
           vars:
-            # update the tag_name for the subnet
-            tag_name: "params-terraform-resource-test"
+            # update the file contents
+            object_content: "terraform is still neat!"
       - *show-outputs
 
   - name: update-infrastructure-via-file
@@ -127,7 +127,7 @@ jobs:
             args:
               - -c
               - |
-                  echo 'tag_name: file-terraform-resource-test' >> vars/input.yml
+                  echo 'object_content: "terraform files are neat too!"' >> vars/input.yml
       - put: terraform
         params:
           env_name: terraform-ci
@@ -159,7 +159,8 @@ jobs:
           generate_random_name: true
           delete_on_failure: true
           vars:
-            subnet_cidr: 10.0.1.0/24
+            object_key: ci-pipeline/track2
+            object_content: "terraform is neat!"
       # create a new lock containing the terraform output
       - put: locks
         params:
@@ -285,7 +286,7 @@ resources:
     vars:
       access_key:  {{ec2_access_key}}
       secret_key:  {{ec2_secret_key}}
-      vpc_id:      {{test_vpc_id}}
+      bucket:      {{storage_bucket}}
 - name: terraform-remote-src
   type: terraform
   source:

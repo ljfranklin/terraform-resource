@@ -8,6 +8,8 @@ variable "env_name" {}
 variable "bucket" {}
 variable "object_key" {}
 variable "object_content" {}
-variable "object_acl" {
-    default = "private"
+
+# used to verify error handling
+variable "invalid_object_count" {
+    default = 0
 }

@@ -3,9 +3,9 @@ package storage_test
 import (
 	"time"
 
-	"terraform-resource/storage"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"terraform-resource/storage"
 )
 
 var _ = Describe("Storage Models", func() {
