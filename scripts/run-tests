@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eux -o pipefail
+set -eu -o pipefail
 
 release_dir="$( cd "$( dirname "$0" )" && cd .. && pwd )"
 src_dir="$( cd "${release_dir}/src/terraform-resource/" && pwd )"
@@ -8,10 +8,14 @@ src_dir="$( cd "${release_dir}/src/terraform-resource/" && pwd )"
 source "${release_dir}/.envrc"
 
 pushd "${src_dir}" > /dev/null
+  set -x
   ginkgo \
     -r \
+    -p \
     -skipPackage vendor/ \
     -randomizeAllSpecs \
     -randomizeSuites \
+    -slowSpecThreshold 30 \
     "$@"
+  set +x
 popd > /dev/null

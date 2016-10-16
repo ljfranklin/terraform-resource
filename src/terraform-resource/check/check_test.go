@@ -1,7 +1,6 @@
 package check_test
 
 import (
-	"crypto/rand"
 	"fmt"
 	"os"
 	"path"
@@ -40,6 +39,8 @@ var _ = Describe("Check", func() {
 
 		bucketPath := os.Getenv("AWS_BUCKET_PATH")
 		Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_PATH must be set")
+		// create nested folder to all running in parallel
+		bucketPath = path.Join(bucketPath, helpers.RandomString("check-test"))
 
 		region := os.Getenv("AWS_REGION") // optional
 		if region == "" {
@@ -52,8 +53,8 @@ var _ = Describe("Check", func() {
 			region,
 			"",
 		)
-		prevEnvName = randomString("s3-test-fixture-previous.tfstate")
-		currEnvName = randomString("s3-test-fixture-current.tfstate")
+		prevEnvName = helpers.RandomString("s3-test-fixture-previous.tfstate")
+		currEnvName = helpers.RandomString("s3-test-fixture-current.tfstate")
 		pathToPrevS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", prevEnvName))
 		pathToCurrS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", currEnvName))
 
@@ -158,10 +159,3 @@ var _ = Describe("Check", func() {
 		})
 	})
 })
-
-func randomString(prefix string) string {
-	b := make([]byte, 4)
-	_, err := rand.Read(b)
-	Expect(err).ToNot(HaveOccurred())
-	return fmt.Sprintf("%s-%x", prefix, b)
-}

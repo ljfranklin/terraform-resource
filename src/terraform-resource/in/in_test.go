@@ -1,7 +1,6 @@
 package in_test
 
 import (
-	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -55,8 +54,8 @@ var _ = Describe("In", func() {
 			region,
 			"",
 		)
-		prevEnvName = randomString("s3-test-fixture-previous")
-		currEnvName = randomString("s3-test-fixture-current")
+		prevEnvName = helpers.RandomString("s3-test-fixture-previous")
+		currEnvName = helpers.RandomString("s3-test-fixture-current")
 		pathToPrevS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", prevEnvName))
 		pathToCurrS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", currEnvName))
 
@@ -196,10 +195,3 @@ var _ = Describe("In", func() {
 		})
 	})
 })
-
-func randomString(prefix string) string {
-	b := make([]byte, 4)
-	_, err := rand.Read(b)
-	Expect(err).ToNot(HaveOccurred())
-	return fmt.Sprintf("%s-%x", prefix, b)
-}

@@ -39,9 +39,9 @@ var _ = Describe("Out", func() {
 	)
 
 	BeforeEach(func() {
-		envName = randomString("out-test")
+		envName = helpers.RandomString("out-test")
 		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
-		s3ObjectPath = path.Join(bucketPath, randomString("out-test"))
+		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-test"))
 
 		storageModel = storage.Model{
 			Bucket:          bucket,
@@ -62,7 +62,7 @@ var _ = Describe("Out", func() {
 		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
 		Expect(err).ToNot(HaveOccurred())
 
-		fixtureEnvName = randomString("s3-test-fixture")
+		fixtureEnvName = helpers.RandomString("s3-test-fixture")
 		pathToS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", fixtureEnvName))
 
 		namer = namerfakes.FakeNamer{}
@@ -228,7 +228,7 @@ var _ = Describe("Out", func() {
 			fileContent, err := yaml.Marshal(fileParams)
 			Expect(err).ToNot(HaveOccurred())
 
-			varFileName = fmt.Sprintf("%s.tf", randomString("tf-variables"))
+			varFileName = fmt.Sprintf("%s.tf", helpers.RandomString("tf-variables"))
 			varFilePath := path.Join(workingDir, varFileName)
 			varFile, err := os.Create(varFilePath)
 			Expect(err).ToNot(HaveOccurred())

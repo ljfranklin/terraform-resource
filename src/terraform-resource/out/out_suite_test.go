@@ -1,16 +1,12 @@
 package out_test
 
 import (
-	"fmt"
-	"math/rand"
 	"os"
-
 	"terraform-resource/test/helpers"
+	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"testing"
 )
 
 func TestOut(t *testing.T) {
@@ -64,10 +60,3 @@ var _ = BeforeSuite(func() {
 		"",
 	)
 })
-
-func randomString(prefix string) string {
-	b := make([]byte, 4)
-	_, err := rand.Read(b)
-	Expect(err).ToNot(HaveOccurred())
-	return fmt.Sprintf("%s-%x", prefix, b)
-}

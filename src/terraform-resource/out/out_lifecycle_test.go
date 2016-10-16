@@ -28,9 +28,9 @@ var _ = Describe("Out Lifecycle", func() {
 	)
 
 	BeforeEach(func() {
-		envName = randomString("out-test")
+		envName = helpers.RandomString("out-test")
 		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
-		s3ObjectPath = path.Join(bucketPath, randomString("out-lifecycle"))
+		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-lifecycle"))
 
 		var err error
 		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test")
