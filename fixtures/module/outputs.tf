@@ -1,15 +1,12 @@
-output "vpc_id" {
-    value = "${module.test_module.vpc_id}"
-}
-output "subnet_id" {
-    value = "${module.test_module.subnet_id}"
-}
-output "subnet_cidr" {
-    value = "${module.test_module.subnet_cidr}"
-}
-output "tag_name" {
-    value = "${module.test_module.tag_name}"
-}
 output "env_name" {
     value = "${module.test_module.env_name}"
+}
+output "bucket" {
+    value = "${module.test_module.bucket}"
+}
+output "object_key" {
+    value = "${module.test_module.object_key}"
+}
+output "content_md5" {
+    value = "${module.test_module.content_md5}"
 }
