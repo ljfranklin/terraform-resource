@@ -210,7 +210,6 @@ jobs:
           remove: locks/
 
   - name: push-prod-image
-    serial_groups: [track1, track2]
     plan:
       - get: resource-src
         passed: [destroy-env-and-lock, destroy-infrastructure]
