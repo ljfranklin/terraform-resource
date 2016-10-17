@@ -4,6 +4,7 @@
 
 1. Create an S3 bucket for testing
 1. Create an AWS user with the following permissions:
+
   ```json
   {
       "Version": "2012-10-17",
