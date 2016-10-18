@@ -29,6 +29,7 @@ type Model struct {
 type Version struct {
 	LastModified time.Time
 	StateFile    string
+	PlanFile     string
 }
 
 func (m Model) Validate() error {

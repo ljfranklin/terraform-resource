@@ -47,6 +47,7 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	if err = terraformModel.ParseVarsFromFile(); err != nil {
 		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.var_file`: %s", err)
 	}
+
 	if len(terraformModel.Source) == 0 {
 		return models.OutResponse{}, errors.New("Missing required field `terraform.source`")
 	}
@@ -57,6 +58,8 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	}
 	terraformModel.Vars["env_name"] = envName
 
+	terraformModel.PlanFileLocalPath = path.Join(tmpDir, "plan")
+	terraformModel.PlanFileRemotePath = fmt.Sprintf("%s.plan", envName)
 	terraformModel.StateFileLocalPath = path.Join(tmpDir, "terraform.tfstate")
 	terraformModel.StateFileRemotePath = fmt.Sprintf("%s.tfstate", envName)
 
@@ -74,9 +77,15 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		RemotePath:    terraformModel.StateFileRemotePath,
 		StorageDriver: storageDriver,
 	}
+	planFile := terraform.PlanFile{
+		LocalPath:     terraformModel.PlanFileLocalPath,
+		RemotePath:    terraformModel.PlanFileRemotePath,
+		StorageDriver: storageDriver,
+	}
 	action := terraform.Action{
 		Client:          client,
 		StateFile:       stateFile,
+		PlanFile:        planFile,
 		DeleteOnFailure: terraformModel.DeleteOnFailure,
 		Logger: logger.Logger{
 			Sink: r.LogWriter,
@@ -85,7 +94,10 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 
 	var result terraform.Result
 	var actionErr error
-	if req.Params.Action == models.DestroyAction {
+
+	if req.Params.PlanOnly {
+		result, actionErr = action.Plan()
+	} else if req.Params.Action == models.DestroyAction {
 		result, actionErr = action.Destroy()
 	} else {
 		result, actionErr = action.Apply()

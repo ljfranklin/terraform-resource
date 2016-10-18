@@ -10,6 +10,7 @@ import (
 
 type Action struct {
 	Client          Client
+	PlanFile        PlanFile
 	StateFile       StateFile
 	Logger          logger.Logger
 	DeleteOnFailure bool
@@ -80,6 +81,19 @@ func (a Action) attemptApply() (Result, error) {
 		return Result{}, err
 	}
 
+	// Does a plan exist on the bucket ?
+	planExist, err := a.PlanFile.Exists()
+	if err != nil {
+		return Result{}, err
+	}
+
+	// if yes, then, delete it
+	if planExist {
+		if _, err := a.PlanFile.Delete(); err != nil {
+			return Result{}, err
+		}
+	}
+
 	clientOutput, err := a.Client.Output()
 	if err != nil {
 		return Result{}, err
@@ -131,8 +145,51 @@ func (a Action) attemptDestroy() (Result, error) {
 	}, nil
 }
 
+func (a Action) Plan() (Result, error) {
+	err := a.setup()
+	if err != nil {
+		return Result{}, err
+	}
+
+	result, err := a.attemptPlan()
+	if err != nil {
+		a.Logger.Error("Failed To Run Terraform Plan!")
+		err = fmt.Errorf("Plan Error: %s", err)
+	}
+
+	if err == nil {
+		a.Logger.Success("Successfully Ran Terraform Plan!")
+	}
+
+	return result, err
+}
+
+func (a Action) attemptPlan() (Result, error) {
+	a.Logger.InfoSection("Terraform Plan")
+	defer a.Logger.EndSection()
+
+	if err := a.Client.Plan(); err != nil {
+		return Result{}, err
+	}
+
+	storageVersion, err := a.PlanFile.Upload()
+	if err != nil {
+		return Result{}, err
+	}
+
+	return Result{
+		Output:  map[string]interface{}{},
+		Version: storageVersion,
+	}, nil
+}
+
 func (a *Action) setup() error {
 	stateFileExists, err := a.StateFile.Exists()
+	if err != nil {
+		return err
+	}
+
+	planFileExists, err := a.PlanFile.Exists()
 	if err != nil {
 		return err
 	}
@@ -144,6 +201,13 @@ func (a *Action) setup() error {
 		}
 		if stateFileExists {
 			a.StateFile = a.StateFile.ConvertToTainted()
+		}
+	}
+
+	if planFileExists {
+		_, err = a.PlanFile.Download()
+		if err != nil {
+			return err
 		}
 	}
 
