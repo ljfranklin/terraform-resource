@@ -59,6 +59,7 @@ var _ = Describe("Out Lifecycle", func() {
 					BucketPath:      bucketPath,
 					AccessKeyID:     accessKey,
 					SecretAccessKey: secretKey,
+					RegionName:      region,
 				},
 			},
 			Params: models.OutParams{
@@ -71,6 +72,7 @@ var _ = Describe("Out Lifecycle", func() {
 						"bucket":         bucket,
 						"object_key":     s3ObjectPath,
 						"object_content": "terraform-is-neat",
+						"region":         region,
 					},
 				},
 			},
@@ -126,6 +128,7 @@ var _ = Describe("Out Lifecycle", func() {
 			"access_key":     accessKey,
 			"secret_key":     secretKey,
 			"object_content": "terraform-is-still-neat",
+			"region":         region,
 		}
 		updateOutput, err := runner.Run(outRequest)
 		Expect(err).ToNot(HaveOccurred())
