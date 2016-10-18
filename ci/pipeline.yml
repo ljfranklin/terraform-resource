@@ -45,7 +45,7 @@ jobs:
           AWS_ACCESS_KEY:           {{ec2_access_key}}
           AWS_SECRET_KEY:           {{ec2_secret_key}}
           AWS_BUCKET:               {{storage_bucket}}
-          AWS_BUCKET_PATH:          terraform-test-unit
+          AWS_BUCKET_SUBFOLDER:     terraform-test-unit
           S3_COMPATIBLE_BUCKET:     {{s3_compatible_bucket}}
           S3_COMPATIBLE_ENDPOINT:   {{s3_compatible_endpoint}}
           S3_COMPATIBLE_ACCESS_KEY: {{s3_compatible_access_key}}

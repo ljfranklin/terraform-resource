@@ -2,7 +2,7 @@
 export AWS_ACCESS_KEY=""
 export AWS_SECRET_KEY=""
 export AWS_BUCKET=""
-export AWS_BUCKET_PATH=""
+export AWS_BUCKET_SUBFOLDER=""
 export AWS_REGION=""
 
 # s3-compatible tests (e.g. Google Cloud Storage, Ceph)

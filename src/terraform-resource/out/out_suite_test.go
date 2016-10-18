@@ -35,8 +35,8 @@ var _ = BeforeSuite(func() {
 	Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
 	bucket = os.Getenv("AWS_BUCKET")
 	Expect(bucket).ToNot(BeEmpty(), "AWS_BUCKET must be set")
-	bucketPath = os.Getenv("AWS_BUCKET_PATH")
-	Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_PATH must be set")
+	bucketPath = os.Getenv("AWS_BUCKET_SUBFOLDER")
+	Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_SUBFOLDER must be set")
 
 	s3CompatibleAccessKey = os.Getenv("S3_COMPATIBLE_ACCESS_KEY")
 	Expect(s3CompatibleAccessKey).ToNot(BeEmpty(), "S3_COMPATIBLE_ACCESS_KEY must be set")

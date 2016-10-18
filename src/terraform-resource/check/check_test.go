@@ -37,8 +37,8 @@ var _ = Describe("Check", func() {
 		bucket = os.Getenv("AWS_BUCKET")
 		Expect(bucket).ToNot(BeEmpty(), "AWS_BUCKET must be set")
 
-		bucketPath := os.Getenv("AWS_BUCKET_PATH")
-		Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_PATH must be set")
+		bucketPath := os.Getenv("AWS_BUCKET_SUBFOLDER")
+		Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_SUBFOLDER must be set")
 		// create nested folder to all running in parallel
 		bucketPath = path.Join(bucketPath, helpers.RandomString("check-test"))
 
