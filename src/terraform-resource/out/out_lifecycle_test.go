@@ -175,4 +175,43 @@ var _ = Describe("Out Lifecycle", func() {
 		Expect(deletedVersion).To(BeTemporally(">", updatedVersion))
 		Expect(deleteOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
 	})
+
+	It("plan infrastructure", func() {
+		planOutRequest := models.OutRequest{
+			Source: models.Source{
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
+				},
+			},
+			Params: models.OutParams{
+				PlanOnly: true,
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		By("running 'out' to create the plan file")
+
+		planRunner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: GinkgoWriter,
+		}
+		_, err := planRunner.Run(planOutRequest)
+		Expect(err).ToNot(HaveOccurred())
+
+	})
 })
