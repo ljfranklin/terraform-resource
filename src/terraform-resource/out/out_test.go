@@ -39,6 +39,10 @@ var _ = Describe("Out", func() {
 	)
 
 	BeforeEach(func() {
+		region := os.Getenv("AWS_REGION") // optional
+		if region == "" {
+			region = "us-east-1"
+		}
 		envName = helpers.RandomString("out-test")
 		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
 		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-test"))
@@ -48,6 +52,7 @@ var _ = Describe("Out", func() {
 			BucketPath:      bucketPath,
 			AccessKeyID:     accessKey,
 			SecretAccessKey: secretKey,
+			RegionName:      region,
 		}
 
 		var err error
@@ -89,6 +94,7 @@ var _ = Describe("Out", func() {
 						"bucket":         bucket,
 						"object_key":     s3ObjectPath,
 						"object_content": "terraform-is-neat",
+						"region":         region,
 					},
 				},
 			},
@@ -117,6 +123,7 @@ var _ = Describe("Out", func() {
 						"bucket":         bucket,
 						"object_key":     s3ObjectPath,
 						"object_content": "terraform-is-neat",
+						"region":         region,
 					},
 				},
 			},
@@ -144,6 +151,7 @@ var _ = Describe("Out", func() {
 						"bucket":         bucket,
 						"object_key":     s3ObjectPath,
 						"object_content": "terraform-is-neat",
+						"region":         region,
 					},
 				},
 			},
@@ -168,6 +176,7 @@ var _ = Describe("Out", func() {
 						"bucket":         bucket,
 						"object_key":     s3ObjectPath,
 						"object_content": "terraform-is-neat",
+						"region":         region,
 					},
 				},
 			},
@@ -192,6 +201,7 @@ var _ = Describe("Out", func() {
 					Vars: map[string]interface{}{
 						"access_key": accessKey,
 						"secret_key": "bad-secret-key", // will be overridden
+						"region":     region,
 					},
 				},
 			},
@@ -204,6 +214,7 @@ var _ = Describe("Out", func() {
 						"bucket":         bucket,
 						"object_key":     s3ObjectPath,
 						"object_content": "terraform-is-neat",
+						"region":         region,
 					},
 				},
 			},
@@ -248,6 +259,7 @@ var _ = Describe("Out", func() {
 							"access_key": accessKey,
 							// will be overridden
 							"secret_key": "bad-secret-key",
+							"region":     region,
 						},
 					},
 				},
@@ -259,6 +271,7 @@ var _ = Describe("Out", func() {
 							"secret_key": secretKey,
 							// will be overridden
 							"object_content": "to-be-overridden",
+							"region":         region,
 						},
 						// var file overrides put.params
 						VarFile: varFileName,
@@ -289,6 +302,7 @@ var _ = Describe("Out", func() {
 						"bucket":         bucket,
 						"object_key":     s3ObjectPath,
 						"object_content": "terraform-is-neat",
+						"region":         region,
 					},
 				},
 			},
@@ -317,6 +331,7 @@ var _ = Describe("Out", func() {
 						"bucket":         bucket,
 						"object_key":     s3ObjectPath,
 						"object_content": "terraform-is-neat",
+						"region":         region,
 					},
 				},
 			},
@@ -345,6 +360,7 @@ var _ = Describe("Out", func() {
 						"bucket":         bucket,
 						"object_key":     s3ObjectPath,
 						"object_content": "terraform-is-neat",
+						"region":         region,
 					},
 				},
 			},
@@ -389,6 +405,7 @@ var _ = Describe("Out", func() {
 							"bucket":         bucket,
 							"object_key":     s3ObjectPath,
 							"object_content": "terraform-is-neat",
+							"region":         region,
 						},
 					},
 				},
@@ -418,6 +435,7 @@ var _ = Describe("Out", func() {
 						"bucket":         bucket,
 						"object_key":     s3ObjectPath,
 						"object_content": "terraform-is-neat",
+						"region":         region,
 					},
 				},
 			},
@@ -447,6 +465,7 @@ var _ = Describe("Out", func() {
 						"bucket":         bucket,
 						"object_key":     s3ObjectPath,
 						"object_content": "terraform-is-neat",
+						"region":         region,
 					},
 				},
 			},
@@ -481,6 +500,7 @@ var _ = Describe("Out", func() {
 						"bucket":         bucket,
 						"object_key":     s3ObjectPath,
 						"object_content": "terraform-is-neat",
+						"region":         region,
 					},
 				},
 			},
@@ -525,6 +545,7 @@ var _ = Describe("Out", func() {
 							"bucket":         bucket,
 							"object_key":     s3ObjectPath,
 							"object_content": "terraform-is-neat",
+							"region":         region,
 						},
 					},
 				},
@@ -562,6 +583,7 @@ var _ = Describe("Out", func() {
 							"object_key":           s3ObjectPath,
 							"object_content":       "terraform-is-neat",
 							"invalid_object_count": "1",
+							"region":               region,
 						},
 					},
 				},
@@ -647,12 +669,13 @@ var _ = Describe("Out", func() {
 				BucketPath:      bucketPath,
 				AccessKeyID:     s3CompatibleAccessKey,
 				SecretAccessKey: s3CompatibleSecretKey,
+				RegionName:      region,
 			}
 
 			s3Verifier = helpers.NewAWSVerifier(
 				s3CompatibleAccessKey,
 				s3CompatibleSecretKey,
-				"",
+				region,
 				s3CompatibleEndpoint,
 			)
 		})
@@ -676,6 +699,7 @@ var _ = Describe("Out", func() {
 							"bucket":         bucket,
 							"object_key":     s3ObjectPath,
 							"object_content": "terraform-is-neat",
+							"region":         region,
 						},
 					},
 				},
