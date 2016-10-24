@@ -41,6 +41,7 @@ See [Terraform Sources](https://www.terraform.io/docs/modules/sources.html) for 
 * `vars`: *Optional.* A collection of Terraform input variables.
 These are typically used to specify credentials or override default module values.
 See [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html) for more details.
+Since Concourse currently only supports [interpolating strings](https://github.com/concourse/concourse/issues/545) into the pipeline config, you may need to use Terraform helpers like [split](https://www.terraform.io/docs/configuration/interpolation.html#split_delim_string_) to handle lists and maps as inputs.
 
 #### Source Example
 
