@@ -71,6 +71,9 @@ resources:
         tag_name: concourse
 ```
 
+Alternative Docker tags are available for specific versions of Terraform, e.g. `ljfranklin/terraform-resource:0.7.7`.
+See [Dockerhub](https://hub.docker.com/r/ljfranklin/terraform-resource/tags/) for a list of all available tags.
+
 ## Behavior
 
 This resource should usually be used with the `put` action rather than a `get`.

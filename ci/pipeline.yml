@@ -214,11 +214,18 @@ jobs:
       - get: resource-src
         passed: [destroy-env-and-lock, destroy-infrastructure]
         trigger: true
-      - put: terraform-prod-image
-        params:
-          pull_repository: ljfranklin/terraform-resource
-          pull_tag: test
-          cache: true
+      - aggregate:
+        - put: terraform-pinned-image
+          params:
+            pull_repository: ljfranklin/terraform-resource
+            pull_tag: test
+            cache: true
+            tag: resource-src/config/terraform-version
+        - put: terraform-prod-image
+          params:
+            pull_repository: ljfranklin/terraform-resource
+            pull_tag: test
+            cache: true
 
 resource_types:
 - name: terraform
@@ -254,6 +261,13 @@ resources:
   source:
     repository: ljfranklin/terraform-resource
     tag: test
+    email: {{docker_email}}
+    username: {{docker_username}}
+    password: {{docker_password}}
+- name: terraform-pinned-image
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
     email: {{docker_email}}
     username: {{docker_username}}
     password: {{docker_password}}
