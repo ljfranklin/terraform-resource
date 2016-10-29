@@ -3,3 +3,4 @@ tmp/
 bin/
 pkg/
 credentials.yml
+/out/

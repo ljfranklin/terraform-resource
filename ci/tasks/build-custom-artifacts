@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+release_dir="$( cd "$( dirname "$0" )" && cd ../.. && pwd )"
+workspace_dir="$( cd "${release_dir}" && cd .. && pwd )"
+
+# inputs
+terraform_input_dir="$( cd "${workspace_dir}/terraform-src" && pwd )"
+
+# outputs
+output_dir="${workspace_dir}/build-artifacts"
+mkdir -p "${output_dir}/terraform/"
+
+tmp_gopath="$(mktemp -d /tmp/gopath-XXXXXX)"
+trap "{ rm -rf "${tmp_gopath}" ; }" EXIT
+
+terraform_dir="${tmp_gopath}/src/github.com/hashicorp/terraform"
+mkdir -p "${terraform_dir}"
+cp -R "${terraform_input_dir}/." "${terraform_dir}"
+
+pushd "${terraform_dir}" > /dev/null
+  GOPATH="${tmp_gopath}" XC_OS="linux" XC_ARCH="amd64" make bin
+  cp ./pkg/linux_amd64/terraform* "${output_dir}/terraform/"
+popd > /dev/null
+
+pushd "${release_dir}" > /dev/null
+  ./scripts/build "${output_dir}"
+popd > /dev/null
+
+cp "${release_dir}/docker-prod/Dockerfile" "${output_dir}/"

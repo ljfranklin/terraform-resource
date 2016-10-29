@@ -1,0 +1,31 @@
+jobs:
+  - name: push-custom-image
+    plan:
+      - aggregate:
+        - get: terraform-src
+        - get: resource-src
+      - task: build-custom-artifacts
+        file: resource-src/ci/tasks/build-custom-artifacts.yml
+      - put: resource-custom-image
+        params:
+          build: build-artifacts/
+
+resources:
+- name: resource-src
+  type: git
+  source:
+    uri: {{resource_git_uri}}
+    branch: {{resource_git_branch}}
+- name: terraform-src
+  type: git
+  source:
+    uri: {{terraform_git_uri}}
+    branch: {{terraform_git_branch}}
+- name: resource-custom-image
+  type: docker-image
+  source:
+    repository: {{docker_repository}}
+    tag: {{docker_tag}}
+    email: {{docker_email}}
+    username: {{docker_username}}
+    password: {{docker_password}}
