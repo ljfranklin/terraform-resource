@@ -1,7 +1,11 @@
+# uncomment time resource to trigger nightly builds
+
 jobs:
   - name: push-custom-image
     plan:
       - aggregate:
+        # - get: nightly
+        #   trigger: true
         - get: terraform-src
         - get: resource-src
       - task: build-custom-artifacts
@@ -29,3 +33,8 @@ resources:
     email: {{docker_email}}
     username: {{docker_username}}
     password: {{docker_password}}
+# - name: nightly
+#   type: time
+#   source:
+#     start: 12:00 AM -0700
+#     stop: 12:10 AM -0700
