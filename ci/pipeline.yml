@@ -31,7 +31,6 @@ jobs:
       - put: terraform-dev-image
         params:
           build: build-artifacts/
-          cache: true
 
   - name: test-unit
     serial_groups: [track1, track2]
