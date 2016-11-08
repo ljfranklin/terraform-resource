@@ -65,6 +65,7 @@ var _ = Describe("Check", func() {
 					BucketPath:      bucketPath,
 					AccessKeyID:     accessKey,
 					SecretAccessKey: secretKey,
+					RegionName:      region,
 				},
 			},
 		}

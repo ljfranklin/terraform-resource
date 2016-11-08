@@ -34,5 +34,5 @@
 
 1. `cd ./src/terraform-resource`
 1. `go get -u github.com/FiloSottile/gvt`
-1. `gvt {fetch,update} github.com/your/dep`
+1. `gvt fetch -tag=v1.4.11 github.com/aws/aws-sdk-go`
 1. `git add vendor/ && git commit`

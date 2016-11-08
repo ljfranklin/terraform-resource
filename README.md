@@ -41,6 +41,7 @@ See [Terraform Sources](https://www.terraform.io/docs/modules/sources.html) for 
 * `vars`: *Optional.* A collection of Terraform input variables.
 These are typically used to specify credentials or override default module values.
 See [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html) for more details.
+Since Concourse currently only supports [interpolating strings](https://github.com/concourse/concourse/issues/545) into the pipeline config, you may need to use Terraform helpers like [split](https://www.terraform.io/docs/configuration/interpolation.html#split_delim_string_) to handle lists and maps as inputs.
 
 #### Source Example
 
@@ -69,6 +70,9 @@ resources:
         secret_key: {{environment_secret_key}}
         tag_name: concourse
 ```
+
+Alternative Docker tags are available for specific versions of Terraform, e.g. `ljfranklin/terraform-resource:0.7.7`.
+See [Dockerhub](https://hub.docker.com/r/ljfranklin/terraform-resource/tags/) for a list of all available tags.
 
 ## Behavior
 
@@ -213,20 +217,3 @@ metadata: { "vpc_id": "vpc-123456", "vpc_tag_name": "concourse" }
 - [Generate director manifest](examples/tasks/director-manifest-aws.erb) from JSON file
 
 See the [Concourse pipeline](ci/pipeline.yml) for additional examples.
-
-## Development
-
-Run tests:
-
-```bash
-cd src/terraform-resource
-go get -u github.com/onsi/ginkgo/ginkgo
-ginkgo -r .
-```
-
-Add/Update dependency:
-
-```bash
-go get -u github.com/FiloSottile/gvt
-gvt fetch -tag=v1.4.11 github.com/aws/aws-sdk-go
-```
