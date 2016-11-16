@@ -135,6 +135,10 @@ func (a Action) attemptDestroy() (Result, error) {
 		return Result{}, err
 	}
 
+	_, err := a.PlanFile.Delete()
+	if err != nil {
+		return Result{}, err
+	}
 	storageVersion, err := a.StateFile.Delete()
 	if err != nil {
 		return Result{}, err

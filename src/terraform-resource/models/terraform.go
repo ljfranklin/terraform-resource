@@ -13,7 +13,7 @@ type Terraform struct {
 	Vars                map[string]interface{} `json:"vars,omitempty"`              // optional
 	VarFile             string                 `json:"var_file,omitempty"`          // optional
 	DeleteOnFailure     bool                   `json:"delete_on_failure,omitempty"` // optional
-	RunPlan             bool                   `json:"run_plan,omitempty"`          // optional
+	PlanRun             bool                   `json:"plan_run,omitempty"`          // optional
 	PlanFileLocalPath   string                 `json:"-"`                           // not specified pipeline
 	PlanFileRemotePath  string                 `json:"-"`                           // not specified pipeline
 	StateFileLocalPath  string                 `json:"-"`                           // not specified pipeline
