@@ -23,6 +23,7 @@ var _ = Describe("Out Lifecycle", func() {
 	var (
 		envName       string
 		stateFilePath string
+		planFilePath  string
 		s3ObjectPath  string
 		workingDir    string
 	)
@@ -30,6 +31,7 @@ var _ = Describe("Out Lifecycle", func() {
 	BeforeEach(func() {
 		envName = helpers.RandomString("out-test")
 		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
+		planFilePath = path.Join(bucketPath, fmt.Sprintf("%s.plan", envName))
 		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-lifecycle"))
 
 		var err error
@@ -49,6 +51,7 @@ var _ = Describe("Out Lifecycle", func() {
 		_ = os.RemoveAll(workingDir)
 		awsVerifier.DeleteObjectFromS3(bucket, s3ObjectPath)
 		awsVerifier.DeleteObjectFromS3(bucket, stateFilePath)
+		awsVerifier.DeleteObjectFromS3(bucket, planFilePath)
 	})
 
 	It("creates, updates, and deletes infrastructure", func() {
@@ -177,44 +180,5 @@ var _ = Describe("Out Lifecycle", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(deletedVersion).To(BeTemporally(">", updatedVersion))
 		Expect(deleteOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
-	})
-
-	It("plan infrastructure", func() {
-		planOutRequest := models.OutRequest{
-			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
-				},
-			},
-			Params: models.OutParams{
-				PlanOnly: true,
-				EnvName: envName,
-				Terraform: models.Terraform{
-					Source: "fixtures/aws/",
-					Vars: map[string]interface{}{
-						"access_key":     accessKey,
-						"secret_key":     secretKey,
-						"bucket":         bucket,
-						"object_key":     s3ObjectPath,
-						"object_content": "terraform-is-neat",
-						"region":         region,
-					},
-				},
-			},
-		}
-
-		By("running 'out' to create the plan file")
-
-		planRunner := out.Runner{
-			SourceDir: workingDir,
-			LogWriter: GinkgoWriter,
-		}
-		_, err := planRunner.Run(planOutRequest)
-		Expect(err).ToNot(HaveOccurred())
-
 	})
 })

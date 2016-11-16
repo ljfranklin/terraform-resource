@@ -50,7 +50,7 @@ func (c Client) Apply() error {
 		"-backup='-'",  // no need to backup state file
 		"-input=false", // do not prompt for inputs
 	}
-	if c.Model.RunPlan {
+	if c.Model.PlanRun {
 		applyArgs = append(applyArgs, fmt.Sprintf("%s", c.Model.PlanFileLocalPath))
 	} else {
 		applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath))
