@@ -116,6 +116,10 @@ Finally, `env_name` is automatically passed as an input `var`.
 
 * `generate_random_name`: *Optional.* Generates a random `env_name` (e.g. "coffee-bee"). Useful for creating lock files.
 
+* `plan_only`: *Optional.* This boolean will allow terraform to create a plan file and store it on S3.
+
+* `plan_run`: *Optional.* This boolean will allow terraform to execute the plan file stored on S3, then delete it.
+
 * `env_name_file`: *Optional.* Reads the `env_name` from a specified file path. Useful for destroying environments from a lock file.
 
 * `action`: *Optional.* Used to indicate a destructive `put`. The only recognized value is `destroy`, create / update are the implicit defaults.
@@ -156,6 +160,31 @@ Finally, `env_name` is automatically passed as an input `var`.
       - put: locks
         params:
           remove: locks/
+```
+
+#### Plan and apply example
+
+```yaml
+- name: terraform-plan
+   plan:
+      - put: terraform
+        params:
+          env_name: staging
+          plan_only: true
+          vars:
+            subnet_cidr: 10.0.1.0/24
+
+- name: terraform-apply
+  plan:
+      - get: terraform
+        trigger: false
+        passed: [terraform-plan]
+      - put: terraform
+        params:
+          env_name: staging
+          plan_run: true
+          vars:
+            subnet_cidr: 10.0.1.0/24
 ```
 
 #### Metadata file

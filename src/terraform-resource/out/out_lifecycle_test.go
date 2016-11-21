@@ -23,6 +23,7 @@ var _ = Describe("Out Lifecycle", func() {
 	var (
 		envName       string
 		stateFilePath string
+		planFilePath  string
 		s3ObjectPath  string
 		workingDir    string
 	)
@@ -30,6 +31,7 @@ var _ = Describe("Out Lifecycle", func() {
 	BeforeEach(func() {
 		envName = helpers.RandomString("out-test")
 		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
+		planFilePath = path.Join(bucketPath, fmt.Sprintf("%s.plan", envName))
 		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-lifecycle"))
 
 		var err error
@@ -49,6 +51,7 @@ var _ = Describe("Out Lifecycle", func() {
 		_ = os.RemoveAll(workingDir)
 		awsVerifier.DeleteObjectFromS3(bucket, s3ObjectPath)
 		awsVerifier.DeleteObjectFromS3(bucket, stateFilePath)
+		awsVerifier.DeleteObjectFromS3(bucket, planFilePath)
 	})
 
 	It("creates, updates, and deletes infrastructure", func() {
