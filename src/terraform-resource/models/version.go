@@ -18,7 +18,7 @@ const (
 type Version struct {
 	LastModified string `json:"last_modified"`
 	EnvName      string `json:"env_name"`
-	PlanOnly     bool   `json:"plan_only,omitempty"` //optional
+	PlanOnly     string `json:"plan_only,omitempty"` //optional
 }
 
 func NewVersion(storageVersion storage.Version) Version {
@@ -27,7 +27,6 @@ func NewVersion(storageVersion storage.Version) Version {
 	return Version{
 		LastModified: storageVersion.LastModified.Format(TimeFormat),
 		EnvName:      envName,
-		PlanOnly:     false,
 	}
 }
 
@@ -61,7 +60,7 @@ func (r Version) IsZero() bool {
 }
 
 func (r Version) IsPlan() bool {
-	return r.PlanOnly
+	return r.PlanOnly == "true"
 }
 
 func (r Version) LastModifiedTime() time.Time {

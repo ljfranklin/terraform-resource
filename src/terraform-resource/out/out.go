@@ -108,7 +108,7 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 
 	version := models.NewVersion(result.Version)
 	if req.Params.PlanOnly {
-		version.PlanOnly = true
+		version.PlanOnly = "true" // Concourse demands version fields are strings
 	}
 
 	metadata := []models.MetadataField{}

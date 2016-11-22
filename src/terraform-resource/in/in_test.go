@@ -179,7 +179,7 @@ var _ = Describe("In", func() {
 				inReq.Version = models.Version{
 					LastModified: time.Now().UTC().Format(storage.TimeFormat),
 					EnvName:      currEnvName,
-					PlanOnly:     true,
+					PlanOnly:     "true",
 				}
 			})
 

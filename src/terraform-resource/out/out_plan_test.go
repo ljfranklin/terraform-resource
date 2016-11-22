@@ -126,7 +126,7 @@ var _ = Describe("Out Plan", func() {
 		_, err = time.Parse(storage.TimeFormat, planOutput.Version.LastModified)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(planOutput.Version.EnvName).To(Equal(planOutRequest.Params.EnvName))
-		Expect(planOutput.Version.PlanOnly).To(BeTrue(), "Expected PlanOnly to be True, but was False")
+		Expect(planOutput.Version.PlanOnly).To(Equal("true"), "Expected PlanOnly to be true, but was false")
 
 		time.Sleep(1 * time.Second) // ensure LastModified changes
 
@@ -146,7 +146,7 @@ var _ = Describe("Out Plan", func() {
 		createOutput, err := applyrunner.Run(applyRequest)
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(createOutput.Version.PlanOnly).To(BeFalse(), "Expected PlanOnly to be False, but was True")
+		Expect(createOutput.Version.PlanOnly).To(BeEmpty())
 
 		Expect(createOutput.Metadata).ToNot(BeEmpty())
 		fields := map[string]interface{}{}

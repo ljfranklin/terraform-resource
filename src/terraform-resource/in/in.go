@@ -47,7 +47,7 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		return models.InResponse{}, fmt.Errorf("Failed to check for existing state file: %s", err)
 	}
 	if storageVersion.IsZero() {
-		if req.Version.PlanOnly {
+		if req.Version.IsPlan() {
 			resp := models.InResponse{
 				Version: req.Version,
 			}
