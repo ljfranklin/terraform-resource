@@ -64,7 +64,7 @@ jobs:
           build: build-artifacts/
           cache: true
 
-  - name: create-infrastructure
+  - name: plan-infrastructure
     serial_groups: [track1]
     plan:
       - get: resource-src
@@ -73,9 +73,21 @@ jobs:
       - put: terraform
         params:
           env_name: terraform-ci
+          plan_only: true
           vars:
             object_key: ci-pipeline/track1
             object_content: "terraform is neat!"
+
+  - name: create-infrastructure
+    serial_groups: [track1]
+    plan:
+      - get: resource-src
+        trigger: true
+        passed: [plan-infrastructure]
+      - put: terraform
+        params:
+          env_name: terraform-ci
+          plan_run: true
       - &show-outputs
         task: show-outputs
         config:
