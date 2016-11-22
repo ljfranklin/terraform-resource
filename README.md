@@ -166,25 +166,25 @@ Finally, `env_name` is automatically passed as an input `var`.
 
 ```yaml
 - name: terraform-plan
-   plan:
-      - put: terraform
-        params:
-          env_name: staging
-          plan_only: true
-          vars:
-            subnet_cidr: 10.0.1.0/24
+  plan:
+    - put: terraform
+      params:
+        env_name: staging
+        plan_only: true
+        vars:
+          subnet_cidr: 10.0.1.0/24
 
 - name: terraform-apply
   plan:
-      - get: terraform
-        trigger: false
-        passed: [terraform-plan]
-      - put: terraform
-        params:
-          env_name: staging
-          plan_run: true
-          vars:
-            subnet_cidr: 10.0.1.0/24
+    - get: terraform
+      trigger: false
+      passed: [terraform-plan]
+    - put: terraform
+      params:
+        env_name: staging
+        plan_run: true
+        vars:
+          subnet_cidr: 10.0.1.0/24
 ```
 
 #### Metadata file

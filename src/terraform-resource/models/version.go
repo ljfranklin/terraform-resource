@@ -18,7 +18,7 @@ const (
 type Version struct {
 	LastModified string `json:"last_modified"`
 	EnvName      string `json:"env_name"`
-	PlanOnly     bool   `json:"plan_only,omitempty"`  //optional
+	PlanOnly     bool   `json:"plan_only,omitempty"` //optional
 }
 
 func NewVersion(storageVersion storage.Version) Version {
