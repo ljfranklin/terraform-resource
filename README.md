@@ -116,7 +116,7 @@ Finally, `env_name` is automatically passed as an input `var`.
 
 * `generate_random_name`: *Optional.* Generates a random `env_name` (e.g. "coffee-bee"). Useful for creating lock files.
 
-* `plan_only`: *Optional.* This boolean will allow terraform to create a plan file and store it on S3.
+* `plan_only`: *Optional.* This boolean will allow terraform to create a plan file and store it on S3. **Warning:** Plan files contain unencrypted credentials like AWS Secret Keys, only store these files in a private bucket.
 
 * `plan_run`: *Optional.* This boolean will allow terraform to execute the plan file stored on S3, then delete it.
 
