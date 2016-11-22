@@ -174,6 +174,30 @@ var _ = Describe("In", func() {
 			})
 		})
 
+		Context("and it was called with 'plan_only'", func() {
+			BeforeEach(func() {
+				inReq.Version = models.Version{
+					LastModified: time.Now().UTC().Format(storage.TimeFormat),
+					EnvName:      currEnvName,
+					PlanOnly:     true,
+				}
+			})
+
+			It("returns the version, but does not create the metadata file", func() {
+				runner := in.Runner{
+					OutputDir: tmpDir,
+				}
+				resp, err := runner.Run(inReq)
+				Expect(err).ToNot(HaveOccurred())
+
+				_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
+				Expect(err).ToNot(HaveOccurred())
+
+				expectedOutputPath := path.Join(tmpDir, "metadata")
+				Expect(expectedOutputPath).ToNot(BeAnExistingFile())
+			})
+		})
+
 		Context("and it was called as part of update or create", func() {
 			BeforeEach(func() {
 				inReq.Params.Action = ""

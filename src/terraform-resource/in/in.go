@@ -47,6 +47,13 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		return models.InResponse{}, fmt.Errorf("Failed to check for existing state file: %s", err)
 	}
 	if storageVersion.IsZero() {
+		if req.Version.PlanOnly {
+			resp := models.InResponse{
+				Version: req.Version,
+			}
+			return resp, nil
+		}
+
 		return models.InResponse{}, fmt.Errorf(
 			"State file does not exist with key '%s'."+
 				"\nIf you intended to run the `destroy` action, add `put.get_params.action: destroy`."+
