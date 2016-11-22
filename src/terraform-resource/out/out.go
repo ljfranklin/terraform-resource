@@ -107,6 +107,9 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	}
 
 	version := models.NewVersion(result.Version)
+	if req.Params.PlanOnly {
+		version.PlanOnly = true
+	}
 
 	metadata := []models.MetadataField{}
 	for key, value := range result.Output {
