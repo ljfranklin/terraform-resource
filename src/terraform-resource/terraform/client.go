@@ -200,6 +200,10 @@ func (c Client) varFlags() []string {
 
 func formatVar(value interface{}) string {
 	valType := reflect.TypeOf(value)
+	if valType == nil {
+		return "null"
+	}
+
 	switch valType.Kind() {
 	case reflect.Slice:
 		valSlice, _ := value.([]interface{})

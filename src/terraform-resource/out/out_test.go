@@ -315,6 +315,39 @@ var _ = Describe("Out", func() {
 		assertOutBehavior(req, expectedMetadata)
 	})
 
+	It("returns an error if an input var is malformed", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         nil,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		var logWriter bytes.Buffer
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: &logWriter,
+			Namer:     &namer,
+		}
+		_, err := runner.Run(req)
+		Expect(err).To(HaveOccurred())
+		Expect(logWriter.String()).To(ContainSubstring("bucket"))
+		Expect(logWriter.String()).To(ContainSubstring("null"))
+	})
+
 	It("replaces spaces in env_name with hyphens", func() {
 		spaceName := strings.Replace(envName, "-", " ", -1)
 		req := models.OutRequest{
