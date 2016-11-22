@@ -13,6 +13,7 @@ type Terraform struct {
 	Vars                map[string]interface{} `json:"vars,omitempty"`              // optional
 	VarFile             string                 `json:"var_file,omitempty"`          // optional
 	DeleteOnFailure     bool                   `json:"delete_on_failure,omitempty"` // optional
+	PlanOnly            bool                   `json:"plan_only,omitempty"`         // optional
 	PlanRun             bool                   `json:"plan_run,omitempty"`          // optional
 	PlanFileLocalPath   string                 `json:"-"`                           // not specified pipeline
 	PlanFileRemotePath  string                 `json:"-"`                           // not specified pipeline
@@ -61,6 +62,12 @@ func (m Terraform) Merge(other Terraform) Terraform {
 	}
 	if other.StateFileRemotePath != "" {
 		m.StateFileRemotePath = other.StateFileRemotePath
+	}
+	if other.PlanOnly {
+		m.PlanOnly = true
+	}
+	if other.PlanRun {
+		m.PlanRun = true
 	}
 	if other.DeleteOnFailure {
 		m.DeleteOnFailure = true

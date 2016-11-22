@@ -27,37 +27,39 @@ func (c Client) Apply() error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	initCmd := terraformCmd([]string{
-		"init",
-		c.Model.Source,
-		tmpDir,
-	})
-	if initOutput, initErr := initCmd.CombinedOutput(); initErr != nil {
-		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", initErr, initOutput)
-	}
+	if c.Model.PlanRun == false {
+		initCmd := terraformCmd([]string{
+			"init",
+			c.Model.Source,
+			tmpDir,
+		})
+		if initOutput, initErr := initCmd.CombinedOutput(); initErr != nil {
+			return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", initErr, initOutput)
+		}
 
-	getCmd := terraformCmd([]string{
-		"get",
-		"-update",
-		tmpDir,
-	})
-	if getOutput, getErr := getCmd.CombinedOutput(); getErr != nil {
-		return fmt.Errorf("terraform get command failed.\nError: %s\nOutput: %s", getErr, getOutput)
+		getCmd := terraformCmd([]string{
+			"get",
+			"-update",
+			tmpDir,
+		})
+		if getOutput, getErr := getCmd.CombinedOutput(); getErr != nil {
+			return fmt.Errorf("terraform get command failed.\nError: %s\nOutput: %s", getErr, getOutput)
+		}
 	}
 
 	applyArgs := []string{
 		"apply",
 		"-backup='-'",  // no need to backup state file
 		"-input=false", // do not prompt for inputs
-	}
-	if c.Model.PlanRun {
-		applyArgs = append(applyArgs, fmt.Sprintf("%s", c.Model.PlanFileLocalPath))
-	} else {
-		applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath))
+		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
 
-	applyArgs = append(applyArgs, c.varFlags()...)
-	applyArgs = append(applyArgs, tmpDir)
+	if c.Model.PlanRun {
+		applyArgs = append(applyArgs, c.Model.PlanFileLocalPath)
+	} else {
+		applyArgs = append(applyArgs, c.varFlags()...)
+		applyArgs = append(applyArgs, tmpDir)
+	}
 
 	applyCmd := terraformCmd(applyArgs)
 	applyCmd.Stdout = c.LogWriter

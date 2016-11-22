@@ -66,10 +66,10 @@ var _ = Describe("Out Plan", func() {
 				},
 			},
 			Params: models.OutParams{
-				PlanOnly: true,
-				EnvName:  envName,
+				EnvName: envName,
 				Terraform: models.Terraform{
-					Source: "fixtures/aws/",
+					Source:   "fixtures/aws/",
+					PlanOnly: true,
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -93,18 +93,9 @@ var _ = Describe("Out Plan", func() {
 				},
 			},
 			Params: models.OutParams{
-				PlanRun: true,
 				EnvName: envName,
 				Terraform: models.Terraform{
-					Source: "fixtures/aws/",
-					Vars: map[string]interface{}{
-						"access_key":     accessKey,
-						"secret_key":     secretKey,
-						"bucket":         bucket,
-						"object_key":     s3ObjectPath,
-						"object_content": "terraform-is-neat",
-						"region":         region,
-					},
+					PlanRun: true,
 				},
 			},
 		}
@@ -216,10 +207,10 @@ var _ = Describe("Out Plan", func() {
 				},
 			},
 			Params: models.OutParams{
-				PlanOnly: true,
-				EnvName:  envName,
+				EnvName: envName,
 				Terraform: models.Terraform{
-					Source: "fixtures/aws/",
+					PlanOnly: true,
+					Source:   "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -243,18 +234,9 @@ var _ = Describe("Out Plan", func() {
 				},
 			},
 			Params: models.OutParams{
-				PlanRun: true,
 				EnvName: envName,
 				Terraform: models.Terraform{
-					Source: "fixtures/aws/",
-					Vars: map[string]interface{}{
-						"access_key":     accessKey,
-						"secret_key":     secretKey,
-						"bucket":         bucket,
-						"object_key":     s3ObjectPath,
-						"object_content": "terraform-is-neat",
-						"region":         region,
-					},
+					PlanRun: true,
 				},
 			},
 		}
@@ -337,10 +319,10 @@ var _ = Describe("Out Plan", func() {
 				},
 			},
 			Params: models.OutParams{
-				PlanOnly: true,
-				EnvName:  envName,
+				EnvName: envName,
 				Terraform: models.Terraform{
-					Source: "fixtures/aws/",
+					PlanOnly: true,
+					Source:   "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -378,7 +360,7 @@ var _ = Describe("Out Plan", func() {
 
 		By("running 'out' to delete the plan file")
 
-		planOutRequest.Params.PlanOnly = false
+		planOutRequest.Params.Terraform.PlanOnly = false
 		planOutRequest.Params.Action = models.DestroyAction
 		_, err = planrunner.Run(planOutRequest)
 		Expect(err).ToNot(HaveOccurred())
@@ -389,7 +371,5 @@ var _ = Describe("Out Plan", func() {
 			planOutRequest.Source.Storage.Bucket,
 			planFilePath,
 		)
-
 	})
-
 })
