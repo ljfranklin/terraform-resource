@@ -120,6 +120,9 @@ func (s *s3) Delete(filename string) error {
 
 	_, err := s.client.DeleteObject(params)
 	if err != nil {
+		if reqErr, ok := err.(awserr.RequestFailure); ok && reqErr.StatusCode() == 404 {
+			return nil // already gone
+		}
 		return fmt.Errorf("DeleteObject request failed.\nError: %s", err.Error())
 	}
 
