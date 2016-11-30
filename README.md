@@ -75,6 +75,7 @@ resources:
 
 - Latest tagged release of Terraform: `ljfranklin/terraform-resource:latest`.
 - Specific versions of Terraform, e.g. `ljfranklin/terraform-resource:0.7.7`.
+- [RC builds](https://concourse.lylefranklin.com/teams/main/pipelines/terraform-resource-rc) from Terraform pre-releases: `ljfranklin/terraform-resource:rc`.
 - [Nightly builds](https://concourse.lylefranklin.com/teams/main/pipelines/terraform-resource-nightly) from Terraform `master` branch: `ljfranklin/terraform-resource:nightly`.
 
 See [Dockerhub](https://hub.docker.com/r/ljfranklin/terraform-resource/tags/) for a list of all available tags.

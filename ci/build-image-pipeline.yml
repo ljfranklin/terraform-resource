@@ -1,4 +1,5 @@
 # uncomment time resource to trigger nightly builds
+# uncomment terraform-src trigger to build rc builds
 
 jobs:
   - name: push-custom-image
@@ -7,6 +8,7 @@ jobs:
         # - get: nightly
         #   trigger: true
         - get: terraform-src
+          # trigger: true
         - get: resource-src
       - task: build-custom-artifacts
         file: resource-src/ci/tasks/build-custom-artifacts.yml
@@ -25,6 +27,7 @@ resources:
   source:
     uri: {{terraform_git_uri}}
     branch: {{terraform_git_branch}}
+    tag_filter: {{terraform_git_tag_filter}}
 - name: resource-custom-image
   type: docker-image
   source:
