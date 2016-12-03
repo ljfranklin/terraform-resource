@@ -118,6 +118,16 @@ var _ = Describe("In", func() {
 
 			Expect(resp.Version.EnvName).To(Equal(prevEnvName))
 
+			includesVersionInMetadata := false
+			for _, field := range resp.Metadata {
+				if field.Name == "terraform_version" {
+					Expect(field.Value).To(MatchRegexp("Terraform v.*"))
+					includesVersionInMetadata = true
+					break
+				}
+			}
+			Expect(includesVersionInMetadata).To(BeTrue(), "Expect to find `terraform_version`, but did not: %#v", resp.Metadata)
+
 			expectedOutputPath := path.Join(tmpDir, "metadata")
 			Expect(expectedOutputPath).To(BeAnExistingFile())
 			outputFile, err := os.Open(expectedOutputPath)

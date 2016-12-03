@@ -122,6 +122,16 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 			Value: strings.Trim(string(jsonValue), "\""),
 		})
 	}
+
+	tfVersion, err := client.Version()
+	if err != nil {
+		return models.OutResponse{}, err
+	}
+	metadata = append(metadata, models.MetadataField{
+		Name:  "terraform_version",
+		Value: tfVersion,
+	})
+
 	resp := models.OutResponse{
 		Version:  version,
 		Metadata: metadata,

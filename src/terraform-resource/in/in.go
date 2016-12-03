@@ -120,6 +120,15 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		})
 	}
 
+	tfVersion, err := client.Version()
+	if err != nil {
+		return models.InResponse{}, err
+	}
+	metadata = append(metadata, models.MetadataField{
+		Name:  "terraform_version",
+		Value: tfVersion,
+	})
+
 	resp := models.InResponse{
 		Version:  version,
 		Metadata: metadata,

@@ -131,6 +131,18 @@ func (c Client) Output() (map[string]interface{}, error) {
 	return output, nil
 }
 
+func (c Client) Version() (string, error) {
+	outputCmd := terraformCmd([]string{
+		"-v",
+	})
+	output, err := outputCmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("Failed to retrieve version.\nError: %s\nOutput: %s", err, output)
+	}
+
+	return strings.TrimSpace(string(output)), nil
+}
+
 func terraformCmd(args []string) *exec.Cmd {
 	return exec.Command("/bin/sh", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
 }

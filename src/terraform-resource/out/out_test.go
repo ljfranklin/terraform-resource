@@ -763,7 +763,7 @@ var _ = Describe("Out", func() {
 		Expect(resp.Version.EnvName).To(Equal(envName))
 
 		Expect(resp.Metadata).ToNot(BeEmpty())
-		fields := map[string]interface{}{}
+		fields := map[string]string{}
 		for _, field := range resp.Metadata {
 			fields[field.Name] = field.Value
 		}
@@ -772,9 +772,11 @@ var _ = Describe("Out", func() {
 			Expect(fields[key]).To(Equal(value))
 		}
 
-		Expect(fields["object_key"]).ToNot(BeEmpty())
-		objectKey := fields["object_key"].(string)
-		awsVerifier.ExpectS3FileToExist(bucket, objectKey)
+		Expect(fields).To(HaveKey("terraform_version"))
+		Expect(fields["terraform_version"]).To(MatchRegexp("Terraform v.*"))
+
+		Expect(fields).To(HaveKey("object_key"))
+		awsVerifier.ExpectS3FileToExist(bucket, fields["object_key"])
 	}
 })
 
