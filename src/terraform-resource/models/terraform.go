@@ -12,6 +12,7 @@ type Terraform struct {
 	Source              string                 `json:"terraform_source"`
 	Vars                map[string]interface{} `json:"vars,omitempty"`              // optional
 	VarFile             string                 `json:"var_file,omitempty"`          // optional
+	Env                 map[string]string      `json:"env,omitempty"`               // optional
 	DeleteOnFailure     bool                   `json:"delete_on_failure,omitempty"` // optional
 	PlanOnly            bool                   `json:"plan_only,omitempty"`         // optional
 	PlanRun             bool                   `json:"plan_run,omitempty"`          // optional
@@ -45,30 +46,48 @@ func (m Terraform) Merge(other Terraform) Terraform {
 		mergedVars[key] = value
 	}
 	m.Vars = mergedVars
+
+	mergedEnv := map[string]string{}
+	for key, value := range m.Env {
+		mergedEnv[key] = value
+	}
+	for key, value := range other.Env {
+		mergedEnv[key] = value
+	}
+	m.Env = mergedEnv
+
 	if other.Source != "" {
 		m.Source = other.Source
 	}
+
 	if other.VarFile != "" {
 		m.VarFile = other.VarFile
 	}
+
 	if other.PlanFileLocalPath != "" {
 		m.PlanFileLocalPath = other.PlanFileLocalPath
 	}
+
 	if other.PlanFileRemotePath != "" {
 		m.PlanFileRemotePath = other.PlanFileRemotePath
 	}
+
 	if other.StateFileLocalPath != "" {
 		m.StateFileLocalPath = other.StateFileLocalPath
 	}
+
 	if other.StateFileRemotePath != "" {
 		m.StateFileRemotePath = other.StateFileRemotePath
 	}
+
 	if other.PlanOnly {
 		m.PlanOnly = true
 	}
+
 	if other.PlanRun {
 		m.PlanRun = true
 	}
+
 	if other.DeleteOnFailure {
 		m.DeleteOnFailure = true
 	}

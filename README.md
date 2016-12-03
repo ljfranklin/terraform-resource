@@ -43,6 +43,8 @@ These are typically used to specify credentials or override default module value
 See [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html) for more details.
 Since Concourse currently only supports [interpolating strings](https://github.com/concourse/concourse/issues/545) into the pipeline config, you may need to use Terraform helpers like [split](https://www.terraform.io/docs/configuration/interpolation.html#split_delim_string_) to handle lists and maps as inputs.
 
+* `env`: *Optional.* Similar to `vars`, this collection of key-value pairs can be used to pass environment variables to Terraform, e.g. "AWS_ACCESS_KEY_ID".
+
 #### Source Example
 
 > **Note:** Declaring custom resources under `resource_types` requires Concourse 1.0 or newer.
@@ -66,9 +68,10 @@ resources:
       # the '//' indicates a sub-directory in a git repo
       terraform_source: github.com/ljfranklin/terraform-resource//fixtures/aws
       vars:
-        access_key: {{environment_access_key}}
-        secret_key: {{environment_secret_key}}
         tag_name: concourse
+      env:
+        AWS_ACCESS_KEY_ID: {{environment_access_key}}
+        AWS_SECRET_ACCESS_KEY: {{environment_secret_key}}
 ```
 
 #### Image Variants
@@ -104,6 +107,12 @@ It then deletes the state file using the configured `storage` driver.
 
 * `terraform_source`: *Required if absent under `source`.* See description under `source.terraform_source`.
 
+* `env_name`: *Optional.* The name of the environment to create or modify. Multiple environments can be managed with a single resource.
+
+* `generate_random_name`: *Optional.* Generates a random `env_name` (e.g. "coffee-bee"). Useful for creating lock files.
+
+* `env_name_file`: *Optional.* Reads the `env_name` from a specified file path. Useful for destroying environments from a lock file.
+
 * `delete_on_failure`: *Optional. Default `false`.* See description under `source.delete_on_failure`.
 
 * `vars`: *Optional.* A collection of Terraform input variables. See description under `source.vars`.
@@ -113,15 +122,11 @@ It then deletes the state file using the configured `storage` driver.
   > Terraform variables will be merged from the following locations in increasing order of precedence: `source.vars`, `put.params.vars`, and `put.params.var_file`. If a state file already exists, the outputs will be fed back in as input `vars` to subsequent `puts` with the lowest precedence.
 Finally, `env_name` is automatically passed as an input `var`.
 
-* `env_name`: *Optional.* The name of the environment to create or modify. Multiple environments can be managed with a single resource.
-
-* `generate_random_name`: *Optional.* Generates a random `env_name` (e.g. "coffee-bee"). Useful for creating lock files.
+* `env`: *Optional.* A key-value collection of environment variables to pass to Terraform. See description under `source.env`.
 
 * `plan_only`: *Optional.* This boolean will allow terraform to create a plan file and store it on S3. **Warning:** Plan files contain unencrypted credentials like AWS Secret Keys, only store these files in a private bucket.
 
 * `plan_run`: *Optional.* This boolean will allow terraform to execute the plan file stored on S3, then delete it.
-
-* `env_name_file`: *Optional.* Reads the `env_name` from a specified file path. Useful for destroying environments from a lock file.
 
 * `action`: *Optional.* Used to indicate a destructive `put`. The only recognized value is `destroy`, create / update are the implicit defaults.
 

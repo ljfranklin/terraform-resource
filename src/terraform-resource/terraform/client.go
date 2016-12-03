@@ -44,7 +44,7 @@ func (c Client) Apply() error {
 
 	applyArgs = append(applyArgs, sourcePath)
 
-	applyCmd := terraformCmd(applyArgs)
+	applyCmd := c.terraformCmd(applyArgs)
 	applyCmd.Stdout = c.LogWriter
 	applyCmd.Stderr = c.LogWriter
 	err := applyCmd.Run()
@@ -70,7 +70,7 @@ func (c Client) Destroy() error {
 	destroyArgs = append(destroyArgs, c.varFlags()...)
 	destroyArgs = append(destroyArgs, sourcePath)
 
-	destroyCmd := terraformCmd(destroyArgs)
+	destroyCmd := c.terraformCmd(destroyArgs)
 	destroyCmd.Stdout = c.LogWriter
 	destroyCmd.Stderr = c.LogWriter
 	err = destroyCmd.Run()
@@ -96,7 +96,7 @@ func (c Client) Plan() error {
 	planArgs = append(planArgs, c.varFlags()...)
 	planArgs = append(planArgs, sourcePath)
 
-	planCmd := terraformCmd(planArgs)
+	planCmd := c.terraformCmd(planArgs)
 	planCmd.Stdout = c.LogWriter
 	planCmd.Stderr = c.LogWriter
 	err = planCmd.Run()
@@ -108,7 +108,7 @@ func (c Client) Plan() error {
 }
 
 func (c Client) Output() (map[string]interface{}, error) {
-	outputCmd := terraformCmd([]string{
+	outputCmd := c.terraformCmd([]string{
 		"output",
 		"-json",
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
@@ -132,7 +132,7 @@ func (c Client) Output() (map[string]interface{}, error) {
 }
 
 func (c Client) Version() (string, error) {
-	outputCmd := terraformCmd([]string{
+	outputCmd := c.terraformCmd([]string{
 		"-v",
 	})
 	output, err := outputCmd.CombinedOutput()
@@ -143,8 +143,17 @@ func (c Client) Version() (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
-func terraformCmd(args []string) *exec.Cmd {
-	return exec.Command("/bin/sh", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
+func (c Client) terraformCmd(args []string) *exec.Cmd {
+	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
+
+	cmd.Env = []string{
+		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
+	}
+	for key, value := range c.Model.Env {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
+	}
+
+	return cmd
 }
 
 func (c Client) fetchSource() (string, error) {
@@ -156,7 +165,7 @@ func (c Client) fetchSource() (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("Failed to create temporary working dir at '%s'", os.TempDir())
 		}
-		initCmd := terraformCmd([]string{
+		initCmd := c.terraformCmd([]string{
 			"init",
 			c.Model.Source,
 			tmpDir,
@@ -167,7 +176,7 @@ func (c Client) fetchSource() (string, error) {
 		sourceDir = tmpDir
 	}
 
-	getCmd := terraformCmd([]string{
+	getCmd := c.terraformCmd([]string{
 		"get",
 		"-update",
 		sourceDir,

@@ -287,6 +287,42 @@ var _ = Describe("Out", func() {
 		})
 	})
 
+	It("sets env variables from `source.terraform` and `put.params.terraform`", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws-env/",
+					Env: map[string]string{
+						"AWS_ACCESS_KEY_ID":     accessKey,
+						"AWS_SECRET_ACCESS_KEY": "bad-secret-key", // will be overridden
+					},
+				},
+			},
+			// put params take precedence
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Env: map[string]string{
+						"AWS_SECRET_ACCESS_KEY": secretKey,
+						"TF_VAR_region":         region, // also supports TF_VAR_ style
+					},
+					Vars: map[string]interface{}{
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]string{
+			"env_name":    envName,
+			"content_md5": calculateMD5("terraform-is-neat"),
+		}
+
+		assertOutBehavior(req, expectedMetadata)
+	})
+
 	It("allows hashes and lists in metadata", func() {
 		req := models.OutRequest{
 			Source: models.Source{

@@ -161,4 +161,28 @@ var _ = Describe("Terraform Models", func() {
 			}))
 		})
 	})
+
+	Describe("Env", func() {
+		It("returns original env and env from Merged model", func() {
+			baseModel := models.Terraform{
+				Env: map[string]string{
+					"base-key":     "base-value",
+					"override-key": "base-override",
+				},
+			}
+			mergeModel := models.Terraform{
+				Env: map[string]string{
+					"merge-key":    "merge-value",
+					"override-key": "merge-override",
+				},
+			}
+
+			finalModel := baseModel.Merge(mergeModel)
+			Expect(finalModel.Env).To(Equal(map[string]string{
+				"base-key":     "base-value",
+				"merge-key":    "merge-value",
+				"override-key": "merge-override",
+			}))
+		})
+	})
 })
