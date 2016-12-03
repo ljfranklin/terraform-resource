@@ -21,29 +21,14 @@ type Client struct {
 }
 
 func (c Client) Apply() error {
-	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-client")
-	if err != nil {
-		return fmt.Errorf("Failed to create temporary working dir at '%s'", os.TempDir())
-	}
-	defer os.RemoveAll(tmpDir)
-
-	if c.Model.PlanRun == false {
-		initCmd := terraformCmd([]string{
-			"init",
-			c.Model.Source,
-			tmpDir,
-		})
-		if initOutput, initErr := initCmd.CombinedOutput(); initErr != nil {
-			return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", initErr, initOutput)
-		}
-
-		getCmd := terraformCmd([]string{
-			"get",
-			"-update",
-			tmpDir,
-		})
-		if getOutput, getErr := getCmd.CombinedOutput(); getErr != nil {
-			return fmt.Errorf("terraform get command failed.\nError: %s\nOutput: %s", getErr, getOutput)
+	var sourcePath string
+	if c.Model.PlanRun {
+		sourcePath = c.Model.PlanFileLocalPath
+	} else {
+		var err error
+		sourcePath, err = c.fetchSource()
+		if err != nil {
+			return err
 		}
 	}
 
@@ -53,18 +38,16 @@ func (c Client) Apply() error {
 		"-input=false", // do not prompt for inputs
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
-
-	if c.Model.PlanRun {
-		applyArgs = append(applyArgs, c.Model.PlanFileLocalPath)
-	} else {
+	if c.Model.PlanRun == false {
 		applyArgs = append(applyArgs, c.varFlags()...)
-		applyArgs = append(applyArgs, tmpDir)
 	}
+
+	applyArgs = append(applyArgs, sourcePath)
 
 	applyCmd := terraformCmd(applyArgs)
 	applyCmd.Stdout = c.LogWriter
 	applyCmd.Stderr = c.LogWriter
-	err = applyCmd.Run()
+	err := applyCmd.Run()
 	if err != nil {
 		return fmt.Errorf("Failed to run Terraform command: %s", err)
 	}
@@ -73,28 +56,9 @@ func (c Client) Apply() error {
 }
 
 func (c Client) Destroy() error {
-	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-client")
+	sourcePath, err := c.fetchSource()
 	if err != nil {
-		return fmt.Errorf("Failed to create temporary working dir at '%s'", os.TempDir())
-	}
-	defer os.RemoveAll(tmpDir)
-
-	initCmd := terraformCmd([]string{
-		"init",
-		c.Model.Source,
-		tmpDir,
-	})
-	if initOutput, initErr := initCmd.CombinedOutput(); initErr != nil {
-		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", initErr, initOutput)
-	}
-
-	getCmd := terraformCmd([]string{
-		"get",
-		"-update",
-		tmpDir,
-	})
-	if getOutput, getErr := getCmd.CombinedOutput(); getErr != nil {
-		return fmt.Errorf("terraform get command failed.\nError: %s\nOutput: %s", getErr, getOutput)
+		return err
 	}
 
 	destroyArgs := []string{
@@ -104,7 +68,7 @@ func (c Client) Destroy() error {
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
 	destroyArgs = append(destroyArgs, c.varFlags()...)
-	destroyArgs = append(destroyArgs, tmpDir)
+	destroyArgs = append(destroyArgs, sourcePath)
 
 	destroyCmd := terraformCmd(destroyArgs)
 	destroyCmd.Stdout = c.LogWriter
@@ -118,28 +82,9 @@ func (c Client) Destroy() error {
 }
 
 func (c Client) Plan() error {
-	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-client")
+	sourcePath, err := c.fetchSource()
 	if err != nil {
-		return fmt.Errorf("Failed to create temporary working dir at '%s'", os.TempDir())
-	}
-	defer os.RemoveAll(tmpDir)
-
-	initCmd := terraformCmd([]string{
-		"init",
-		c.Model.Source,
-		tmpDir,
-	})
-	if initOutput, initErr := initCmd.CombinedOutput(); initErr != nil {
-		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", initErr, initOutput)
-	}
-
-	getCmd := terraformCmd([]string{
-		"get",
-		"-update",
-		tmpDir,
-	})
-	if getOutput, getErr := getCmd.CombinedOutput(); getErr != nil {
-		return fmt.Errorf("terraform get command failed.\nError: %s\nOutput: %s", getErr, getOutput)
+		return err
 	}
 
 	planArgs := []string{
@@ -149,7 +94,7 @@ func (c Client) Plan() error {
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
 	planArgs = append(planArgs, c.varFlags()...)
-	planArgs = append(planArgs, tmpDir)
+	planArgs = append(planArgs, sourcePath)
 
 	planCmd := terraformCmd(planArgs)
 	planCmd.Stdout = c.LogWriter
@@ -188,6 +133,45 @@ func (c Client) Output() (map[string]interface{}, error) {
 
 func terraformCmd(args []string) *exec.Cmd {
 	return exec.Command("/bin/sh", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
+}
+
+func (c Client) fetchSource() (string, error) {
+	var sourceDir string
+	if c.useLocalSource() {
+		sourceDir = c.Model.Source
+	} else {
+		tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-client")
+		if err != nil {
+			return "", fmt.Errorf("Failed to create temporary working dir at '%s'", os.TempDir())
+		}
+		initCmd := terraformCmd([]string{
+			"init",
+			c.Model.Source,
+			tmpDir,
+		})
+		if initOutput, initErr := initCmd.CombinedOutput(); initErr != nil {
+			return "", fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", initErr, initOutput)
+		}
+		sourceDir = tmpDir
+	}
+
+	getCmd := terraformCmd([]string{
+		"get",
+		"-update",
+		sourceDir,
+	})
+	if getOutput, getErr := getCmd.CombinedOutput(); getErr != nil {
+		return "", fmt.Errorf("terraform get command failed.\nError: %s\nOutput: %s", getErr, getOutput)
+	}
+
+	return sourceDir, nil
+}
+
+func (c Client) useLocalSource() bool {
+	if info, err := os.Stat(c.Model.Source); err == nil && info.IsDir() {
+		return true
+	}
+	return false
 }
 
 func (c Client) varFlags() []string {

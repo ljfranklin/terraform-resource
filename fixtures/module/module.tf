@@ -1,5 +1,5 @@
 module "test_module" {
-  source = "github.com/ljfranklin/terraform-resource//fixtures/aws"
+  source = "../aws"
 
   access_key = "${var.access_key}"
   secret_key = "${var.secret_key}"
