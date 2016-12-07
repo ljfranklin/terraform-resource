@@ -29,7 +29,7 @@ pushd "${tmp_dir}" > /dev/null
   # https://www.hashicorp.com/security.html
   gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys 51852D87348FFC4C
   gpg --verify terraform_SHA256SUMS.sig terraform_SHA256SUMS
-  grep terraform_${terraform_version}_linux_amd64.zip terraform_SHA256SUMS | sha1sum -a 256 -c -
+  grep terraform_${terraform_version}_linux_amd64.zip terraform_SHA256SUMS | sha1sum -c -
 
   unzip terraform_${terraform_version}_linux_amd64.zip -d "${output_dir}/terraform"
 popd > /dev/null
