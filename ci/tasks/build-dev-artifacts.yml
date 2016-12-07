@@ -14,4 +14,7 @@ outputs:
 - name: build-artifacts
 
 run:
-  path: resource-src/docker-dev/build-artifacts
+  path: resource-src/ci/tasks/build-artifacts
+
+params:
+  DOCKERFILE_DIR: "resource-src/docker-dev/"

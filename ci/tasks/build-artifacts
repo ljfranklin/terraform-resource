@@ -1,0 +1,44 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+release_dir="$( cd "${docker_dir}" && cd .. && pwd )"
+workspace_dir="$( cd "${release_dir}" && cd .. && pwd )"
+
+# env
+source "${release_dir}/.envrc"
+: ${DOCKERFILE_DIR:?}
+
+terraform_version="$( cat "${release_dir}/config/terraform-version" )"
+
+# outputs
+output_dir="${workspace_dir}/build-artifacts"
+mkdir -p "${output_dir}/terraform"
+
+tmp_dir="$(mktemp -d /tmp/build-artifacts-XXXXXX)"
+trap "{ rm -rf "${tmp_dir}" ; }" EXIT
+
+pushd "${tmp_dir}" > /dev/null
+  echo "Downloading artifacts..."
+  wget -O terraform_${terraform_version}_linux_amd64.zip https://releases.hashicorp.com/terraform/${terraform_version}/terraform_${terraform_version}_linux_amd64.zip
+  wget -O terraform_SHA256SUMS https://releases.hashicorp.com/terraform/${terraform_version}/terraform_${terraform_version}_SHA256SUMS
+  wget -O terraform_SHA256SUMS.sig https://releases.hashicorp.com/terraform/${terraform_version}/terraform_${terraform_version}_SHA256SUMS.sig
+
+  echo "Verifying artifacts..."
+  # verify checksum file with Hashicorp public key
+  # https://www.hashicorp.com/security.html
+  gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys 51852D87348FFC4C
+  gpg --verify terraform_SHA256SUMS.sig terraform_SHA256SUMS
+  grep --color=no terraform_${terraform_version}_linux_amd64.zip terraform_SHA256SUMS | shasum -a 256 -c -
+
+  unzip terraform_${terraform_version}_linux_amd64.zip -d "${output_dir}/terraform"
+popd > /dev/null
+
+echo "Building resource..."
+pushd "${release_dir}" > /dev/null
+  ./scripts/build "${output_dir}"
+popd > /dev/null
+
+cp "${workspace_dir}/${DOCKERFILE_DIR}/Dockerfile" "${output_dir}/"
+
+echo "Successfully fetched all Terraform artifacts!"
