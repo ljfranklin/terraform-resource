@@ -2,7 +2,7 @@
 
 set -eu -o pipefail
 
-release_dir="$( cd "${docker_dir}" && cd .. && pwd )"
+release_dir="$( cd "$( dirname "$0" )" && cd ../.. && pwd )"
 workspace_dir="$( cd "${release_dir}" && cd .. && pwd )"
 
 # env
