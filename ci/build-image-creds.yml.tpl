@@ -12,3 +12,6 @@ terraform_git_tag_filter: *
 
 docker_repository:        ljfranklin/terraform-resource
 docker_tag:               nightly
+
+# optional, usually in format https://hooks.slack.com/services/XXXX
+slack_url:                ""
