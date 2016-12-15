@@ -19,5 +19,5 @@ resource "aws_s3_bucket_object" "invalid_object" {
   key        = "${var.object_key}-acl"
   bucket     = "${var.bucket}"
   content    = "${var.object_content}"
-  kms_key_id = "invalid-key"
+  kms_key_id = "arn:aws:kms:us-east-1:111111111111:key/INVALID_KEY"
 }
