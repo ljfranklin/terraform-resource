@@ -1,5 +1,23 @@
+shared:
+  - &failure-alert
+    put: slack-alert
+    params:
+      silent: true
+      icon_emoji: ":interrobang:"
+      text: |
+        *The <$ATC_EXTERNAL_URL/teams/main/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_PIPELINE_NAME - $BUILD_JOB_NAME> job failed!*
+  - &success-alert
+    put: slack-alert
+    params:
+      silent: true
+      icon_emoji: ":rocket:"
+      text: |
+        *The <$ATC_EXTERNAL_URL/teams/main/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|$BUILD_PIPELINE_NAME - $BUILD_JOB_NAME> job passed!*
+
 jobs:
   - name: auto-bump-terraform
+    on_success: *success-alert
+    on_failure: *failure-alert
     plan:
       - get: terraform-github-release
         trigger: true
@@ -23,6 +41,7 @@ jobs:
 
   - name: push-dev-image
     serial_groups: [track1, track2]
+    on_failure: *failure-alert
     plan:
       - get: resource-src
         trigger: true
@@ -34,6 +53,7 @@ jobs:
 
   - name: test-unit
     serial_groups: [track1, track2]
+    on_failure: *failure-alert
     plan:
       - get: resource-src
         trigger: true
@@ -53,6 +73,7 @@ jobs:
 
   - name: push-test-image
     serial_groups: [track1, track2]
+    on_failure: *failure-alert
     plan:
       - get: resource-src
         trigger: true
@@ -66,6 +87,7 @@ jobs:
 
   - name: plan-infrastructure
     serial_groups: [track1]
+    on_failure: *failure-alert
     plan:
       - get: resource-src
         trigger: true
@@ -80,6 +102,7 @@ jobs:
 
   - name: create-infrastructure
     serial_groups: [track1]
+    on_failure: *failure-alert
     plan:
       - get: resource-src
         trigger: true
@@ -109,6 +132,7 @@ jobs:
 
   - name: update-infrastructure-via-params
     serial_groups: [track1]
+    on_failure: *failure-alert
     plan:
       - get: resource-src
         trigger: true
@@ -123,6 +147,7 @@ jobs:
 
   - name: update-infrastructure-via-file
     serial_groups: [track1]
+    on_failure: *failure-alert
     plan:
       - get: resource-src
         trigger: true
@@ -147,6 +172,7 @@ jobs:
 
   - name: destroy-infrastructure
     serial_groups: [track1]
+    on_failure: *failure-alert
     plan:
       - get: resource-src
         trigger: true
@@ -160,6 +186,7 @@ jobs:
 
   - name: create-env-and-lock
     serial_groups: [track2]
+    on_failure: *failure-alert
     plan:
       - get: resource-src
         trigger: true
@@ -179,6 +206,7 @@ jobs:
 
   - name: lock-env
     serial_groups: [track2]
+    on_failure: *failure-alert
     plan:
       - get: resource-src
         trigger: true
@@ -202,6 +230,7 @@ jobs:
 
   - name: destroy-env-and-lock
     serial_groups: [track2]
+    on_failure: *failure-alert
     plan:
       - get: resource-src
         trigger: true
@@ -221,6 +250,7 @@ jobs:
           remove: locks/
 
   - name: push-prod-image
+    on_failure: *failure-alert
     plan:
       - get: resource-src
         passed: [destroy-env-and-lock, destroy-infrastructure]
@@ -316,3 +346,7 @@ resources:
   source:
     <<: *terraform-source
     terraform_source: github.com/ljfranklin/terraform-resource//fixtures/aws
+- name: slack-alert
+  type: slack-notification
+  source:
+    url: {{slack_url}}

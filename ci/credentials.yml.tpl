@@ -20,3 +20,6 @@ docker_password:
 
 # creds to commit lock files to GitHub
 pool_git_private_key:
+
+# used to trigger slack alerts, usually in format https://hooks.slack.com/services/XXXX
+slack_url:

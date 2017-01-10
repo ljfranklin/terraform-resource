@@ -4,3 +4,4 @@ bin/
 pkg/
 credentials.yml
 /out/
+*.swp
