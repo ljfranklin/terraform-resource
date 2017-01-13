@@ -275,6 +275,11 @@ resource_types:
     # use tag `latest` for stable release
     repository: ljfranklin/terraform-resource
     tag: test
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
 
 resources:
 - name: resource-src
