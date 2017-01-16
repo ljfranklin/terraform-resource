@@ -81,12 +81,21 @@ func (s StateFile) Upload() (storage.Version, error) {
 		return storage.Version{}, fmt.Errorf("Failed to upload state file: %s", err)
 	}
 
-	version, err := s.StorageDriver.Version(s.RemotePath)
-	if err != nil {
-		return storage.Version{}, fmt.Errorf("Failed to retrieve version from '%s': %s", s.RemotePath, err)
+	// handle AWS eventual consistency errors
+	retryAttempts := 5
+	var version storage.Version
+	for i := 0; i < retryAttempts; i++ {
+		version, err = s.StorageDriver.Version(s.RemotePath)
+		if err != nil {
+			return storage.Version{}, fmt.Errorf("Failed to retrieve version from '%s': %s", s.RemotePath, err)
+		}
+		if !version.IsZero() {
+			break
+		}
+		time.Sleep(1 * time.Second)
 	}
 	if version.IsZero() {
-		return storage.Version{}, fmt.Errorf("Couldn't find state file at: %s", s.RemotePath)
+		return storage.Version{}, fmt.Errorf("Couldn't find state file after %d retries at: %s", retryAttempts, s.RemotePath)
 	}
 
 	return version, nil
