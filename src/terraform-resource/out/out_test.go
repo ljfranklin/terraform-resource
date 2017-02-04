@@ -105,6 +105,8 @@ var _ = Describe("Out", func() {
 		}
 
 		assertOutBehavior(req, expectedMetadata)
+
+		awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
 	})
 
 	It("creates IaaS resources from a remote terraform source", func() {
@@ -347,6 +349,31 @@ var _ = Describe("Out", func() {
 			"map":  `{"key-1":"value-1","key-2":"value-2"}`,
 			"list": `["item-1","item-2"]`,
 		}
+
+		assertOutBehavior(req, expectedMetadata)
+	})
+
+	It("allows an empty set of outputs", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/no-outputs/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]string{}
 
 		assertOutBehavior(req, expectedMetadata)
 	})
@@ -810,9 +837,6 @@ var _ = Describe("Out", func() {
 
 		Expect(fields).To(HaveKey("terraform_version"))
 		Expect(fields["terraform_version"]).To(MatchRegexp("Terraform v.*"))
-
-		Expect(fields).To(HaveKey("object_key"))
-		awsVerifier.ExpectS3FileToExist(bucket, fields["object_key"])
 	}
 })
 

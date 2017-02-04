@@ -115,7 +115,13 @@ func (c Client) Output() (map[string]interface{}, error) {
 	})
 	rawOutput, err := outputCmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve output.\nError: %s\nOutput: %s", err, rawOutput)
+		// TF CLI currently doesn't provide a nice way to detect an empty set of outputs
+		// https://github.com/hashicorp/terraform/issues/11696
+		if strings.Contains(string(rawOutput), "no outputs defined") {
+			rawOutput = []byte("{}")
+		} else {
+			return nil, fmt.Errorf("Failed to retrieve output.\nError: %s\nOutput: %s", err, rawOutput)
+		}
 	}
 
 	tfOutput := map[string]map[string]interface{}{}
