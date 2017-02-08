@@ -129,6 +129,18 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		Value: tfVersion,
 	})
 
+	if req.Params.OutputStatefile {
+		stateFilePath := path.Join(r.OutputDir, "terraform.tfstate")
+		stateContents, err := ioutil.ReadFile(terraformModel.StateFileLocalPath)
+		if err != nil {
+			return models.InResponse{}, err
+		}
+		err = ioutil.WriteFile(stateFilePath, stateContents, 0777)
+		if err != nil {
+			return models.InResponse{}, err
+		}
+	}
+
 	resp := models.InResponse{
 		Version:  version,
 		Metadata: metadata,
