@@ -149,10 +149,33 @@ var _ = Describe("In", func() {
 			}))
 
 			expectedNamePath := path.Join(tmpDir, "name")
-			Expect(expectedOutputPath).To(BeAnExistingFile())
+			Expect(expectedNamePath).To(BeAnExistingFile())
 			nameContents, err := ioutil.ReadFile(expectedNamePath)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(nameContents)).To(Equal(prevEnvName))
+		})
+
+		It("outputs the statefile if `output_statefile` is given", func() {
+			inReq.Params.OutputStatefile = true
+			inReq.Version = models.Version{
+				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToPrevS3Fixture),
+				EnvName:      prevEnvName,
+			}
+
+			runner := in.Runner{
+				OutputDir: tmpDir,
+			}
+			_, err := runner.Run(inReq)
+			Expect(err).ToNot(HaveOccurred())
+
+			expectedOutputPath := path.Join(tmpDir, "metadata")
+			Expect(expectedOutputPath).To(BeAnExistingFile())
+
+			expectedNamePath := path.Join(tmpDir, "name")
+			Expect(expectedNamePath).To(BeAnExistingFile())
+
+			expectedStatePath := path.Join(tmpDir, "terraform.tfstate")
+			Expect(expectedStatePath).To(BeAnExistingFile())
 		})
 	})
 

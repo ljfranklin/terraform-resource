@@ -103,13 +103,19 @@ It then uploads the updated state file.
 If the `destroy` action is specified, `put` will destroy all IaaS resources specified in the state file.
 It then deletes the state file using the configured `storage` driver.
 
+#### Get Parameters
+
+> **Note:** In Concourse, a `put` is always followed by an implicit `get`. To pass `get` params via `put`, use `put.get_params`.
+
+* `output_statefile`: *Optional. Default `false`* If true, the resource writes the Terraform statefile to a file named `terraform.tfstate`. **Warning:** Ensure any changes to this statefile are persisted back to the resource's storage bucket. **Another warning:** Some statefiles contain unencrypted secrets, be careful not to expose these in your build logs.
+
 #### Put Parameters
 
 * `terraform_source`: *Required if absent under `source`.* See description under `source.terraform_source`.
 
 * `env_name`: *Optional.* The name of the environment to create or modify. Multiple environments can be managed with a single resource.
 
-* `generate_random_name`: *Optional.* Generates a random `env_name` (e.g. "coffee-bee"). Useful for creating lock files.
+* `generate_random_name`: *Optional. Default `false`* Generates a random `env_name` (e.g. "coffee-bee"). Useful for creating lock files.
 
 * `env_name_file`: *Optional.* Reads the `env_name` from a specified file path. Useful for destroying environments from a lock file.
 
@@ -124,9 +130,9 @@ Finally, `env_name` is automatically passed as an input `var`.
 
 * `env`: *Optional.* A key-value collection of environment variables to pass to Terraform. See description under `source.env`.
 
-* `plan_only`: *Optional.* This boolean will allow terraform to create a plan file and store it on S3. **Warning:** Plan files contain unencrypted credentials like AWS Secret Keys, only store these files in a private bucket.
+* `plan_only`: *Optional. Default `false`* This boolean will allow terraform to create a plan file and store it on S3. **Warning:** Plan files contain unencrypted credentials like AWS Secret Keys, only store these files in a private bucket.
 
-* `plan_run`: *Optional.* This boolean will allow terraform to execute the plan file stored on S3, then delete it.
+* `plan_run`: *Optional. Default `false`* This boolean will allow terraform to execute the plan file stored on S3, then delete it.
 
 * `action`: *Optional.* Used to indicate a destructive `put`. The only recognized value is `destroy`, create / update are the implicit defaults.
 
