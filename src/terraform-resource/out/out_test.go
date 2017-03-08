@@ -36,6 +36,7 @@ var _ = Describe("Out", func() {
 		pathToS3Fixture   string
 		namer             namerfakes.FakeNamer
 		assertOutBehavior func(models.OutRequest, map[string]string)
+		logWriter         bytes.Buffer
 	)
 
 	BeforeEach(func() {
@@ -378,6 +379,35 @@ var _ = Describe("Out", func() {
 		assertOutBehavior(req, expectedMetadata)
 	})
 
+	It("redacts sensitive outputs in metadata and logs", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]string{
+			"secret": `\u003csensitive\u003e`, // JSON encoder escapes < and >
+		}
+
+		assertOutBehavior(req, expectedMetadata)
+
+		Expect(logWriter.String()).ToNot(ContainSubstring("super-secret"))
+	})
+
 	It("returns an error if an input var is malformed", func() {
 		req := models.OutRequest{
 			Source: models.Source{
@@ -399,7 +429,6 @@ var _ = Describe("Out", func() {
 			},
 		}
 
-		var logWriter bytes.Buffer
 		runner := out.Runner{
 			SourceDir: workingDir,
 			LogWriter: &logWriter,
@@ -687,7 +716,6 @@ var _ = Describe("Out", func() {
 		})
 
 		It("does not delete partially created resources by default", func() {
-			var logWriter bytes.Buffer
 			runner := out.Runner{
 				SourceDir: workingDir,
 				LogWriter: &logWriter,
@@ -713,7 +741,6 @@ var _ = Describe("Out", func() {
 		})
 
 		It("untaints the state file after the next successful put", func() {
-			var logWriter bytes.Buffer
 			runner := out.Runner{
 				SourceDir: workingDir,
 				LogWriter: &logWriter,
@@ -737,7 +764,6 @@ var _ = Describe("Out", func() {
 		It("deletes all resources on failure if delete_on_failure is true", func() {
 			req.Params.Terraform.DeleteOnFailure = true
 
-			var logWriter bytes.Buffer
 			runner := out.Runner{
 				SourceDir: workingDir,
 				LogWriter: &logWriter,
@@ -812,7 +838,6 @@ var _ = Describe("Out", func() {
 	})
 
 	assertOutBehavior = func(outRequest models.OutRequest, expectedMetadata map[string]string) {
-		var logWriter bytes.Buffer
 		runner := out.Runner{
 			SourceDir: workingDir,
 			LogWriter: &logWriter,

@@ -18,7 +18,7 @@ type Action struct {
 
 type Result struct {
 	Version storage.Version
-	Output  map[string]interface{}
+	Output  map[string]map[string]interface{}
 }
 
 func (a Action) Apply() (Result, error) {
@@ -144,7 +144,7 @@ func (a Action) attemptDestroy() (Result, error) {
 		return Result{}, err
 	}
 	return Result{
-		Output:  map[string]interface{}{},
+		Output:  map[string]map[string]interface{}{},
 		Version: storageVersion,
 	}, nil
 }
@@ -182,7 +182,7 @@ func (a Action) attemptPlan() (Result, error) {
 	}
 
 	return Result{
-		Output:  map[string]interface{}{},
+		Output:  map[string]map[string]interface{}{},
 		Version: storageVersion,
 	}, nil
 }
@@ -224,7 +224,13 @@ func (a *Action) setup() error {
 		if err != nil {
 			return err
 		}
-		a.Client.Model = models.Terraform{Vars: outputs}.Merge(a.Client.Model)
+		// TODO: should I remove this feature?
+		simpleOutputs := map[string]interface{}{}
+		for key, value := range outputs {
+			simpleOutputs[key] = value["value"]
+		}
+
+		a.Client.Model = models.Terraform{Vars: simpleOutputs}.Merge(a.Client.Model)
 	}
 	return nil
 }

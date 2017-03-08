@@ -118,15 +118,13 @@ var _ = Describe("In", func() {
 
 			Expect(resp.Version.EnvName).To(Equal(prevEnvName))
 
-			includesVersionInMetadata := false
+			metadata := map[string]string{}
 			for _, field := range resp.Metadata {
-				if field.Name == "terraform_version" {
-					Expect(field.Value).To(MatchRegexp("Terraform v.*"))
-					includesVersionInMetadata = true
-					break
-				}
+				metadata[field.Name] = field.Value
 			}
-			Expect(includesVersionInMetadata).To(BeTrue(), "Expect to find `terraform_version`, but did not: %#v", resp.Metadata)
+			Expect(metadata["terraform_version"]).To(MatchRegexp("Terraform v.*"))
+			Expect(metadata["env_name"]).To(Equal("previous"))
+			Expect(metadata["secret"]).To(Equal(`\u003csensitive\u003e`)) // JSON encoder escapes < and >
 
 			expectedOutputPath := path.Join(tmpDir, "metadata")
 			Expect(expectedOutputPath).To(BeAnExistingFile())
@@ -147,6 +145,7 @@ var _ = Describe("In", func() {
 				"item-1",
 				"item-2",
 			}))
+			Expect(outputContents["secret"]).To(Equal("super-secret"))
 
 			expectedNamePath := path.Join(tmpDir, "name")
 			Expect(expectedNamePath).To(BeAnExistingFile())

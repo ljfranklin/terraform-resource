@@ -22,3 +22,7 @@ output "map" {
 output "list" {
     value = ["item-1", "item-2"]
 }
+output "secret" {
+    sensitive = true
+    value     = "super-secret"
+}

@@ -94,9 +94,21 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	defer nameFile.Close()
 	nameFile.WriteString(version.EnvName)
 
-	output, err := client.Output()
+	tfOutput, err := client.Output()
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to parse terraform output.\nError: %s", err)
+	}
+
+	actualOutput := map[string]interface{}{}
+	sanitizedOutput := map[string]interface{}{}
+	for key, value := range tfOutput {
+		actualOutput[key] = value["value"]
+
+		if value["sensitive"] == true {
+			sanitizedOutput[key] = `<sensitive>`
+		} else {
+			sanitizedOutput[key] = value["value"]
+		}
 	}
 
 	outputFilepath := path.Join(r.OutputDir, "metadata")
@@ -104,12 +116,12 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to create output file at path '%s': %s", outputFilepath, err)
 	}
-	if err := json.NewEncoder(outputFile).Encode(output); err != nil {
+	if err := json.NewEncoder(outputFile).Encode(actualOutput); err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to write output file: %s", err)
 	}
 
 	metadata := []models.MetadataField{}
-	for key, value := range output {
+	for key, value := range sanitizedOutput {
 		jsonValue, err := json.Marshal(value)
 		if err != nil {
 			jsonValue = []byte(fmt.Sprintf("Unable to parse output value for key '%s': %s", key, err))

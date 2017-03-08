@@ -107,7 +107,7 @@ func (c Client) Plan() error {
 	return nil
 }
 
-func (c Client) Output() (map[string]interface{}, error) {
+func (c Client) Output() (map[string]map[string]interface{}, error) {
 	outputCmd := c.terraformCmd([]string{
 		"output",
 		"-json",
@@ -129,12 +129,7 @@ func (c Client) Output() (map[string]interface{}, error) {
 		return nil, fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawOutput)
 	}
 
-	output := map[string]interface{}{}
-	for key, value := range tfOutput {
-		output[key] = value["value"]
-	}
-
-	return output, nil
+	return tfOutput, nil
 }
 
 func (c Client) Version() (string, error) {
