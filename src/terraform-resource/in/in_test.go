@@ -124,7 +124,7 @@ var _ = Describe("In", func() {
 			}
 			Expect(metadata["terraform_version"]).To(MatchRegexp("Terraform v.*"))
 			Expect(metadata["env_name"]).To(Equal("previous"))
-			Expect(metadata["secret"]).To(Equal(`\u003csensitive\u003e`)) // JSON encoder escapes < and >
+			Expect(metadata["secret"]).To(Equal("<sensitive>"))
 
 			expectedOutputPath := path.Join(tmpDir, "metadata")
 			Expect(expectedOutputPath).To(BeAnExistingFile())

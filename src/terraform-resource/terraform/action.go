@@ -1,8 +1,10 @@
 package terraform
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"terraform-resource/logger"
 	"terraform-resource/models"
 	"terraform-resource/storage"
@@ -19,6 +21,32 @@ type Action struct {
 type Result struct {
 	Version storage.Version
 	Output  map[string]map[string]interface{}
+}
+
+func (r Result) RawOutput() map[string]interface{} {
+	outputs := map[string]interface{}{}
+	for key, value := range r.Output {
+		outputs[key] = value["value"]
+	}
+
+	return outputs
+}
+
+func (r Result) SanitizedOutput() map[string]string {
+	output := map[string]string{}
+	for key, value := range r.Output {
+		if value["sensitive"] == true {
+			output[key] = "<sensitive>"
+		} else {
+			jsonValue, err := json.Marshal(value["value"])
+			if err != nil {
+				jsonValue = []byte(fmt.Sprintf("Unable to parse output value for key '%s': %s", key, err))
+			}
+
+			output[key] = strings.Trim(string(jsonValue), "\"")
+		}
+	}
+	return output
 }
 
 func (a Action) Apply() (Result, error) {
@@ -224,13 +252,11 @@ func (a *Action) setup() error {
 		if err != nil {
 			return err
 		}
-		// TODO: should I remove this feature?
-		simpleOutputs := map[string]interface{}{}
-		for key, value := range outputs {
-			simpleOutputs[key] = value["value"]
+		previousResult := Result{
+			Output: outputs,
 		}
 
-		a.Client.Model = models.Terraform{Vars: simpleOutputs}.Merge(a.Client.Model)
+		a.Client.Model = models.Terraform{Vars: previousResult.RawOutput()}.Merge(a.Client.Model)
 	}
 	return nil
 }

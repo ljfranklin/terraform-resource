@@ -400,7 +400,7 @@ var _ = Describe("Out", func() {
 			},
 		}
 		expectedMetadata := map[string]string{
-			"secret": `\u003csensitive\u003e`, // JSON encoder escapes < and >
+			"secret": `<sensitive>`,
 		}
 
 		assertOutBehavior(req, expectedMetadata)

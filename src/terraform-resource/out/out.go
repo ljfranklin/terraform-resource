@@ -1,7 +1,6 @@
 package out
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -112,22 +111,10 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	}
 
 	metadata := []models.MetadataField{}
-	output := map[string]interface{}{}
-	for key, value := range result.Output {
-		if value["sensitive"] == true {
-			output[key] = `<sensitive>`
-		} else {
-			output[key] = value["value"]
-		}
-	}
-	for key, value := range output {
-		jsonValue, err := json.Marshal(value)
-		if err != nil {
-			jsonValue = []byte(fmt.Sprintf("Unable to parse output value for key '%s': %s", key, err))
-		}
+	for key, value := range result.SanitizedOutput() {
 		metadata = append(metadata, models.MetadataField{
 			Name:  key,
-			Value: strings.Trim(string(jsonValue), "\""),
+			Value: value,
 		})
 	}
 

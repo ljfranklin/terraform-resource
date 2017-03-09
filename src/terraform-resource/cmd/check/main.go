@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"terraform-resource/check"
+	"terraform-resource/encoder"
 	"terraform-resource/models"
 )
 
@@ -21,7 +22,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := json.NewEncoder(os.Stdout).Encode(resp); err != nil {
+	if err := encoder.NewJSONEncoder(os.Stdout).Encode(resp); err != nil {
 		log.Fatalf("Failed to write Versions to stdout: %s", err)
 	}
 }

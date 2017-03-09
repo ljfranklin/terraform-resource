@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"terraform-resource/encoder"
 	"terraform-resource/in"
 	"terraform-resource/models"
 )
@@ -28,7 +29,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := json.NewEncoder(os.Stdout).Encode(resp); err != nil {
+	if err := encoder.NewJSONEncoder(os.Stdout).Encode(resp); err != nil {
 		log.Fatalf("Failed to write InResponse: %s", err)
 	}
 }

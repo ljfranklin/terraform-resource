@@ -1,13 +1,12 @@
 package in
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 
+	"terraform-resource/encoder"
 	"terraform-resource/models"
 	"terraform-resource/storage"
 	"terraform-resource/terraform"
@@ -98,17 +97,8 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to parse terraform output.\nError: %s", err)
 	}
-
-	actualOutput := map[string]interface{}{}
-	sanitizedOutput := map[string]interface{}{}
-	for key, value := range tfOutput {
-		actualOutput[key] = value["value"]
-
-		if value["sensitive"] == true {
-			sanitizedOutput[key] = `<sensitive>`
-		} else {
-			sanitizedOutput[key] = value["value"]
-		}
+	result := terraform.Result{
+		Output: tfOutput,
 	}
 
 	outputFilepath := path.Join(r.OutputDir, "metadata")
@@ -116,19 +106,16 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to create output file at path '%s': %s", outputFilepath, err)
 	}
-	if err := json.NewEncoder(outputFile).Encode(actualOutput); err != nil {
+
+	if err := encoder.NewJSONEncoder(outputFile).Encode(result.RawOutput()); err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to write output file: %s", err)
 	}
 
 	metadata := []models.MetadataField{}
-	for key, value := range sanitizedOutput {
-		jsonValue, err := json.Marshal(value)
-		if err != nil {
-			jsonValue = []byte(fmt.Sprintf("Unable to parse output value for key '%s': %s", key, err))
-		}
+	for key, value := range result.SanitizedOutput() {
 		metadata = append(metadata, models.MetadataField{
 			Name:  key,
-			Value: strings.Trim(string(jsonValue), "\""),
+			Value: value,
 		})
 	}
 
