@@ -36,10 +36,12 @@ func (c Client) Apply() error {
 		"apply",
 		"-backup='-'",  // no need to backup state file
 		"-input=false", // do not prompt for inputs
-		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
 	if c.Model.PlanRun == false {
 		applyArgs = append(applyArgs, c.varFlags()...)
+		applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath))
+	} else {
+		applyArgs = append(applyArgs, fmt.Sprintf("-state-out=%s", c.Model.StateFileLocalPath))
 	}
 
 	applyArgs = append(applyArgs, sourcePath)

@@ -72,7 +72,7 @@ var _ = Describe("In", func() {
 		}
 
 		var err error
-		tmpDir, err = ioutil.TempDir("", "terraform-resource-in-test")
+		tmpDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-in-test")
 		Expect(err).ToNot(HaveOccurred())
 	})
 

@@ -40,7 +40,7 @@ fi
 
 if [[ "${upstream_major_minor}" != "${downstream_major_minor}" ]]; then
   echo "Refusing to perform an automatic major or minor version bump to '${upstream_version}'."
-  exit 0
+  exit 1
 fi
 
 if [[ "${upstream_patch}" -gt "${downstream_patch}" ]]; then

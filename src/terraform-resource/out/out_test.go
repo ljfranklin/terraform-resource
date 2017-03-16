@@ -242,7 +242,7 @@ var _ = Describe("Out", func() {
 			fileContent, err := yaml.Marshal(fileParams)
 			Expect(err).ToNot(HaveOccurred())
 
-			varFileName = fmt.Sprintf("%s.tf", helpers.RandomString("tf-variables"))
+			varFileName = fmt.Sprintf("%s.yml", helpers.RandomString("tf-variables"))
 			varFilePath := path.Join(workingDir, varFileName)
 			varFile, err := os.Create(varFilePath)
 			Expect(err).ToNot(HaveOccurred())
