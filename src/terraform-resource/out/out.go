@@ -27,6 +27,14 @@ type Runner struct {
 }
 
 func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
+	logger := logger.Logger{
+		Sink: r.LogWriter,
+	}
+
+	if req.Params.VarFile != "" {
+		logger.Warn("WARNING: `var_file` has been deprecated in favor of `var_files`. Switch to `var_files` prior to June 1st 2017 💣")
+	}
+
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-out")
 	if err != nil {
 		return models.OutResponse{}, fmt.Errorf("Failed to create tmp dir at '%s'", os.TempDir())
@@ -43,8 +51,13 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	if terraformModel.VarFile != "" {
 		terraformModel.VarFile = path.Join(r.SourceDir, terraformModel.VarFile)
 	}
-	if err = terraformModel.ParseVarsFromFile(); err != nil {
-		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.var_file`: %s", err)
+	if terraformModel.VarFiles != nil {
+		for i := range terraformModel.VarFiles {
+			terraformModel.VarFiles[i] = path.Join(r.SourceDir, terraformModel.VarFiles[i])
+		}
+	}
+	if err = terraformModel.ParseVarsFromFiles(); err != nil {
+		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.var_files`: %s", err)
 	}
 
 	if len(terraformModel.Source) == 0 && terraformModel.PlanRun == false {
@@ -86,9 +99,7 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		StateFile:       stateFile,
 		PlanFile:        planFile,
 		DeleteOnFailure: terraformModel.DeleteOnFailure,
-		Logger: logger.Logger{
-			Sink: r.LogWriter,
-		},
+		Logger:          logger,
 	}
 
 	var result terraform.Result

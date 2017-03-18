@@ -123,9 +123,9 @@ It then deletes the state file using the configured `storage` driver.
 
 * `vars`: *Optional.* A collection of Terraform input variables. See description under `source.vars`.
 
-* `var_file`: *Optional.* A file containing Terraform input variables. This file can be in YAML or JSON format.
+* `var_files`: *Optional.* A list of files containing Terraform input variables. These files can be in YAML or JSON format.
 
-  > Terraform variables will be merged from the following locations in increasing order of precedence: `source.vars`, `put.params.vars`, and `put.params.var_file`. If a state file already exists, the outputs will be fed back in as input `vars` to subsequent `puts` with the lowest precedence.
+  > Terraform variables will be merged from the following locations in increasing order of precedence: `source.vars`, `put.params.vars`, and `put.params.var_files`. If a state file already exists, the outputs will be fed back in as input `vars` to subsequent `puts` with the lowest precedence.
 Finally, `env_name` is automatically passed as an input `var`.
 
 * `env`: *Optional.* A key-value collection of environment variables to pass to Terraform. See description under `source.env`.

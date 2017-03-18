@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -36,6 +37,7 @@ var _ = Describe("Out", func() {
 		pathToS3Fixture   string
 		namer             namerfakes.FakeNamer
 		assertOutBehavior func(models.OutRequest, map[string]string)
+		createYAMLTmpFile func(string, interface{}) string
 		logWriter         bytes.Buffer
 	)
 
@@ -231,25 +233,17 @@ var _ = Describe("Out", func() {
 	})
 
 	Context("when given a yaml file containing variables", func() {
-		var varFileName string
+		var firstVarFile string
+		var secondVarFile string
 
 		BeforeEach(func() {
-			fileParams := map[string]interface{}{
-				"bucket":         bucket,
+			firstVarFile = createYAMLTmpFile("tf-vars-1", map[string]interface{}{
+				"bucket": bucket,
+			})
+			secondVarFile = createYAMLTmpFile("tf-vars-2", map[string]interface{}{
 				"object_key":     s3ObjectPath,
 				"object_content": "terraform-files-are-neat",
-			}
-			fileContent, err := yaml.Marshal(fileParams)
-			Expect(err).ToNot(HaveOccurred())
-
-			varFileName = fmt.Sprintf("%s.yml", helpers.RandomString("tf-variables"))
-			varFilePath := path.Join(workingDir, varFileName)
-			varFile, err := os.Create(varFilePath)
-			Expect(err).ToNot(HaveOccurred())
-			defer varFile.Close()
-
-			_, err = varFile.Write(fileContent)
-			Expect(err).ToNot(HaveOccurred())
+			})
 		})
 
 		It("creates IaaS resources from request vars and file vars", func() {
@@ -276,8 +270,8 @@ var _ = Describe("Out", func() {
 							"object_content": "to-be-overridden",
 							"region":         region,
 						},
-						// var file overrides put.params
-						VarFile: varFileName,
+						// var files overrides put.params
+						VarFiles: []string{firstVarFile, secondVarFile},
 					},
 				},
 			}
@@ -287,6 +281,51 @@ var _ = Describe("Out", func() {
 			}
 
 			assertOutBehavior(req, expectedMetadata)
+		})
+
+		It("prints a deprecation warning if VarFile is used", func() {
+			deadline := time.Date(2017, time.June, 1, 0, 0, 0, 0, time.Local)
+			if time.Now().After(deadline) {
+				Fail("Time to remove support for `var_file`!")
+			}
+
+			req := models.OutRequest{
+				Source: models.Source{
+					Storage: storageModel,
+					Terraform: models.Terraform{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key": accessKey,
+							"bucket":     bucket,
+							// will be overridden
+							"secret_key": "bad-secret-key",
+							"region":     region,
+						},
+					},
+				},
+				// put params overrides source
+				Params: models.OutParams{
+					EnvName: envName,
+					Terraform: models.Terraform{
+						Vars: map[string]interface{}{
+							"secret_key": secretKey,
+							// will be overridden
+							"object_content": "to-be-overridden",
+							"region":         region,
+						},
+						// var files overrides put.params
+						VarFile: secondVarFile,
+					},
+				},
+			}
+			expectedMetadata := map[string]string{
+				"env_name":    envName,
+				"content_md5": calculateMD5("terraform-files-are-neat"),
+			}
+
+			assertOutBehavior(req, expectedMetadata)
+
+			Expect(logWriter.String()).To(MatchRegexp("WARNING.*var_file.*June 1"))
 		})
 	})
 
@@ -862,6 +901,22 @@ var _ = Describe("Out", func() {
 
 		Expect(fields).To(HaveKey("terraform_version"))
 		Expect(fields["terraform_version"]).To(MatchRegexp("Terraform v.*"))
+	}
+
+	createYAMLTmpFile = func(filePrefix string, content interface{}) string {
+		fileContent, err := yaml.Marshal(content)
+		Expect(err).ToNot(HaveOccurred())
+
+		varFileName := fmt.Sprintf("%s.yml", helpers.RandomString(filePrefix))
+		varFilePath := path.Join(workingDir, varFileName)
+		varFile, err := os.Create(varFilePath)
+		Expect(err).ToNot(HaveOccurred())
+		defer varFile.Close()
+
+		_, err = varFile.Write(fileContent)
+		Expect(err).ToNot(HaveOccurred())
+
+		return varFileName
 	}
 })
 

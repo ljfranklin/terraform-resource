@@ -167,7 +167,8 @@ jobs:
       - put: terraform
         params:
           env_name: terraform-ci
-          var_file: vars/input.yml
+          var_files:
+          - vars/input.yml
       - *show-outputs
 
   - name: destroy-infrastructure
