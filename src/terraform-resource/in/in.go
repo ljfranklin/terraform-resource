@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 
 	"terraform-resource/encoder"
 	"terraform-resource/models"
@@ -40,7 +41,7 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	}
 	storageDriver := storage.BuildDriver(storageModel)
 
-	stateFilename := fmt.Sprintf("%s.tfstate", req.Version.EnvName)
+	stateFilename := fmt.Sprintf("%s.tfstate", strings.Replace(req.Version.EnvName, ".tfstate", ""))
 	storageVersion, err := storageDriver.Version(stateFilename)
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to check for existing state file: %s", err)
