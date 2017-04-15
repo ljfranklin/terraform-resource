@@ -3,8 +3,6 @@
 A [Concourse](http://concourse.ci/) resource that allows jobs to modify IaaS resources via [Terraform](https://www.terraform.io/).
 Useful for creating a pool of reproducible environments. No more snowflakes!
 
-See what's in progress on the [Trello board](https://trello.com/b/s06sLNwc/terraform-resource).
-
 See [DEVELOPMENT](DEVELOPMENT.md) if you're interested in submitting a PR :+1:
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/ljfranklin/terraform-resource.svg)
