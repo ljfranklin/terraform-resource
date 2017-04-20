@@ -36,3 +36,18 @@
 1. `go get -u github.com/FiloSottile/gvt`
 1. `gvt fetch -tag=v1.4.11 github.com/aws/aws-sdk-go`
 1. `git add vendor/ && git commit`
+
+#### Testing your changes in Concourse
+
+1. Build a docker image with your changes:
+  `./scripts/docker-build --image-name DOCKER_USER/IMAGE:TAG --terraform-url https://LATEST_TERRAFORM_URL.zip`
+1. Include the image in your pipeline:
+  ```yaml
+  resource_types:
+  - name: terraform
+    type: docker-image
+    source:
+      repository: DOCKER_USER/IMAGE:TAG
+  ```
+1. Run your pipeline and verify everything works as expected.
+1. Submit your changes as a PR!
