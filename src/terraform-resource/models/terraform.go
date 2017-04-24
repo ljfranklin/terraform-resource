@@ -17,6 +17,7 @@ type Terraform struct {
 	DeleteOnFailure     bool                   `json:"delete_on_failure,omitempty"` // optional
 	PlanOnly            bool                   `json:"plan_only,omitempty"`         // optional
 	PlanRun             bool                   `json:"plan_run,omitempty"`          // optional
+	OutputModule        string                 `json:"output_module,omitempty"`     // optional
 	PlanFileLocalPath   string                 `json:"-"`                           // not specified pipeline
 	PlanFileRemotePath  string                 `json:"-"`                           // not specified pipeline
 	StateFileLocalPath  string                 `json:"-"`                           // not specified pipeline
@@ -87,6 +88,10 @@ func (m Terraform) Merge(other Terraform) Terraform {
 
 	if other.PlanOnly {
 		m.PlanOnly = true
+	}
+
+	if other.OutputModule != "" {
+		m.OutputModule = other.OutputModule
 	}
 
 	if other.PlanRun {

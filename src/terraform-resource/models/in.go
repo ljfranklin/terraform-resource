@@ -14,4 +14,5 @@ type InResponse struct {
 type InParams struct {
 	Action          string `json:"action,omitempty"`           // optional
 	OutputStatefile bool   `json:"output_statefile,omitempty"` // optional
+	OutputModule 		string `json:"output_module,omitempty"` 	 // optional
 }
