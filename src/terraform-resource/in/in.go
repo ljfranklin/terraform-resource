@@ -65,6 +65,15 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		StateFileLocalPath:  path.Join(tmpDir, "terraform.tfstate"),
 		StateFileRemotePath: stateFilename,
 	}
+
+	if req.Params.OutputModule != "" {
+		terraformModel = models.Terraform{
+			StateFileLocalPath:  path.Join(tmpDir, "terraform.tfstate"),
+			StateFileRemotePath: stateFilename,
+			OutputModule: req.Params.OutputModule,
+		}
+	}
+
 	if err = terraformModel.Validate(); err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
 	}

@@ -112,6 +112,37 @@ var _ = Describe("Out", func() {
 		awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
 	})
 
+	It("creates IaaS resources from a local terraform source using modules", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/module/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+				OutputModule: "test_module_1",
+			},
+		}
+		expectedMetadata := map[string]string{
+			"env_name":    envName,
+			"content_md5": calculateMD5("terraform-is-neat"),
+		}
+
+		assertOutBehavior(req, expectedMetadata)
+
+		awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
+	})
+
 	It("creates IaaS resources from a remote terraform source", func() {
 		req := models.OutRequest{
 			Source: models.Source{
@@ -159,6 +190,7 @@ var _ = Describe("Out", func() {
 						"region":         region,
 					},
 				},
+				OutputModule: "test_module_1",
 			},
 		}
 		expectedMetadata := map[string]string{

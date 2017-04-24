@@ -110,11 +110,18 @@ func (c Client) Plan() error {
 }
 
 func (c Client) Output() (map[string]map[string]interface{}, error) {
-	outputCmd := c.terraformCmd([]string{
+	outputArgs := []string{
 		"output",
 		"-json",
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
-	})
+	}
+
+	if c.Model.OutputModule != "" {
+		outputArgs = append(outputArgs, fmt.Sprintf("-module=%s", c.Model.OutputModule))
+	}
+
+	outputCmd := c.terraformCmd(outputArgs)
+
 	rawOutput, err := outputCmd.CombinedOutput()
 	if err != nil {
 		// TF CLI currently doesn't provide a nice way to detect an empty set of outputs

@@ -48,6 +48,9 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	storageDriver := storage.BuildDriver(storageModel)
 
 	terraformModel := req.Source.Terraform.Merge(req.Params.Terraform)
+	if req.Params.OutputModule != "" {
+		terraformModel.OutputModule = req.Params.OutputModule
+	}
 	if terraformModel.VarFile != "" {
 		terraformModel.VarFile = path.Join(r.SourceDir, terraformModel.VarFile)
 	}
