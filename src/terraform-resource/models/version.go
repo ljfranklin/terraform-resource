@@ -3,7 +3,6 @@ package models
 import (
 	"fmt"
 	"path"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -23,7 +22,9 @@ type Version struct {
 
 func NewVersion(storageVersion storage.Version) Version {
 	basename := path.Base(storageVersion.StateFile)
-	envName := strings.TrimSuffix(basename, filepath.Ext(basename))
+	envName := strings.TrimSuffix(basename, ".tainted")
+	envName = strings.TrimSuffix(envName, ".plan")
+	envName = strings.TrimSuffix(envName, ".tfstate")
 	return Version{
 		LastModified: storageVersion.LastModified.Format(TimeFormat),
 		EnvName:      envName,

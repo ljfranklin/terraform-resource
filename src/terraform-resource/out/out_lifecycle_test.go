@@ -1,6 +1,7 @@
 package out_test
 
 import (
+	"bytes"
 	"crypto/md5"
 	"fmt"
 	"io/ioutil"
@@ -179,6 +180,66 @@ var _ = Describe("Out Lifecycle", func() {
 		deletedVersion, err := time.Parse(storage.TimeFormat, deleteOutput.Version.LastModified)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(deletedVersion).To(BeTemporally(">", updatedVersion))
+		Expect(deleteOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
+	})
+
+	It("can delete after a failed put", func() {
+		outRequest := models.OutRequest{
+			Source: models.Source{
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"bucket":               bucket,
+						"object_key":           s3ObjectPath,
+						"object_content":       "terraform-is-neat",
+						"region":               region,
+						"invalid_object_count": 1,
+					},
+				},
+			},
+		}
+
+		By("running 'out' to create the tainted S3 file")
+
+		logWriter := bytes.Buffer{}
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: &logWriter,
+		}
+		_, err := runner.Run(outRequest)
+		Expect(err).To(HaveOccurred())
+		Expect(logWriter.String()).To(ContainSubstring("invalid_object"))
+
+		By("ensuring that tainted state file exists")
+
+		awsVerifier.ExpectS3FileToExist(
+			outRequest.Source.Storage.Bucket,
+			fmt.Sprintf("%s.tainted", stateFilePath),
+		)
+
+		By("running 'out' to delete the environment and state file")
+
+		outRequest.Params.Action = models.DestroyAction
+		deleteOutput, err := runner.Run(outRequest)
+		Expect(err).ToNot(HaveOccurred())
+
+		awsVerifier.ExpectS3FileToNotExist(
+			outRequest.Source.Storage.Bucket,
+			stateFilePath,
+		)
+
 		Expect(deleteOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
 	})
 })
