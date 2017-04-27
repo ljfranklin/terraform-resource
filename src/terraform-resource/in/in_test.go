@@ -20,16 +20,16 @@ import (
 var _ = Describe("In", func() {
 
 	var (
-		awsVerifier         *helpers.AWSVerifier
-		inReq               models.InRequest
-		bucket              string
-		prevEnvName         string
-		currEnvName         string
-		modulesEnvName      string
-		pathToPrevS3Fixture string
-		pathToCurrS3Fixture string
+		awsVerifier            *helpers.AWSVerifier
+		inReq                  models.InRequest
+		bucket                 string
+		prevEnvName            string
+		currEnvName            string
+		modulesEnvName         string
+		pathToPrevS3Fixture    string
+		pathToCurrS3Fixture    string
 		pathToModulesS3Fixture string
-		tmpDir              string
+		tmpDir                 string
 	)
 
 	BeforeEach(func() {
@@ -189,63 +189,6 @@ var _ = Describe("In", func() {
 
 		It("retrieve module specific output when `output_module` is specified", func() {
 			inReq.Params.OutputModule = "module_1"
-			inReq.Version = models.Version{
-				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToModulesS3Fixture),
-				EnvName:      modulesEnvName,
-			}
-
-			runner := in.Runner{
-				OutputDir: tmpDir,
-			}
-			resp, err := runner.Run(inReq)
-			Expect(err).ToNot(HaveOccurred())
-
-			_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(resp.Version.EnvName).To(Equal(modulesEnvName))
-
-			metadata := map[string]string{}
-			for _, field := range resp.Metadata {
-				metadata[field.Name] = field.Value
-			}
-			Expect(metadata["terraform_version"]).To(MatchRegexp("Terraform v.*"))
-			Expect(metadata["env_name"]).To(Equal("module_1"))
-			Expect(metadata["secret"]).To(Equal("<sensitive>"))
-
-			expectedOutputPath := path.Join(tmpDir, "metadata")
-			Expect(expectedOutputPath).To(BeAnExistingFile())
-			outputFile, err := os.Open(expectedOutputPath)
-			Expect(err).ToNot(HaveOccurred())
-			defer outputFile.Close()
-
-			outputContents := map[string]interface{}{}
-			err = json.NewDecoder(outputFile).Decode(&outputContents)
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(outputContents["env_name"]).To(Equal("module_1"))
-			Expect(outputContents["map"]).To(Equal(map[string]interface{}{
-				"key-1": "value-1",
-				"key-2": "value-2",
-			}))
-			Expect(outputContents["list"]).To(Equal([]interface{}{
-				"item-1",
-				"item-2",
-			}))
-			Expect(outputContents["secret"]).To(Equal("super-secret"))
-
-			expectedNamePath := path.Join(tmpDir, "name")
-			Expect(expectedNamePath).To(BeAnExistingFile())
-			nameContents, err := ioutil.ReadFile(expectedNamePath)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(string(nameContents)).To(Equal(modulesEnvName))
-		})
-
-		It("retrieve module specific output when `output_module` is specified at the resource level", func() {
-			model := models.Terraform{
-				OutputModule: "module_1",
-			}
-			inReq.Params.Terraform = model
 			inReq.Version = models.Version{
 				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToModulesS3Fixture),
 				EnvName:      modulesEnvName,
