@@ -130,7 +130,6 @@ var _ = Describe("Out", func() {
 						"region":         region,
 					},
 				},
-				OutputModule: "test_module_1",
 			},
 		}
 		expectedMetadata := map[string]string{
@@ -190,7 +189,6 @@ var _ = Describe("Out", func() {
 						"region":         region,
 					},
 				},
-				OutputModule: "test_module_1",
 			},
 		}
 		expectedMetadata := map[string]string{
