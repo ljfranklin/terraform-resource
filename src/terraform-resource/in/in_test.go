@@ -25,8 +25,10 @@ var _ = Describe("In", func() {
 		bucket              string
 		prevEnvName         string
 		currEnvName         string
+		modulesEnvName      string
 		pathToPrevS3Fixture string
 		pathToCurrS3Fixture string
+		pathToModulesS3Fixture string
 		tmpDir              string
 	)
 
@@ -56,8 +58,10 @@ var _ = Describe("In", func() {
 		)
 		prevEnvName = helpers.RandomString("s3-test-fixture-previous")
 		currEnvName = helpers.RandomString("s3-test-fixture-current")
+		modulesEnvName = helpers.RandomString("s3-test-fixture-modules")
 		pathToPrevS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", prevEnvName))
 		pathToCurrS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", currEnvName))
+		pathToModulesS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", modulesEnvName))
 
 		inReq = models.InRequest{
 			Source: models.Source{
@@ -93,11 +97,17 @@ var _ = Describe("In", func() {
 			Expect(err).ToNot(HaveOccurred())
 			defer currFixture.Close()
 			awsVerifier.UploadObjectToS3(bucket, pathToCurrS3Fixture, currFixture)
+
+			modulesFixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-modules.tfstate"))
+			Expect(err).ToNot(HaveOccurred())
+			defer currFixture.Close()
+			awsVerifier.UploadObjectToS3(bucket, pathToModulesS3Fixture, modulesFixture)
 		})
 
 		AfterEach(func() {
 			awsVerifier.DeleteObjectFromS3(bucket, pathToPrevS3Fixture)
 			awsVerifier.DeleteObjectFromS3(bucket, pathToCurrS3Fixture)
+			awsVerifier.DeleteObjectFromS3(bucket, pathToModulesS3Fixture)
 		})
 
 		It("fetches the state file matching the provided version", func() {
@@ -175,6 +185,117 @@ var _ = Describe("In", func() {
 
 			expectedStatePath := path.Join(tmpDir, "terraform.tfstate")
 			Expect(expectedStatePath).To(BeAnExistingFile())
+		})
+
+		It("retrieve module specific output when `output_module` is specified", func() {
+			inReq.Params.OutputModule = "module_1"
+			inReq.Version = models.Version{
+				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToModulesS3Fixture),
+				EnvName:      modulesEnvName,
+			}
+
+			runner := in.Runner{
+				OutputDir: tmpDir,
+			}
+			resp, err := runner.Run(inReq)
+			Expect(err).ToNot(HaveOccurred())
+
+			_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.Version.EnvName).To(Equal(modulesEnvName))
+
+			metadata := map[string]string{}
+			for _, field := range resp.Metadata {
+				metadata[field.Name] = field.Value
+			}
+			Expect(metadata["terraform_version"]).To(MatchRegexp("Terraform v.*"))
+			Expect(metadata["env_name"]).To(Equal("module_1"))
+			Expect(metadata["secret"]).To(Equal("<sensitive>"))
+
+			expectedOutputPath := path.Join(tmpDir, "metadata")
+			Expect(expectedOutputPath).To(BeAnExistingFile())
+			outputFile, err := os.Open(expectedOutputPath)
+			Expect(err).ToNot(HaveOccurred())
+			defer outputFile.Close()
+
+			outputContents := map[string]interface{}{}
+			err = json.NewDecoder(outputFile).Decode(&outputContents)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(outputContents["env_name"]).To(Equal("module_1"))
+			Expect(outputContents["map"]).To(Equal(map[string]interface{}{
+				"key-1": "value-1",
+				"key-2": "value-2",
+			}))
+			Expect(outputContents["list"]).To(Equal([]interface{}{
+				"item-1",
+				"item-2",
+			}))
+			Expect(outputContents["secret"]).To(Equal("super-secret"))
+
+			expectedNamePath := path.Join(tmpDir, "name")
+			Expect(expectedNamePath).To(BeAnExistingFile())
+			nameContents, err := ioutil.ReadFile(expectedNamePath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(string(nameContents)).To(Equal(modulesEnvName))
+		})
+
+		It("retrieve module specific output when `output_module` is specified at the resource level", func() {
+			model := models.Terraform{
+				OutputModule: "module_1",
+			}
+			inReq.Params.Terraform = model
+			inReq.Version = models.Version{
+				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToModulesS3Fixture),
+				EnvName:      modulesEnvName,
+			}
+
+			runner := in.Runner{
+				OutputDir: tmpDir,
+			}
+			resp, err := runner.Run(inReq)
+			Expect(err).ToNot(HaveOccurred())
+
+			_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.Version.EnvName).To(Equal(modulesEnvName))
+
+			metadata := map[string]string{}
+			for _, field := range resp.Metadata {
+				metadata[field.Name] = field.Value
+			}
+			Expect(metadata["terraform_version"]).To(MatchRegexp("Terraform v.*"))
+			Expect(metadata["env_name"]).To(Equal("module_1"))
+			Expect(metadata["secret"]).To(Equal("<sensitive>"))
+
+			expectedOutputPath := path.Join(tmpDir, "metadata")
+			Expect(expectedOutputPath).To(BeAnExistingFile())
+			outputFile, err := os.Open(expectedOutputPath)
+			Expect(err).ToNot(HaveOccurred())
+			defer outputFile.Close()
+
+			outputContents := map[string]interface{}{}
+			err = json.NewDecoder(outputFile).Decode(&outputContents)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(outputContents["env_name"]).To(Equal("module_1"))
+			Expect(outputContents["map"]).To(Equal(map[string]interface{}{
+				"key-1": "value-1",
+				"key-2": "value-2",
+			}))
+			Expect(outputContents["list"]).To(Equal([]interface{}{
+				"item-1",
+				"item-2",
+			}))
+			Expect(outputContents["secret"]).To(Equal("super-secret"))
+
+			expectedNamePath := path.Join(tmpDir, "name")
+			Expect(expectedNamePath).To(BeAnExistingFile())
+			nameContents, err := ioutil.ReadFile(expectedNamePath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(string(nameContents)).To(Equal(modulesEnvName))
 		})
 	})
 
