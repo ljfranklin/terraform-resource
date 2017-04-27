@@ -43,6 +43,8 @@ Since Concourse currently only supports [interpolating strings](https://github.c
 
 * `env`: *Optional.* Similar to `vars`, this collection of key-value pairs can be used to pass environment variables to Terraform, e.g. "AWS_ACCESS_KEY_ID".
 
+* `output_module` *Optional.* When using modules, name of the module to retrieve outputs.
+
 #### Source Example
 
 > **Note:** Declaring custom resources under `resource_types` requires Concourse 1.0 or newer.
@@ -65,6 +67,8 @@ resources:
         secret_access_key: {{storage_secret_key}}
       # the '//' indicates a sub-directory in a git repo
       terraform_source: github.com/ljfranklin/terraform-resource//fixtures/aws
+      # Optional, when using modules, specifies the default module for output retrieval
+      output_module: <module-name>
       vars:
         tag_name: concourse
       env:
@@ -106,6 +110,8 @@ It then deletes the state file using the configured `storage` driver.
 > **Note:** In Concourse, a `put` is always followed by an implicit `get`. To pass `get` params via `put`, use `put.get_params`.
 
 * `output_statefile`: *Optional. Default `false`* If true, the resource writes the Terraform statefile to a file named `terraform.tfstate`. **Warning:** Ensure any changes to this statefile are persisted back to the resource's storage bucket. **Another warning:** Some statefiles contain unencrypted secrets, be careful not to expose these in your build logs.
+
+* `output_module` *Required if using modules.* Name of the module to retrieve outputs.
 
 #### Put Parameters
 
