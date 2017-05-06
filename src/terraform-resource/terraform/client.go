@@ -163,25 +163,54 @@ func (c Client) Import() error {
 		return err
 	}
 
-	for importType, importName := range c.Model.Imports {
+	for tfID, iaasID := range c.Model.Imports {
+		exists, err := c.resourceExists(tfID)
+		if err != nil {
+			return fmt.Errorf("Failed to check for existence of resource %s %s.\nError: %s", tfID, iaasID, err)
+		}
+		if exists {
+			c.LogWriter.Write([]byte(fmt.Sprintf("Skipping import of `%s: %s` as it already exists in the statefile...\n", tfID, iaasID)))
+			continue
+		}
+
+		c.LogWriter.Write([]byte(fmt.Sprintf("Importing `%s: %s`...\n", tfID, iaasID)))
 		importArgs := []string{
 			"import",
 			fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 			fmt.Sprintf("-config=%s", sourcePath),
 		}
 		importArgs = append(importArgs, c.varFlags()...)
-		importArgs = append(importArgs, importType)
-		importArgs = append(importArgs, importName)
+		importArgs = append(importArgs, tfID)
+		importArgs = append(importArgs, iaasID)
 
-		c.LogWriter.Write([]byte(fmt.Sprintf("Importing `%s: %s`...\n", importType, importName)))
 		importCmd := c.terraformCmd(importArgs)
 		rawOutput, err := importCmd.CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("Failed to import resource %s %s.\nError: %s\nOutput: %s", importType, importName, err, rawOutput)
+			return fmt.Errorf("Failed to import resource %s %s.\nError: %s\nOutput: %s", tfID, iaasID, err, rawOutput)
 		}
 	}
 
 	return nil
+}
+
+func (c Client) resourceExists(tfID string) (bool, error) {
+	if _, err := os.Stat(c.Model.StateFileLocalPath); os.IsNotExist(err) {
+		return false, nil
+	}
+
+	cmd := c.terraformCmd([]string{
+		"state",
+		"list",
+		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
+		tfID,
+	})
+	rawOutput, err := cmd.CombinedOutput()
+	if err != nil {
+		return false, fmt.Errorf("Error: %s, Output: %s", err, rawOutput)
+	}
+
+	// command returns the ID of the resource if it exists
+	return (len(strings.TrimSpace(string(rawOutput))) > 0), nil
 }
 
 func (c Client) terraformCmd(args []string) *exec.Cmd {
