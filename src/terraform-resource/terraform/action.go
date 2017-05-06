@@ -49,7 +49,7 @@ func (r Result) SanitizedOutput() map[string]string {
 	return output
 }
 
-func (a Action) Apply() (Result, error) {
+func (a *Action) Apply() (Result, error) {
 	err := a.setup()
 	if err != nil {
 		return Result{}, err
@@ -88,7 +88,7 @@ func (a Action) Apply() (Result, error) {
 	return result, err
 }
 
-func (a Action) attemptApply() (Result, error) {
+func (a *Action) attemptApply() (Result, error) {
 	a.Logger.InfoSection("Terraform Apply")
 	defer a.Logger.EndSection()
 
@@ -132,7 +132,7 @@ func (a Action) attemptApply() (Result, error) {
 	}, nil
 }
 
-func (a Action) Destroy() (Result, error) {
+func (a *Action) Destroy() (Result, error) {
 	err := a.setup()
 	if err != nil {
 		return Result{}, err
@@ -155,7 +155,7 @@ func (a Action) Destroy() (Result, error) {
 	return result, err
 }
 
-func (a Action) attemptDestroy() (Result, error) {
+func (a *Action) attemptDestroy() (Result, error) {
 	a.Logger.WarnSection("Terraform Destroy")
 	defer a.Logger.EndSection()
 
@@ -177,7 +177,7 @@ func (a Action) attemptDestroy() (Result, error) {
 	}, nil
 }
 
-func (a Action) Plan() (Result, error) {
+func (a *Action) Plan() (Result, error) {
 	err := a.setup()
 	if err != nil {
 		return Result{}, err
@@ -196,7 +196,7 @@ func (a Action) Plan() (Result, error) {
 	return result, err
 }
 
-func (a Action) attemptPlan() (Result, error) {
+func (a *Action) attemptPlan() (Result, error) {
 	a.Logger.InfoSection("Terraform Plan")
 	defer a.Logger.EndSection()
 
