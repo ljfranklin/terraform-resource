@@ -108,6 +108,10 @@ func (m Terraform) Merge(other Terraform) Terraform {
 		m.ImportFiles = other.ImportFiles
 	}
 
+	if other.Imports != nil {
+		m.Imports = other.Imports
+	}
+
 	return m
 }
 

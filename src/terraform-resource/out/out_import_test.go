@@ -100,5 +100,16 @@ var _ = Describe("Out Import", func() {
 			bucket,
 			s3ObjectPath,
 		)
+
+		By("Running again to ensure imports are merged with existing state file")
+
+		_, err = runner.Run(importRequest)
+		Expect(err).ToNot(HaveOccurred())
+
+		awsVerifier.ExpectS3BucketToExist(bucket)
+		awsVerifier.ExpectS3FileToExist(
+			bucket,
+			s3ObjectPath,
+		)
 	})
 })
