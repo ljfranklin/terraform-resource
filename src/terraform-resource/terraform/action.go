@@ -258,6 +258,12 @@ func (a *Action) setup() error {
 
 		a.Client.Model = models.Terraform{Vars: previousResult.RawOutput()}.Merge(a.Client.Model)
 	}
+
+	err = a.Client.Import()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -153,6 +153,36 @@ func (c Client) Version() (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
+func (c Client) Import() error {
+	if len(c.Model.Imports) == 0 {
+		return nil
+	}
+
+	sourcePath, err := c.fetchSource()
+	if err != nil {
+		return err
+	}
+
+	for importType, importName := range c.Model.Imports {
+		importArgs := []string{
+			"import",
+			fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
+			fmt.Sprintf("-config=%s", sourcePath),
+		}
+		importArgs = append(importArgs, c.varFlags()...)
+		importArgs = append(importArgs, importType)
+		importArgs = append(importArgs, importName)
+
+		importCmd := c.terraformCmd(importArgs)
+		rawOutput, err := importCmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("Failed to import resource %s %s.\nError: %s\nOutput: %s", importType, importName, err, rawOutput)
+		}
+	}
+
+	return nil
+}
+
 func (c Client) terraformCmd(args []string) *exec.Cmd {
 	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
 

@@ -47,6 +47,17 @@ func NewAWSVerifier(accessKey string, secretKey string, region string, endpoint 
 	}
 }
 
+func (a AWSVerifier) ExpectS3BucketToExist(bucketName string) {
+	params := &awss3.HeadBucketInput{
+		Bucket: aws.String(bucketName),
+	}
+
+	_, err := a.s3.HeadBucket(params)
+	Expect(err).ToNot(HaveOccurred(),
+		"Expected S3 bucket '%s' to exist, but it does not",
+		bucketName)
+}
+
 func (a AWSVerifier) ExpectS3FileToExist(bucketName string, key string) {
 	params := &awss3.HeadObjectInput{
 		Bucket: aws.String(bucketName),

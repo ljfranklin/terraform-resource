@@ -115,6 +115,7 @@ var _ = Describe("Terraform Models", func() {
 				StateFileLocalPath:  "fake-local-path",
 				StateFileRemotePath: "fake-remote-path",
 				DeleteOnFailure:     true,
+				ImportFiles:         []string{"fake-imports-path"},
 			}
 
 			finalModel := baseModel.Merge(mergeModel)
@@ -122,6 +123,7 @@ var _ = Describe("Terraform Models", func() {
 			Expect(finalModel.StateFileLocalPath).To(Equal("fake-local-path"))
 			Expect(finalModel.StateFileRemotePath).To(Equal("fake-remote-path"))
 			Expect(finalModel.DeleteOnFailure).To(BeTrue())
+			Expect(finalModel.ImportFiles).To(Equal([]string{"fake-imports-path"}))
 		})
 
 		It("returns original vars and vars from Merged model", func() {
@@ -236,6 +238,25 @@ var _ = Describe("Terraform Models", func() {
 				"base-key":     "base-value",
 				"merge-key":    "merge-value",
 				"override-key": "merge-override",
+			}))
+		})
+	})
+
+	Describe("ParseImportsFromFile", func() {
+		It("populates Imports from contents of ImportsFile", func() {
+			importsFilePath := path.Join(tmpDir, "imports")
+			importsFileContents := "key: value"
+			err := ioutil.WriteFile(importsFilePath, []byte(importsFileContents), 0700)
+			Expect(err).ToNot(HaveOccurred())
+
+			model := models.Terraform{
+				ImportFiles: []string{importsFilePath},
+			}
+			err = model.ParseImportsFromFile()
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(model.Imports).To(Equal(map[string]string{
+				"key": "value",
 			}))
 		})
 	})

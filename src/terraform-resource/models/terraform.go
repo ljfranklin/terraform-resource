@@ -18,10 +18,12 @@ type Terraform struct {
 	PlanOnly            bool                   `json:"plan_only,omitempty"`         // optional
 	PlanRun             bool                   `json:"plan_run,omitempty"`          // optional
 	OutputModule        string                 `json:"output_module,omitempty"`     // optional
+	ImportFiles         []string               `json:"import_files,omitempty"`      // optional
 	PlanFileLocalPath   string                 `json:"-"`                           // not specified pipeline
 	PlanFileRemotePath  string                 `json:"-"`                           // not specified pipeline
 	StateFileLocalPath  string                 `json:"-"`                           // not specified pipeline
 	StateFileRemotePath string                 `json:"-"`                           // not specified pipeline
+	Imports             map[string]string      `json:"-"`                           // not specified pipeline
 }
 
 func (m Terraform) Validate() error {
@@ -102,6 +104,10 @@ func (m Terraform) Merge(other Terraform) Terraform {
 		m.DeleteOnFailure = true
 	}
 
+	if other.ImportFiles != nil {
+		m.ImportFiles = other.ImportFiles
+	}
+
 	return m
 }
 
@@ -159,4 +165,31 @@ func (m *Terraform) parseVarsFromFiles(filepath string) (map[string]interface{},
 	}
 
 	return terraformVars, nil
+}
+
+func (m *Terraform) ParseImportsFromFile() error {
+	if m.Imports == nil {
+		m.Imports = map[string]string{}
+	}
+
+	if m.ImportFiles != nil {
+		for _, file := range m.ImportFiles {
+			fileContents, readErr := ioutil.ReadFile(file)
+			if readErr != nil {
+				return fmt.Errorf("Failed to read Terraform ImportsFile at '%s': %s", file, readErr)
+			}
+
+			fileImports := map[string]string{}
+			readErr = yaml.Unmarshal(fileContents, &fileImports)
+			if readErr != nil {
+				return fmt.Errorf("Failed to parse Terraform ImportsFile at '%s': %s", file, readErr)
+			}
+
+			for key, value := range fileImports {
+				m.Imports[key] = value
+			}
+		}
+	}
+
+	return nil
 }

@@ -7,23 +7,18 @@
 
   ```json
   {
-      "Version": "2012-10-17",
-      "Statement": [
-          {
-              "Sid": "Stmt1476735201000",
-              "Effect": "Allow",
-              "Action": [
-                  "s3:DeleteObject",
-                  "s3:GetObject",
-                  "s3:ListBucket",
-                  "s3:PutObject"
-              ],
-              "Resource": [
-                  "arn:aws:s3:::YOUR_BUCKET",
-                  "arn:aws:s3:::YOUR_BUCKET/*"
-              ]
-          }
-      ]
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1476735201000",
+            "Effect": "Allow",
+            "NotAction": "s3:DeleteBucket",
+            "Resource": [
+                "arn:aws:s3:::YOUR_BUCKET",
+                "arn:aws:s3:::YOUR_BUCKET/*"
+            ]
+        }
+    ]
   }
   ```
 1. `cp ./scripts/test.env.tpl ./tmp/test.env`
