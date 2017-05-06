@@ -173,6 +173,7 @@ func (c Client) Import() error {
 		importArgs = append(importArgs, importType)
 		importArgs = append(importArgs, importName)
 
+		c.LogWriter.Write([]byte(fmt.Sprintf("Importing `%s: %s`...\n", importType, importName)))
 		importCmd := c.terraformCmd(importArgs)
 		rawOutput, err := importCmd.CombinedOutput()
 		if err != nil {
