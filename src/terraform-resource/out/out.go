@@ -31,10 +31,6 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		Sink: r.LogWriter,
 	}
 
-	if req.Params.VarFile != "" {
-		logger.Warn("WARNING: `var_file` has been deprecated in favor of `var_files`. Switch to `var_files` prior to June 1st 2017 💣")
-	}
-
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-out")
 	if err != nil {
 		return models.OutResponse{}, fmt.Errorf("Failed to create tmp dir at '%s'", os.TempDir())
@@ -48,9 +44,6 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	storageDriver := storage.BuildDriver(storageModel)
 
 	terraformModel := req.Source.Terraform.Merge(req.Params.Terraform)
-	if terraformModel.VarFile != "" {
-		terraformModel.VarFile = path.Join(r.SourceDir, terraformModel.VarFile)
-	}
 	if terraformModel.VarFiles != nil {
 		for i := range terraformModel.VarFiles {
 			terraformModel.VarFiles[i] = path.Join(r.SourceDir, terraformModel.VarFiles[i])

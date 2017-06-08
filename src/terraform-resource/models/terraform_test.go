@@ -85,28 +85,6 @@ var _ = Describe("Terraform Models", func() {
 			Expect(model.Vars).To(Equal(fileVars))
 		})
 
-		It("returns fields from DEPRECATED VarFile", func() {
-			varFile := path.Join(tmpDir, "var_file")
-
-			fileVars := map[string]interface{}{
-				"fake-key": "fake-value",
-			}
-			fileContents, err := json.Marshal(fileVars)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = ioutil.WriteFile(varFile, fileContents, 0600)
-			Expect(err).ToNot(HaveOccurred())
-
-			model := models.Terraform{
-				VarFile: varFile,
-			}
-
-			err = model.ParseVarsFromFiles()
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(model.Vars).To(Equal(fileVars))
-		})
-
 		It("merges non-var fields", func() {
 			baseModel := models.Terraform{
 				Source: "base-source",
@@ -171,38 +149,6 @@ var _ = Describe("Terraform Models", func() {
 			model := models.Terraform{
 				Source:   "base-source",
 				VarFiles: []string{varFile},
-				Vars: map[string]interface{}{
-					"base-key":     "base-value",
-					"override-key": "base-override",
-				},
-			}
-
-			err = model.ParseVarsFromFiles()
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(model.Vars).To(Equal(map[string]interface{}{
-				"base-key":     "base-value",
-				"merge-key":    "merge-value",
-				"override-key": "merge-override",
-			}))
-		})
-
-		It("returns original vars and vars from DEPRECATED VarFile", func() {
-			varFile := path.Join(tmpDir, "var_file")
-
-			fileVars := map[string]interface{}{
-				"merge-key":    "merge-value",
-				"override-key": "merge-override",
-			}
-			fileContents, err := json.Marshal(fileVars)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = ioutil.WriteFile(varFile, fileContents, 0600)
-			Expect(err).ToNot(HaveOccurred())
-
-			model := models.Terraform{
-				Source:  "base-source",
-				VarFile: varFile,
 				Vars: map[string]interface{}{
 					"base-key":     "base-value",
 					"override-key": "base-override",

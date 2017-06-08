@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path"
 	"strings"
-	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -281,51 +280,6 @@ var _ = Describe("Out", func() {
 			}
 
 			assertOutBehavior(req, expectedMetadata)
-		})
-
-		It("prints a deprecation warning if VarFile is used", func() {
-			deadline := time.Date(2017, time.June, 1, 0, 0, 0, 0, time.Local)
-			if time.Now().After(deadline) {
-				Fail("Time to remove support for `var_file`!")
-			}
-
-			req := models.OutRequest{
-				Source: models.Source{
-					Storage: storageModel,
-					Terraform: models.Terraform{
-						Source: "fixtures/aws/",
-						Vars: map[string]interface{}{
-							"access_key": accessKey,
-							"bucket":     bucket,
-							// will be overridden
-							"secret_key": "bad-secret-key",
-							"region":     region,
-						},
-					},
-				},
-				// put params overrides source
-				Params: models.OutParams{
-					EnvName: envName,
-					Terraform: models.Terraform{
-						Vars: map[string]interface{}{
-							"secret_key": secretKey,
-							// will be overridden
-							"object_content": "to-be-overridden",
-							"region":         region,
-						},
-						// var files overrides put.params
-						VarFile: secondVarFile,
-					},
-				},
-			}
-			expectedMetadata := map[string]string{
-				"env_name":    envName,
-				"content_md5": calculateMD5("terraform-files-are-neat"),
-			}
-
-			assertOutBehavior(req, expectedMetadata)
-
-			Expect(logWriter.String()).To(MatchRegexp("WARNING.*var_file.*June 1"))
 		})
 	})
 

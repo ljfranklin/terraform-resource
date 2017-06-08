@@ -11,7 +11,6 @@ import (
 type Terraform struct {
 	Source              string                 `json:"terraform_source"`
 	Vars                map[string]interface{} `json:"vars,omitempty"`              // optional
-	VarFile             string                 `json:"var_file,omitempty"`          // optional
 	VarFiles            []string               `json:"var_files,omitempty"`         // optional
 	Env                 map[string]string      `json:"env,omitempty"`               // optional
 	DeleteOnFailure     bool                   `json:"delete_on_failure,omitempty"` // optional
@@ -68,10 +67,6 @@ func (m Terraform) Merge(other Terraform) Terraform {
 		m.VarFiles = other.VarFiles
 	}
 
-	if other.VarFile != "" {
-		m.VarFile = other.VarFile
-	}
-
 	if other.PlanFileLocalPath != "" {
 		m.PlanFileLocalPath = other.PlanFileLocalPath
 	}
@@ -119,17 +114,6 @@ func (m *Terraform) ParseVarsFromFiles() error {
 	terraformVars := map[string]interface{}{}
 	for key, value := range m.Vars {
 		terraformVars[key] = value
-	}
-
-	if m.VarFile != "" {
-		newVars, err := m.parseVarsFromFiles(m.VarFile)
-		if err != nil {
-			return err
-		}
-
-		for key, value := range newVars {
-			terraformVars[key] = value
-		}
 	}
 
 	if m.VarFiles != nil {
