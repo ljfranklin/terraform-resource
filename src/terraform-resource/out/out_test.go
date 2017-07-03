@@ -118,35 +118,6 @@ var _ = Describe("Out", func() {
 		awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
 	})
 
-	It("creates IaaS resources from a remote terraform source", func() {
-		req := models.OutRequest{
-			Source: models.Source{
-				Storage: storageModel,
-			},
-			Params: models.OutParams{
-				EnvName: envName,
-				Terraform: models.Terraform{
-					// Note: changes to fixture must be pushed before running this test
-					Source: "github.com/ljfranklin/terraform-resource//fixtures/aws/",
-					Vars: map[string]interface{}{
-						"access_key":     accessKey,
-						"secret_key":     secretKey,
-						"bucket":         bucket,
-						"object_key":     s3ObjectPath,
-						"object_content": "terraform-is-neat",
-						"region":         region,
-					},
-				},
-			},
-		}
-		expectedMetadata := map[string]string{
-			"env_name":    envName,
-			"content_md5": calculateMD5("terraform-is-neat"),
-		}
-
-		assertOutBehavior(req, expectedMetadata)
-	})
-
 	It("creates IaaS resources from a terraform module", func() {
 		req := models.OutRequest{
 			Source: models.Source{

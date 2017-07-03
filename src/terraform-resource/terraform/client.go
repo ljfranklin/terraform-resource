@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"reflect"
@@ -228,25 +227,7 @@ func (c Client) terraformCmd(args []string) *exec.Cmd {
 }
 
 func (c Client) fetchSource() (string, error) {
-	var sourceDir string
-	if c.useLocalSource() {
-		sourceDir = c.Model.Source
-	} else {
-		tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-client")
-		if err != nil {
-			return "", fmt.Errorf("Failed to create temporary working dir at '%s'", os.TempDir())
-		}
-		initCmd := c.terraformCmd([]string{
-			"init",
-			c.Model.Source,
-			tmpDir,
-		})
-		if initOutput, initErr := initCmd.CombinedOutput(); initErr != nil {
-			return "", fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", initErr, initOutput)
-		}
-		sourceDir = tmpDir
-	}
-
+	sourceDir := c.Model.Source
 	getCmd := c.terraformCmd([]string{
 		"get",
 		"-update",
@@ -257,13 +238,6 @@ func (c Client) fetchSource() (string, error) {
 	}
 
 	return sourceDir, nil
-}
-
-func (c Client) useLocalSource() bool {
-	if info, err := os.Stat(c.Model.Source); err == nil && info.IsDir() {
-		return true
-	}
-	return false
 }
 
 func (c Client) varFlags() []string {

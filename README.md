@@ -30,10 +30,6 @@ See [DEVELOPMENT](DEVELOPMENT.md) if you're interested in submitting a PR :+1:
   > **Note:** By default, the resource will use S3 signing version v2 if an endpoint is specified as many non-S3 blobstores do not support v4.
 Opt into v4 signing by setting `storage.use_signing_v4: true`.
 
-* `terraform_source`: *Required.* The location of the Terraform module to apply.
-These can be local paths, URLs, GitHub repos, and more.
-See [Terraform Sources](https://www.terraform.io/docs/modules/sources.html) for more examples.
-
 * `delete_on_failure`: *Optional. Default `false`.* If true, the resource will run `terraform destroy` if `terraform apply` returns an error.
 
 * `vars`: *Optional.* A collection of Terraform input variables.
@@ -63,8 +59,6 @@ resources:
         bucket_path: terraform-ci/
         access_key_id: {{storage_access_key}}
         secret_access_key: {{storage_secret_key}}
-      # the '//' indicates a sub-directory in a git repo
-      terraform_source: github.com/ljfranklin/terraform-resource//fixtures/aws
       vars:
         tag_name: concourse
       env:
@@ -111,7 +105,8 @@ It then deletes the state file using the configured `storage` driver.
 
 #### Put Parameters
 
-* `terraform_source`: *Required if absent under `source`.* See description under `source.terraform_source`.
+* `terraform_source`: *Required.* The relative path of the directory containing your Terraform configuration files.
+For example: if your `.tf` files are stored in a git repo called `prod-config` under a directory `terraform-configs`, you could do a `get: prod-config` in your pipeline with `terraform_source: prod-config/terraform-configs/` as the source.
 
 * `env_name`: *Optional.* The name of the environment to create or modify. Multiple environments can be managed with a single resource.
 
