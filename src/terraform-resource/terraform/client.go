@@ -20,15 +20,16 @@ type Client struct {
 }
 
 func (c Client) Apply() error {
+	err := c.runInit()
+	if err != nil {
+		return err
+	}
+
 	var sourcePath string
 	if c.Model.PlanRun {
 		sourcePath = c.Model.PlanFileLocalPath
 	} else {
-		var err error
-		sourcePath, err = c.fetchSource()
-		if err != nil {
-			return err
-		}
+		sourcePath = c.Model.Source
 	}
 
 	applyArgs := []string{
@@ -48,7 +49,7 @@ func (c Client) Apply() error {
 	applyCmd := c.terraformCmd(applyArgs)
 	applyCmd.Stdout = c.LogWriter
 	applyCmd.Stderr = c.LogWriter
-	err := applyCmd.Run()
+	err = applyCmd.Run()
 	if err != nil {
 		return fmt.Errorf("Failed to run Terraform command: %s", err)
 	}
@@ -57,7 +58,7 @@ func (c Client) Apply() error {
 }
 
 func (c Client) Destroy() error {
-	sourcePath, err := c.fetchSource()
+	err := c.runInit()
 	if err != nil {
 		return err
 	}
@@ -69,7 +70,7 @@ func (c Client) Destroy() error {
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
 	destroyArgs = append(destroyArgs, c.varFlags()...)
-	destroyArgs = append(destroyArgs, sourcePath)
+	destroyArgs = append(destroyArgs, c.Model.Source)
 
 	destroyCmd := c.terraformCmd(destroyArgs)
 	destroyCmd.Stdout = c.LogWriter
@@ -83,7 +84,7 @@ func (c Client) Destroy() error {
 }
 
 func (c Client) Plan() error {
-	sourcePath, err := c.fetchSource()
+	err := c.runInit()
 	if err != nil {
 		return err
 	}
@@ -95,7 +96,7 @@ func (c Client) Plan() error {
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
 	planArgs = append(planArgs, c.varFlags()...)
-	planArgs = append(planArgs, sourcePath)
+	planArgs = append(planArgs, c.Model.Source)
 
 	planCmd := c.terraformCmd(planArgs)
 	planCmd.Stdout = c.LogWriter
@@ -157,7 +158,7 @@ func (c Client) Import() error {
 		return nil
 	}
 
-	sourcePath, err := c.fetchSource()
+	err := c.runInit()
 	if err != nil {
 		return err
 	}
@@ -176,7 +177,7 @@ func (c Client) Import() error {
 		importArgs := []string{
 			"import",
 			fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
-			fmt.Sprintf("-config=%s", sourcePath),
+			fmt.Sprintf("-config=%s", c.Model.Source),
 		}
 		importArgs = append(importArgs, c.varFlags()...)
 		importArgs = append(importArgs, tfID)
@@ -226,18 +227,19 @@ func (c Client) terraformCmd(args []string) *exec.Cmd {
 	return cmd
 }
 
-func (c Client) fetchSource() (string, error) {
-	sourceDir := c.Model.Source
-	getCmd := c.terraformCmd([]string{
-		"get",
-		"-update",
-		sourceDir,
+func (c Client) runInit() error {
+	initCmd := c.terraformCmd([]string{
+		"init",
+		"-input=false",
+		"-get=true",
+		"-backend=false", // resource doesn't support built-in backends yet
+		c.Model.Source,
 	})
-	if getOutput, getErr := getCmd.CombinedOutput(); getErr != nil {
-		return "", fmt.Errorf("terraform get command failed.\nError: %s\nOutput: %s", getErr, getOutput)
+	if output, err := initCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", err, output)
 	}
 
-	return sourceDir, nil
+	return nil
 }
 
 func (c Client) varFlags() []string {
