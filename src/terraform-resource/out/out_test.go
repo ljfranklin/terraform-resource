@@ -268,7 +268,6 @@ var _ = Describe("Out", func() {
 			"atc_external_url": "sample-atc-external-url",
 			"content_md5": calculateMD5("terraform-is-neat"),
 		}
-		fmt.Println(req)
 		assertOutBehavior(req, expectedMetadata)
 
 		awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)

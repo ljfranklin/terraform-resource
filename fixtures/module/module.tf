@@ -6,7 +6,6 @@ module "test_module" {
   region = "${var.region}"
   env_name = "${var.env_name}"
 
-  env_name = "${var.env_name}"
   build_id = "${var.build_id}"
   build_name = "${var.build_name}"
   build_job_name = "${var.build_job_name}"
