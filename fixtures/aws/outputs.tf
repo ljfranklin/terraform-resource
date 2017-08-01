@@ -1,6 +1,24 @@
 output "env_name" {
     value = "${var.env_name}"
 }
+output "build_id" {
+    value = "${var.build_id}"
+}
+output "build_name" {
+    value = "${var.build_name}"
+}
+output "build_job_name" {
+    value = "${var.build_job_name}"
+}
+output "build_pipeline_name" {
+    value = "${var.build_pipeline_name}"
+}
+output "build_team_name" {
+    value = "${var.build_team_name}"
+}
+output "atc_external_url" {
+    value = "${var.atc_external_url}"
+}
 output "bucket" {
     value = "${var.bucket}"
 }

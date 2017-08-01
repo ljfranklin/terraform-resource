@@ -49,6 +49,13 @@ var _ = Describe("Out", func() {
 		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
 		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-test"))
 
+		os.Setenv("BUILD_ID", "sample-build-id")
+		os.Setenv("BUILD_NAME", "sample-build-name")
+		os.Setenv("BUILD_JOB_NAME", "sample-build-job-name")
+		os.Setenv("BUILD_PIPELINE_NAME", "sample-build-pipeline-name")
+		os.Setenv("BUILD_TEAM_NAME", "sample-build-team-name")
+		os.Setenv("ATC_EXTERNAL_URL", "sample-atc-external-url")
+
 		storageModel = storage.Model{
 			Bucket:          bucket,
 			BucketPath:      bucketPath,
@@ -230,6 +237,42 @@ var _ = Describe("Out", func() {
 
 		assertOutBehavior(req, expectedMetadata)
 	})
+
+	It("creates build information as variables", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]string{
+			"env_name":    envName,
+			"build_id": "sample-build-id",
+			"build_name": "sample-build-name",
+			"build_job_name": "sample-build-job-name",
+			"build_pipeline_name": "sample-build-pipeline-name",
+			"build_team_name": "sample-build-team-name",
+			"atc_external_url": "sample-atc-external-url",
+			"content_md5": calculateMD5("terraform-is-neat"),
+		}
+		assertOutBehavior(req, expectedMetadata)
+
+		awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
+	})
+
 
 	Context("when given a yaml file containing variables", func() {
 		var firstVarFile string

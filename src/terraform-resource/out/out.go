@@ -65,6 +65,12 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		return models.OutResponse{}, err
 	}
 	terraformModel.Vars["env_name"] = envName
+	terraformModel.Vars["build_id"] = os.Getenv("BUILD_ID")
+	terraformModel.Vars["build_name"] = os.Getenv("BUILD_NAME")
+	terraformModel.Vars["build_job_name"] = os.Getenv("BUILD_JOB_NAME")
+	terraformModel.Vars["build_pipeline_name"] = os.Getenv("BUILD_PIPELINE_NAME")
+	terraformModel.Vars["build_team_name"] = os.Getenv("BUILD_TEAM_NAME")
+	terraformModel.Vars["atc_external_url"] = os.Getenv("ATC_EXTERNAL_URL")
 
 	terraformModel.PlanFileLocalPath = path.Join(tmpDir, "plan")
 	terraformModel.PlanFileRemotePath = fmt.Sprintf("%s.plan", envName)
