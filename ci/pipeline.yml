@@ -55,10 +55,14 @@ jobs:
     serial_groups: [track1, track2]
     on_failure: *failure-alert
     plan:
-      - get: resource-src
-        trigger: true
-        passed: [push-dev-image]
+      - aggregate:
+        - get: resource-src
+          trigger: true
+          passed: [push-dev-image]
+        - get: terraform-dev-image
+          passed: [push-dev-image]
       - task: test-unit
+        image: terraform-dev-image
         file: resource-src/ci/tasks/test-unit.yml
         params:
           AWS_ACCESS_KEY:           {{ec2_access_key}}
@@ -75,15 +79,27 @@ jobs:
     serial_groups: [track1, track2]
     on_failure: *failure-alert
     plan:
-      - get: resource-src
-        trigger: true
-        passed: [test-unit]
+      - aggregate:
+        - get: resource-src
+          trigger: true
+          passed: [test-unit]
+        - get: terraform-dev-image
+          passed: [test-unit]
       - task: build-artifacts
+        image: terraform-dev-image
         file: resource-src/ci/tasks/build-prod-artifacts.yml
       - put: terraform-test-image
         params:
           build: build-artifacts/
           cache: true
+      - task: wait-for-resource-type-to-update
+        config:
+          platform: linux
+          image: terraform-dev-image
+          run:
+            path: sleep
+            args:
+              - 120 # concourse updates resource images every minute
 
   - name: plan-infrastructure
     serial_groups: [track1]
