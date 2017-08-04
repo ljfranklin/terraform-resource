@@ -93,9 +93,9 @@ jobs:
           build: build-artifacts/
           cache: true
       - task: wait-for-resource-type-to-update
+        image: terraform-dev-image
         config:
           platform: linux
-          image: terraform-dev-image
           run:
             path: sleep
             args:
