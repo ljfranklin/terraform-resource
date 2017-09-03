@@ -69,7 +69,8 @@ If you'd like to build your own image from a specific Terraform branch, configur
 ## Behavior
 
 This resource should usually be used with the `put` action rather than a `get`.
-This ensures the output always reflects the current state of the IaaS and allows management of multiple environments as shown below. A `get` step takes no parameters and outputs the same `metadata` file format shown below for `put`.
+This ensures the output always reflects the current state of the IaaS and allows management of multiple environments as shown below.
+A `get` step outputs the same `metadata` file format shown below for `put`.
 
 #### Get Parameters
 
