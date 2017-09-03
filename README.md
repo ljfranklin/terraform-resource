@@ -9,26 +9,11 @@ See [DEVELOPMENT](DEVELOPMENT.md) if you're interested in submitting a PR :+1:
 
 ## Source Configuration
 
-* `storage.driver`: *Optional. Default `s3`.* The driver used to store the Terraform state file. Currently `s3` is the only supported driver.
+* `backend_type`: *Required.* The name of the [Terraform backend](https://www.terraform.io/docs/backends/types/index.html) the resource will use to store statefiles, e.g. `s3` or `consul`.
 
-* `storage.bucket`: *Required.* The S3 bucket used to store the state files.
+  > **Note:** Only a [subset of the backends](https://www.terraform.io/docs/state/workspaces.html) support the multiple workspace feature this resource requires.
 
-* `storage.bucket_path`: *Required.* The S3 path used to store state files, e.g. `terraform-ci/`.
-
-* `storage.access_key_id`: *Required.* The AWS access key used to access the bucket.
-
-* `storage.secret_access_key`: *Required.* The AWS secret key used to access the bucket.
-
-* `storage.region_name`: *Optional.* The AWS region where the bucket is located.
-
-* `storage.server_side_encryption`: *Optional.* An encryption algorithm to use when storing objects in S3, e.g. "AES256".
-
-* `storage.sse_kms_key_id` *Optional.* The ID of the AWS KMS master encryption key used for the object.
-
-* `storage.endpoint`: *Optional.* The endpoint for an s3-compatible blobstore (e.g. Ceph).
-
-  > **Note:** By default, the resource will use S3 signing version v2 if an endpoint is specified as many non-S3 blobstores do not support v4.
-Opt into v4 signing by setting `storage.use_signing_v4: true`.
+* `backend_config`: *Required.* A map of key-value configuration options specific to your choosen backend, e.g. [S3 options](https://www.terraform.io/docs/backends/types/s3.html#configuration-variables).
 
 * `delete_on_failure`: *Optional. Default `false`.* If true, the resource will run `terraform destroy` if `terraform apply` returns an error.
 
@@ -38,6 +23,8 @@ See [Terraform Input Variables](https://www.terraform.io/intro/getting-started/v
 Since Concourse currently only supports [interpolating strings](https://github.com/concourse/concourse/issues/545) into the pipeline config, you may need to use Terraform helpers like [split](https://www.terraform.io/docs/configuration/interpolation.html#split_delim_string_) to handle lists and maps as inputs.
 
 * `env`: *Optional.* Similar to `vars`, this collection of key-value pairs can be used to pass environment variables to Terraform, e.g. "AWS_ACCESS_KEY_ID".
+
+> **Important!:** The `source.storage` field has been replaced by `source.backend` to leverage the built-in Terraform backends. If you currently use `source.storage` in your pipeline, follow the instructions in the [Backend Migration](#backend-migration) section.
 
 #### Source Example
 
@@ -54,17 +41,20 @@ resources:
   - name: terraform
     type: terraform
     source:
-      storage:
+      backend_type: s3
+      backend_config:
         bucket: mybucket
-        bucket_path: terraform-ci/
-        access_key_id: {{storage_access_key}}
-        secret_access_key: {{storage_secret_key}}
+        key: mydir/terraform.tfstate
+        region: us-east-1
+        access_key: {{storage_access_key}}
+        secret_key: {{storage_secret_key}}
       vars:
         tag_name: concourse
       env:
         AWS_ACCESS_KEY_ID: {{environment_access_key}}
         AWS_SECRET_ACCESS_KEY: {{environment_secret_key}}
 ```
+
 
 #### Image Variants
 
@@ -80,20 +70,6 @@ If you'd like to build your own image from a specific Terraform branch, configur
 
 This resource should usually be used with the `put` action rather than a `get`.
 This ensures the output always reflects the current state of the IaaS and allows management of multiple environments as shown below. A `get` step takes no parameters and outputs the same `metadata` file format shown below for `put`.
-
-Depending on the context, the `put` step will perform one of three actions:
-
-**Create:**
-If the state file does not exist, `put` will create all the IaaS resources specified by `terraform_source`.
-It then uploads the resulting state file using the configured `storage` driver.
-
-**Update:**
-If the state file already exists, `put` will update the IaaS resources to match the desired state specified in `terraform_source`.
-It then uploads the updated state file.
-
-**Destroy:**
-If the `destroy` action is specified, `put` will destroy all IaaS resources specified in the state file.
-It then deletes the state file using the configured `storage` driver.
 
 #### Get Parameters
 
@@ -131,7 +107,7 @@ Finally, `env_name` is automatically passed as an input `var`.
 
 * `import_files`: *Optional.* A list of files containing existing resources to [import](https://www.terraform.io/docs/import/usage.html) into the state file. The files can be in YAML or JSON format, containing key-value pairs like `aws_instance.bar: i-abcd1234`.
 
-* `action`: *Optional.* Used to indicate a destructive `put`. The only recognized value is `destroy`, create / update are the implicit defaults.
+* `action`: *Optional.* When set to `destroy`, the resource will run `terraform destroy` against the given statefile.
 
   > **Note:** You must also set `put.get_params.action` to `destroy` to ensure the task succeeds. This is a temporary workaround until Concourse adds support for `delete` as a first-class operation. See [this issue](https://github.com/concourse/concourse/issues/362) for more details.
 
@@ -229,12 +205,66 @@ name: e2e
 metadata: { "vpc_id": "vpc-123456", "vpc_tag_name": "concourse" }
 ```
 
-#### Examples
+## Backend Migration
 
-**Templates:**
-- BOSH Director on [AWS with a single subnet](examples/aws/bosh-single-subnet.tf)
+Previous versions of this resource required statefiles to be stored in an S3-compatible blobstore using the `source.storage` field.
+The latest version of this resource instead uses the build-in [Terraform Backends](https://www.terraform.io/docs/backends/types/index.html) to supports file storage other than S3.
+If you have an existing pipeline that uses `source.storage`, your statefiles will need to be migrated into the new backend directory structure using the following steps:
 
-**Tasks:**
-- [Generate director manifest](examples/tasks/director-manifest-aws.erb) from JSON file
+1. Rename `source.storage` to `source.migrate_from_storage` in your pipeline config. All fields within `source.storage` should remain unchanged, only the top-level key should be renamed.
+1. Add `source.backend_type` and `source.backend_config` fields as described under [Source Configuration](#source-configuration).
+1. Update your pipeline: `fly set-pipeline`.
+1. The next time your pipeline performs a `put` to the Terraform resource:
+  - The resource will copy the statefile for the modified environment into the new directory structure.
+  - The resource will rename the old statefile in S3 to `$ENV_NAME.migrated`.
+1. Once all statefiles have been migrated and everything is working as expected, you may:
+  - Remove the old `.migrated` statefiles.
+  - Remove the `source.migrate_from_storage` from your pipeline config.
 
-See the [Concourse pipeline](ci/pipeline.yml) for additional examples.
+#### Legacy storage configuration
+
+* `migrate_from_storage.bucket`: *Required.* The S3 bucket used to store the state files.
+
+* `migrate_from_storage.bucket_path`: *Required.* The S3 path used to store state files, e.g. `mydir/`.
+
+* `migrate_from_storage.access_key_id`: *Required.* The AWS access key used to access the bucket.
+
+* `migrate_from_storage.secret_access_key`: *Required.* The AWS secret key used to access the bucket.
+
+* `migrate_from_storage.region_name`: *Optional.* The AWS region where the bucket is located.
+
+* `migrate_from_storage.server_side_encryption`: *Optional.* An encryption algorithm to use when storing objects in S3, e.g. "AES256".
+
+* `migrate_from_storage.sse_kms_key_id` *Optional.* The ID of the AWS KMS master encryption key used for the object.
+
+* `migrate_from_storage.endpoint`: *Optional.* The endpoint for an s3-compatible blobstore (e.g. Ceph).
+
+  > **Note:** By default, the resource will use S3 signing version v2 if an endpoint is specified as many non-S3 blobstores do not support v4.
+Opt into v4 signing by setting `migrate_from_storage.use_signing_v4: true`.
+
+#### Migration Example
+
+```yaml
+resources:
+  - name: terraform
+    type: terraform
+    source:
+      backend_type: s3
+      backend_config:
+        bucket: mybucket
+        key: mydir/terraform.tfstate
+        region: us-east-1
+        access_key: {{storage_access_key}}
+        secret_key: {{storage_secret_key}}
+      migrate_from_storage:
+        bucket: mybucket
+        bucket_path: mydir/
+        region: us-east-1
+        access_key_id: {{storage_access_key}}
+        secret_access_key: {{storage_secret_key}}
+      vars:
+        tag_name: concourse
+      env:
+        AWS_ACCESS_KEY_ID: {{environment_access_key}}
+        AWS_SECRET_ACCESS_KEY: {{environment_secret_key}}
+```
