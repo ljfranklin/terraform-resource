@@ -127,13 +127,7 @@ var _ = Describe("Out Lifecycle", func() {
 
 		By("running 'out' to update the S3 file")
 
-		// omits some fields to ensure the resource feeds previous output back in as input
-		outRequest.Params.Terraform.Vars = map[string]interface{}{
-			"access_key":     accessKey,
-			"secret_key":     secretKey,
-			"object_content": "terraform-is-still-neat",
-			"region":         region,
-		}
+		outRequest.Params.Terraform.Vars["object_content"] = "terraform-is-still-neat"
 		updateOutput, err := runner.Run(outRequest)
 		Expect(err).ToNot(HaveOccurred())
 

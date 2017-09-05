@@ -3,15 +3,26 @@ package models_test
 import (
 	"time"
 
+	"terraform-resource/models"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"terraform-resource/models"
 )
 
 var _ = Describe("Version", func() {
 
 	Describe("#Validate", func() {
-		It("returns nil if all fields are provided", func() {
+		It("returns nil if required fields are provided", func() {
+			model := models.Version{
+				Serial:  1,
+				EnvName: "fake-env",
+			}
+
+			err := model.Validate()
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("returns nil if legacy required fields are provided", func() {
 			model := models.Version{
 				LastModified: "2006-01-02T15:04:05Z",
 				EnvName:      "fake-env",
@@ -21,9 +32,8 @@ var _ = Describe("Version", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("returns error if storage fields are missing", func() {
+		It("returns error if fields are missing", func() {
 			requiredFields := []string{
-				"version.last_modified",
 				"version.env_name",
 			}
 
@@ -49,7 +59,7 @@ var _ = Describe("Version", func() {
 	Describe("#IsZero", func() {
 		It("returns false if a field is provided", func() {
 			model := models.Version{
-				LastModified: "2006-01-02T15:04:05Z",
+				EnvName: "fake-env",
 			}
 
 			Expect(model.IsZero()).To(BeFalse(), "Expected IsZero() to be false")

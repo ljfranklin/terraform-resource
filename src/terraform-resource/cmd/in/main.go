@@ -23,6 +23,7 @@ func main() {
 
 	runner := in.Runner{
 		OutputDir: outputDir,
+		LogWriter: os.Stderr,
 	}
 	resp, err := runner.Run(req)
 	if err != nil {

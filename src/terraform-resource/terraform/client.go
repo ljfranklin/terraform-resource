@@ -1,35 +1,114 @@
 package terraform
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"reflect"
 	"strings"
 
 	"terraform-resource/models"
-	"terraform-resource/storage"
 )
 
-type Client struct {
-	Model         models.Terraform
-	StorageDriver storage.Storage
-	LogWriter     io.Writer
+//go:generate counterfeiter . Client
+
+type Client interface {
+	InitWithBackend(string) error
+	InitWithoutBackend() error
+	Apply() error
+	Destroy() error
+	Plan() error
+	Output() (map[string]map[string]interface{}, error)
+	Version() (string, error)
+	Import() error
+	WorkspaceList() ([]string, error)
+	StatePull(string) (map[string]interface{}, error)
 }
 
-func (c Client) Apply() error {
-	err := c.runInit()
+type client struct {
+	model     models.Terraform
+	logWriter io.Writer
+}
+
+func NewClient(model models.Terraform, logWriter io.Writer) Client {
+	return client{
+		model:     model,
+		logWriter: logWriter,
+	}
+}
+
+func (c client) InitWithBackend(envName string) error {
+	if err := c.writeBackendOverride(); err != nil {
+		return err
+	}
+
+	initArgs := []string{
+		"init",
+		"-input=false",
+		"-get=true",
+		"-backend=true",
+		c.model.Source,
+	}
+	for key, value := range c.model.BackendConfig {
+		initArgs = append(initArgs, fmt.Sprintf("-backend-config='%s=%s'", key, value))
+	}
+	if c.model.PluginDir != "" {
+		initArgs = append(initArgs, fmt.Sprintf("-plugin-dir=%s", c.model.PluginDir))
+	}
+
+	initCmd := c.terraformCmd(initArgs, nil)
+	if output, err := initCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", err, output)
+	}
+
+	return nil
+}
+
+func (c client) writeBackendOverride() error {
+	// TODO: fix bug with override file in empty directory
+	// backendPath := path.Join(c.model.Source, "resource_backend_override.tf")
+	backendPath := path.Join(c.model.Source, "resource_backend.tf")
+	backendContent := fmt.Sprintf(`terraform { backend "%s" {} }`, c.model.BackendType)
+	return ioutil.WriteFile(backendPath, []byte(backendContent), 0755)
+}
+
+func (c client) InitWithoutBackend() error {
+	initArgs := []string{
+		"init",
+		"-input=false",
+		"-get=true",
+		"-backend=false",
+	}
+	if c.model.PluginDir != "" {
+		initArgs = append(initArgs, fmt.Sprintf("-plugin-dir=%s", c.model.PluginDir))
+	}
+	initArgs = append(initArgs, c.model.Source)
+	initCmd := c.terraformCmd(initArgs, nil)
+
+	if output, err := initCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", err, output)
+	}
+
+	return nil
+}
+
+func (c client) Apply() error {
+	err := c.InitWithoutBackend()
 	if err != nil {
 		return err
 	}
 
 	var sourcePath string
-	if c.Model.PlanRun {
-		sourcePath = c.Model.PlanFileLocalPath
+	if c.model.PlanRun {
+		sourcePath = c.model.PlanFileLocalPath
 	} else {
-		sourcePath = c.Model.Source
+		sourcePath = c.model.Source
 	}
 
 	applyArgs := []string{
@@ -38,18 +117,18 @@ func (c Client) Apply() error {
 		"-input=false", // do not prompt for inputs
 		"-auto-approve",
 	}
-	if c.Model.PlanRun == false {
+	if c.model.PlanRun == false {
 		applyArgs = append(applyArgs, c.varFlags()...)
-		applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath))
+		applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.model.StateFileLocalPath))
 	} else {
-		applyArgs = append(applyArgs, fmt.Sprintf("-state-out=%s", c.Model.StateFileLocalPath))
+		applyArgs = append(applyArgs, fmt.Sprintf("-state-out=%s", c.model.StateFileLocalPath))
 	}
 
 	applyArgs = append(applyArgs, sourcePath)
 
-	applyCmd := c.terraformCmd(applyArgs)
-	applyCmd.Stdout = c.LogWriter
-	applyCmd.Stderr = c.LogWriter
+	applyCmd := c.terraformCmd(applyArgs, nil)
+	applyCmd.Stdout = c.logWriter
+	applyCmd.Stderr = c.logWriter
 	err = applyCmd.Run()
 	if err != nil {
 		return fmt.Errorf("Failed to run Terraform command: %s", err)
@@ -58,8 +137,8 @@ func (c Client) Apply() error {
 	return nil
 }
 
-func (c Client) Destroy() error {
-	err := c.runInit()
+func (c client) Destroy() error {
+	err := c.InitWithoutBackend()
 	if err != nil {
 		return err
 	}
@@ -68,14 +147,14 @@ func (c Client) Destroy() error {
 		"destroy",
 		"-backup='-'", // no need to backup state file
 		"-force",      // do not prompt for confirmation
-		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
+		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 	destroyArgs = append(destroyArgs, c.varFlags()...)
-	destroyArgs = append(destroyArgs, c.Model.Source)
+	destroyArgs = append(destroyArgs, c.model.Source)
 
-	destroyCmd := c.terraformCmd(destroyArgs)
-	destroyCmd.Stdout = c.LogWriter
-	destroyCmd.Stderr = c.LogWriter
+	destroyCmd := c.terraformCmd(destroyArgs, nil)
+	destroyCmd.Stdout = c.logWriter
+	destroyCmd.Stderr = c.logWriter
 	err = destroyCmd.Run()
 	if err != nil {
 		return fmt.Errorf("Failed to run Terraform command: %s", err)
@@ -84,8 +163,8 @@ func (c Client) Destroy() error {
 	return nil
 }
 
-func (c Client) Plan() error {
-	err := c.runInit()
+func (c client) Plan() error {
+	err := c.InitWithoutBackend()
 	if err != nil {
 		return err
 	}
@@ -93,15 +172,15 @@ func (c Client) Plan() error {
 	planArgs := []string{
 		"plan",
 		"-input=false", // do not prompt for inputs
-		fmt.Sprintf("-out=%s", c.Model.PlanFileLocalPath),
-		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
+		fmt.Sprintf("-out=%s", c.model.PlanFileLocalPath),
+		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 	planArgs = append(planArgs, c.varFlags()...)
-	planArgs = append(planArgs, c.Model.Source)
+	planArgs = append(planArgs, c.model.Source)
 
-	planCmd := c.terraformCmd(planArgs)
-	planCmd.Stdout = c.LogWriter
-	planCmd.Stderr = c.LogWriter
+	planCmd := c.terraformCmd(planArgs, nil)
+	planCmd.Stdout = c.logWriter
+	planCmd.Stderr = c.logWriter
 	err = planCmd.Run()
 	if err != nil {
 		return fmt.Errorf("Failed to run Terraform command: %s", err)
@@ -110,18 +189,18 @@ func (c Client) Plan() error {
 	return nil
 }
 
-func (c Client) Output() (map[string]map[string]interface{}, error) {
+func (c client) Output() (map[string]map[string]interface{}, error) {
 	outputArgs := []string{
 		"output",
 		"-json",
-		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
+		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 
-	if c.Model.OutputModule != "" {
-		outputArgs = append(outputArgs, fmt.Sprintf("-module=%s", c.Model.OutputModule))
+	if c.model.OutputModule != "" {
+		outputArgs = append(outputArgs, fmt.Sprintf("-module=%s", c.model.OutputModule))
 	}
 
-	outputCmd := c.terraformCmd(outputArgs)
+	outputCmd := c.terraformCmd(outputArgs, nil)
 
 	rawOutput, err := outputCmd.CombinedOutput()
 	if err != nil {
@@ -142,10 +221,10 @@ func (c Client) Output() (map[string]map[string]interface{}, error) {
 	return tfOutput, nil
 }
 
-func (c Client) Version() (string, error) {
+func (c client) Version() (string, error) {
 	outputCmd := c.terraformCmd([]string{
 		"-v",
-	})
+	}, nil)
 	output, err := outputCmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("Failed to retrieve version.\nError: %s\nOutput: %s", err, output)
@@ -154,37 +233,37 @@ func (c Client) Version() (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
-func (c Client) Import() error {
-	if len(c.Model.Imports) == 0 {
+func (c client) Import() error {
+	if len(c.model.Imports) == 0 {
 		return nil
 	}
 
-	err := c.runInit()
+	err := c.InitWithoutBackend()
 	if err != nil {
 		return err
 	}
 
-	for tfID, iaasID := range c.Model.Imports {
+	for tfID, iaasID := range c.model.Imports {
 		exists, err := c.resourceExists(tfID)
 		if err != nil {
 			return fmt.Errorf("Failed to check for existence of resource %s %s.\nError: %s", tfID, iaasID, err)
 		}
 		if exists {
-			c.LogWriter.Write([]byte(fmt.Sprintf("Skipping import of `%s: %s` as it already exists in the statefile...\n", tfID, iaasID)))
+			c.logWriter.Write([]byte(fmt.Sprintf("Skipping import of `%s: %s` as it already exists in the statefile...\n", tfID, iaasID)))
 			continue
 		}
 
-		c.LogWriter.Write([]byte(fmt.Sprintf("Importing `%s: %s`...\n", tfID, iaasID)))
+		c.logWriter.Write([]byte(fmt.Sprintf("Importing `%s: %s`...\n", tfID, iaasID)))
 		importArgs := []string{
 			"import",
-			fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
-			fmt.Sprintf("-config=%s", c.Model.Source),
+			fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
+			fmt.Sprintf("-config=%s", c.model.Source),
 		}
 		importArgs = append(importArgs, c.varFlags()...)
 		importArgs = append(importArgs, tfID)
 		importArgs = append(importArgs, iaasID)
 
-		importCmd := c.terraformCmd(importArgs)
+		importCmd := c.terraformCmd(importArgs, nil)
 		rawOutput, err := importCmd.CombinedOutput()
 		if err != nil {
 			return fmt.Errorf("Failed to import resource %s %s.\nError: %s\nOutput: %s", tfID, iaasID, err, rawOutput)
@@ -194,17 +273,62 @@ func (c Client) Import() error {
 	return nil
 }
 
-func (c Client) resourceExists(tfID string) (bool, error) {
-	if _, err := os.Stat(c.Model.StateFileLocalPath); os.IsNotExist(err) {
+func (c client) WorkspaceList() ([]string, error) {
+	cmd := c.terraformCmd([]string{
+		"workspace",
+		"list",
+		c.model.Source,
+	}, nil)
+	rawOutput, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("Error: %s, Output: %s", err, rawOutput)
+	}
+
+	envs := []string{}
+	scanner := bufio.NewScanner(bytes.NewReader(rawOutput))
+	for scanner.Scan() {
+		env := strings.TrimPrefix(scanner.Text(), "*")
+		env = strings.TrimSpace(env)
+		if len(env) > 0 {
+			envs = append(envs, env)
+		}
+	}
+
+	return envs, nil
+}
+
+func (c client) StatePull(envName string) (map[string]interface{}, error) {
+	cmd := c.terraformCmd([]string{
+		"state",
+		"pull",
+	}, []string{
+		fmt.Sprintf("TF_WORKSPACE='%s'", envName),
+	})
+	rawOutput, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("Error: %s, Output: %s", err, rawOutput)
+	}
+
+	// TODO: read this into a struct
+	tfState := map[string]interface{}{}
+	if err = json.Unmarshal(rawOutput, &tfState); err != nil {
+		return nil, fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawOutput)
+	}
+
+	return tfState, nil
+}
+
+func (c client) resourceExists(tfID string) (bool, error) {
+	if _, err := os.Stat(c.model.StateFileLocalPath); os.IsNotExist(err) {
 		return false, nil
 	}
 
 	cmd := c.terraformCmd([]string{
 		"state",
 		"list",
-		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
+		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 		tfID,
-	})
+	}, nil)
 	rawOutput, err := cmd.CombinedOutput()
 	if err != nil {
 		return false, fmt.Errorf("Error: %s, Output: %s", err, rawOutput)
@@ -214,46 +338,23 @@ func (c Client) resourceExists(tfID string) (bool, error) {
 	return (len(strings.TrimSpace(string(rawOutput))) > 0), nil
 }
 
-func (c Client) terraformCmd(args []string) *exec.Cmd {
+func (c client) terraformCmd(args []string, env []string) *exec.Cmd {
 	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
 
 	cmd.Env = []string{
 		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
 		"CHECKPOINT_DISABLE=1",
 	}
-	for key, value := range c.Model.Env {
-		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
+	for _, e := range env {
+		cmd.Env = append(cmd.Env, e)
 	}
 
 	return cmd
 }
 
-func (c Client) runInit() error {
-	initArgs := []string{
-		"init",
-		"-input=false",
-		"-get=true",
-		"-backend=false", // resource doesn't support built-in backends yet
-	}
-
-	if c.Model.PluginDir != "" {
-		initArgs = append(initArgs, fmt.Sprintf("-plugin-dir=%s", c.Model.PluginDir))
-	}
-
-	initArgs = append(initArgs, c.Model.Source)
-
-	initCmd := c.terraformCmd(initArgs)
-
-	if output, err := initCmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", err, output)
-	}
-
-	return nil
-}
-
-func (c Client) varFlags() []string {
+func (c client) varFlags() []string {
 	args := []string{}
-	for key, val := range c.Model.Vars {
+	for key, val := range c.model.Vars {
 		args = append(args, "-var", fmt.Sprintf("'%s=%s'", key, formatVar(val)))
 	}
 	return args

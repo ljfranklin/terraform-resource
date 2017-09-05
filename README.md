@@ -15,6 +15,8 @@ See [DEVELOPMENT](DEVELOPMENT.md) if you're interested in submitting a PR :+1:
 
 * `backend_config`: *Required.* A map of key-value configuration options specific to your choosen backend, e.g. [S3 options](https://www.terraform.io/docs/backends/types/s3.html#configuration-variables).
 
+* `env_name`: *Optional.* Name of the environment to manage, e.g. `staging`. TODO: add explaination about single vs multi-env modes.
+
 * `delete_on_failure`: *Optional. Default `false`.* If true, the resource will run `terraform destroy` if `terraform apply` returns an error.
 
 * `vars`: *Optional.* A collection of Terraform input variables.

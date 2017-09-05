@@ -3,7 +3,6 @@ package models
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -19,6 +18,8 @@ type Terraform struct {
 	OutputModule        string                 `json:"output_module,omitempty"`     // optional
 	ImportFiles         []string               `json:"import_files,omitempty"`      // optional
 	PluginDir           string                 `json:"plugin_dir,omitempty"`        // optional
+	BackendType         string                 `json:"backend_type,omitempty"`      // optional
+	BackendConfig       map[string]interface{} `json:"backend_config,omitempty"`    // optional
 	PlanFileLocalPath   string                 `json:"-"`                           // not specified pipeline
 	PlanFileRemotePath  string                 `json:"-"`                           // not specified pipeline
 	StateFileLocalPath  string                 `json:"-"`                           // not specified pipeline
@@ -27,17 +28,6 @@ type Terraform struct {
 }
 
 func (m Terraform) Validate() error {
-	missingFields := []string{}
-	if m.StateFileLocalPath == "" {
-		missingFields = append(missingFields, "state_file_local_path")
-	}
-	if m.StateFileRemotePath == "" {
-		missingFields = append(missingFields, "state_file_remote_path")
-	}
-
-	if len(missingFields) > 0 {
-		return fmt.Errorf("Missing required terraform fields: %s", strings.Join(missingFields, ", "))
-	}
 	return nil
 }
 
@@ -110,6 +100,14 @@ func (m Terraform) Merge(other Terraform) Terraform {
 
 	if other.Imports != nil {
 		m.Imports = other.Imports
+	}
+
+	if other.BackendType != "" {
+		m.BackendType = other.BackendType
+	}
+
+	if other.BackendConfig != nil {
+		m.BackendConfig = other.BackendConfig
 	}
 
 	return m

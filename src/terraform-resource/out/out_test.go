@@ -230,20 +230,19 @@ var _ = Describe("Out", func() {
 			},
 		}
 		expectedMetadata := map[string]string{
-			"env_name":    envName,
-			"build_id": "sample-build-id",
-			"build_name": "sample-build-name",
-			"build_job_name": "sample-build-job-name",
+			"env_name":            envName,
+			"build_id":            "sample-build-id",
+			"build_name":          "sample-build-name",
+			"build_job_name":      "sample-build-job-name",
 			"build_pipeline_name": "sample-build-pipeline-name",
-			"build_team_name": "sample-build-team-name",
-			"atc_external_url": "sample-atc-external-url",
-			"content_md5": calculateMD5("terraform-is-neat"),
+			"build_team_name":     "sample-build-team-name",
+			"atc_external_url":    "sample-atc-external-url",
+			"content_md5":         calculateMD5("terraform-is-neat"),
 		}
 		assertOutBehavior(req, expectedMetadata)
 
 		awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
 	})
-
 
 	Context("when given a yaml file containing variables", func() {
 		var firstVarFile string
@@ -649,7 +648,7 @@ var _ = Describe("Out", func() {
 
 	Context("when bucket contains a state file", func() {
 		BeforeEach(func() {
-			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-current.tfstate"))
+			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3-storage/terraform-current.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
 			defer currFixture.Close()
 			awsVerifier.UploadObjectToS3(bucket, pathToS3Fixture, currFixture)

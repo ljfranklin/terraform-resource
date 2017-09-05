@@ -16,7 +16,9 @@ func main() {
 		log.Fatalf("Failed to read InRequest: %s", err)
 	}
 
-	cmd := check.Runner{}
+	cmd := check.Runner{
+		LogWriter: os.Stderr,
+	}
 	resp, err := cmd.Run(req)
 	if err != nil {
 		log.Fatal(err)

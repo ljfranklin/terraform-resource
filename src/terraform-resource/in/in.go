@@ -2,6 +2,7 @@ package in
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -14,6 +15,7 @@ import (
 
 type Runner struct {
 	OutputDir string
+	LogWriter io.Writer
 }
 
 func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
@@ -74,11 +76,11 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		return models.InResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
 	}
 
-	client := terraform.Client{
-		Model:         terraformModel,
-		StorageDriver: storageDriver,
-	}
-	stateFile := terraform.StateFile{
+	client := terraform.NewClient(
+		terraformModel,
+		r.LogWriter,
+	)
+	stateFile := storage.StateFile{
 		LocalPath:     terraformModel.StateFileLocalPath,
 		RemotePath:    terraformModel.StateFileRemotePath,
 		StorageDriver: storageDriver,
@@ -88,7 +90,7 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to download state file from storage backend: %s", err)
 	}
-	version := models.NewVersion(storageVersion)
+	version := models.NewVersionFromLegacyStorage(storageVersion)
 
 	nameFilepath := path.Join(r.OutputDir, "name")
 	nameFile, err := os.Create(nameFilepath)

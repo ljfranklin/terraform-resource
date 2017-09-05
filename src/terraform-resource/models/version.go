@@ -15,12 +15,13 @@ const (
 )
 
 type Version struct {
-	LastModified string `json:"last_modified"`
+	Serial       int    `json:"serial"`
 	EnvName      string `json:"env_name"`
-	PlanOnly     string `json:"plan_only,omitempty"` //optional
+	LastModified string `json:"last_modified,omitempty"` // optional
+	PlanOnly     string `json:"plan_only,omitempty"`     //optional
 }
 
-func NewVersion(storageVersion storage.Version) Version {
+func NewVersionFromLegacyStorage(storageVersion storage.Version) Version {
 	basename := path.Base(storageVersion.StateFile)
 	envName := strings.TrimSuffix(basename, ".tainted")
 	envName = strings.TrimSuffix(envName, ".plan")
@@ -34,9 +35,6 @@ func NewVersion(storageVersion storage.Version) Version {
 func (r Version) Validate() error {
 	missingFields := []string{}
 	fieldPrefix := "version"
-	if r.LastModified == "" {
-		missingFields = append(missingFields, fmt.Sprintf("%s.last_modified", fieldPrefix))
-	}
 	if r.EnvName == "" {
 		missingFields = append(missingFields, fmt.Sprintf("%s.env_name", fieldPrefix))
 	}
@@ -48,9 +46,11 @@ func (r Version) Validate() error {
 		return fmt.Errorf("Missing fields: %s", strings.Join(missingFields, ", "))
 	}
 
-	_, err := time.Parse(TimeFormat, r.LastModified)
-	if err != nil {
-		return fmt.Errorf("LastModified field is in invalid format: %s", err)
+	if r.LastModified != "" {
+		_, err := time.Parse(TimeFormat, r.LastModified)
+		if err != nil {
+			return fmt.Errorf("LastModified field is in invalid format: %s", err)
+		}
 	}
 
 	return nil

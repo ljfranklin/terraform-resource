@@ -86,19 +86,19 @@ var _ = Describe("In", func() {
 
 	Context("when multiple state files exist on S3", func() {
 		BeforeEach(func() {
-			prevFixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-previous.tfstate"))
+			prevFixture, err := os.Open(helpers.FileLocation("fixtures/s3-storage/terraform-previous.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
 			defer prevFixture.Close()
 
 			awsVerifier.UploadObjectToS3(bucket, pathToPrevS3Fixture, prevFixture)
 			time.Sleep(5 * time.Second) // ensure last modified is different
 
-			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-current.tfstate"))
+			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3-storage/terraform-current.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
 			defer currFixture.Close()
 			awsVerifier.UploadObjectToS3(bucket, pathToCurrS3Fixture, currFixture)
 
-			modulesFixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-modules.tfstate"))
+			modulesFixture, err := os.Open(helpers.FileLocation("fixtures/s3-storage/terraform-modules.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
 			defer currFixture.Close()
 			awsVerifier.UploadObjectToS3(bucket, pathToModulesS3Fixture, modulesFixture)

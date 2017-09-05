@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"strings"
 	"terraform-resource/logger"
-	"terraform-resource/models"
 	"terraform-resource/storage"
 )
 
 type Action struct {
 	Client          Client
-	PlanFile        PlanFile
-	StateFile       StateFile
+	PlanFile        storage.PlanFile
+	StateFile       storage.StateFile
 	Logger          logger.Logger
 	DeleteOnFailure bool
 }
@@ -117,7 +116,7 @@ func (a *Action) attemptApply() (Result, error) {
 
 	// if yes, then, delete it
 	if planExist {
-		if _, err := a.PlanFile.Delete(); err != nil {
+		if _, err = a.PlanFile.Delete(); err != nil {
 			return Result{}, err
 		}
 	}
@@ -248,15 +247,6 @@ func (a *Action) setup() error {
 		if err != nil {
 			return err
 		}
-		outputs, err := a.Client.Output()
-		if err != nil {
-			return err
-		}
-		previousResult := Result{
-			Output: outputs,
-		}
-
-		a.Client.Model = models.Terraform{Vars: previousResult.RawOutput()}.Merge(a.Client.Model)
 	}
 
 	err = a.Client.Import()

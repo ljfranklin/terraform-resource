@@ -81,17 +81,16 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		return models.OutResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
 	}
 
-	client := terraform.Client{
-		Model:         terraformModel,
-		StorageDriver: storageDriver,
-		LogWriter:     r.LogWriter,
-	}
-	stateFile := terraform.StateFile{
+	client := terraform.NewClient(
+		terraformModel,
+		r.LogWriter,
+	)
+	stateFile := storage.StateFile{
 		LocalPath:     terraformModel.StateFileLocalPath,
 		RemotePath:    terraformModel.StateFileRemotePath,
 		StorageDriver: storageDriver,
 	}
-	planFile := terraform.PlanFile{
+	planFile := storage.PlanFile{
 		LocalPath:     terraformModel.PlanFileLocalPath,
 		RemotePath:    terraformModel.PlanFileRemotePath,
 		StorageDriver: storageDriver,
@@ -118,7 +117,7 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		return models.OutResponse{}, actionErr
 	}
 
-	version := models.NewVersion(result.Version)
+	version := models.NewVersionFromLegacyStorage(result.Version)
 	if req.Params.PlanOnly {
 		version.PlanOnly = "true" // Concourse demands version fields are strings
 	}
@@ -159,7 +158,7 @@ func (r Runner) buildEnvName(req models.OutRequest, storageDriver storage.Storag
 	} else if len(req.Params.EnvName) > 0 {
 		envName = req.Params.EnvName
 	} else if req.Params.GenerateRandomName {
-		randomName := ""
+		var randomName string
 		for i := 0; i < NameClashRetries; i++ {
 			randomName = r.Namer.RandomName()
 			clash, err := doesEnvNameClash(randomName, storageDriver)
