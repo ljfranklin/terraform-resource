@@ -121,7 +121,7 @@ func (a *Action) attemptApply() (Result, error) {
 		}
 	}
 
-	clientOutput, err := a.Client.Output()
+	clientOutput, err := a.Client.OutputWithLegacyStorage()
 	if err != nil {
 		return Result{}, err
 	}

@@ -24,11 +24,12 @@ type Client interface {
 	Apply() error
 	Destroy() error
 	Plan() error
-	Output() (map[string]map[string]interface{}, error)
+	Output(string) (map[string]map[string]interface{}, error)
+	OutputWithLegacyStorage() (map[string]map[string]interface{}, error)
 	Version() (string, error)
 	Import() error
 	WorkspaceList() ([]string, error)
-	StatePull(string) (map[string]interface{}, error)
+	StatePull(string) ([]byte, error)
 }
 
 type client struct {
@@ -53,7 +54,6 @@ func (c client) InitWithBackend(envName string) error {
 		"-input=false",
 		"-get=true",
 		"-backend=true",
-		c.model.Source,
 	}
 	for key, value := range c.model.BackendConfig {
 		initArgs = append(initArgs, fmt.Sprintf("-backend-config='%s=%s'", key, value))
@@ -61,6 +61,7 @@ func (c client) InitWithBackend(envName string) error {
 	if c.model.PluginDir != "" {
 		initArgs = append(initArgs, fmt.Sprintf("-plugin-dir=%s", c.model.PluginDir))
 	}
+	initArgs = append(initArgs, c.model.Source)
 
 	initCmd := c.terraformCmd(initArgs, nil)
 	if output, err := initCmd.CombinedOutput(); err != nil {
@@ -189,7 +190,39 @@ func (c client) Plan() error {
 	return nil
 }
 
-func (c client) Output() (map[string]map[string]interface{}, error) {
+func (c client) Output(envName string) (map[string]map[string]interface{}, error) {
+	outputArgs := []string{
+		"output",
+		"-json",
+	}
+	if c.model.OutputModule != "" {
+		outputArgs = append(outputArgs, fmt.Sprintf("-module=%s", c.model.OutputModule))
+	}
+
+	outputCmd := c.terraformCmd(outputArgs, []string{
+		fmt.Sprintf("TF_WORKSPACE=%s", envName),
+	})
+
+	rawOutput, err := outputCmd.CombinedOutput()
+	if err != nil {
+		// TF CLI currently doesn't provide a nice way to detect an empty set of outputs
+		// https://github.com/hashicorp/terraform/issues/11696
+		if strings.Contains(string(rawOutput), "no outputs defined") {
+			rawOutput = []byte("{}")
+		} else {
+			return nil, fmt.Errorf("Failed to retrieve output.\nError: %s\nOutput: %s", err, rawOutput)
+		}
+	}
+
+	tfOutput := map[string]map[string]interface{}{}
+	if err = json.Unmarshal(rawOutput, &tfOutput); err != nil {
+		return nil, fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawOutput)
+	}
+
+	return tfOutput, nil
+}
+
+func (c client) OutputWithLegacyStorage() (map[string]map[string]interface{}, error) {
 	outputArgs := []string{
 		"output",
 		"-json",
@@ -297,25 +330,19 @@ func (c client) WorkspaceList() ([]string, error) {
 	return envs, nil
 }
 
-func (c client) StatePull(envName string) (map[string]interface{}, error) {
+func (c client) StatePull(envName string) ([]byte, error) {
 	cmd := c.terraformCmd([]string{
 		"state",
 		"pull",
 	}, []string{
-		fmt.Sprintf("TF_WORKSPACE='%s'", envName),
+		fmt.Sprintf("TF_WORKSPACE=%s", envName),
 	})
 	rawOutput, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("Error: %s, Output: %s", err, rawOutput)
 	}
 
-	// TODO: read this into a struct
-	tfState := map[string]interface{}{}
-	if err = json.Unmarshal(rawOutput, &tfState); err != nil {
-		return nil, fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawOutput)
-	}
-
-	return tfState, nil
+	return rawOutput, nil
 }
 
 func (c client) resourceExists(tfID string) (bool, error) {

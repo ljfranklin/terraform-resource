@@ -17,7 +17,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("In", func() {
+var _ = Describe("In with legacy storage", func() {
 
 	var (
 		awsVerifier            *helpers.AWSVerifier
