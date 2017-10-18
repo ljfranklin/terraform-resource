@@ -27,10 +27,109 @@ type Runner struct {
 }
 
 func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
-	logger := logger.Logger{
-		Sink: r.LogWriter,
+	terraformModel := req.Source.Terraform.Merge(req.Params.Terraform)
+	if terraformModel.VarFiles != nil {
+		for i := range terraformModel.VarFiles {
+			terraformModel.VarFiles[i] = path.Join(r.SourceDir, terraformModel.VarFiles[i])
+		}
+	}
+	if err := terraformModel.ParseVarsFromFiles(); err != nil {
+		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.var_files`: %s", err)
+	}
+	if err := terraformModel.ParseImportsFromFile(); err != nil {
+		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.imports_file`: %s", err)
 	}
 
+	if len(terraformModel.Source) == 0 && terraformModel.PlanRun == false {
+		return models.OutResponse{}, errors.New("Missing required field `terraform.source`")
+	}
+
+	terraformModel.Vars["build_id"] = os.Getenv("BUILD_ID")
+	terraformModel.Vars["build_name"] = os.Getenv("BUILD_NAME")
+	terraformModel.Vars["build_job_name"] = os.Getenv("BUILD_JOB_NAME")
+	terraformModel.Vars["build_pipeline_name"] = os.Getenv("BUILD_PIPELINE_NAME")
+	terraformModel.Vars["build_team_name"] = os.Getenv("BUILD_TEAM_NAME")
+	terraformModel.Vars["atc_external_url"] = os.Getenv("ATC_EXTERNAL_URL")
+
+	if err := terraformModel.Validate(); err != nil {
+		return models.OutResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
+	}
+
+	if req.Source.BackendType == "" {
+		return r.runWithLegacyStorage(req, terraformModel)
+	}
+	return r.runWithBackend(req, terraformModel)
+}
+
+func (r Runner) runWithBackend(req models.OutRequest, terraformModel models.Terraform) (models.OutResponse, error) {
+	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-out")
+	if err != nil {
+		return models.OutResponse{}, fmt.Errorf("Failed to create tmp dir at '%s'", os.TempDir())
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// TODO: handle EnvNameFile
+	// TODO: handle randomly generated names
+	envName := req.Params.EnvName
+	terraformModel.Vars["env_name"] = envName
+
+	client := terraform.NewClient(
+		terraformModel,
+		r.LogWriter,
+	)
+	action := terraform.Action{
+		Client:          client,
+		EnvName:         envName,
+		DeleteOnFailure: terraformModel.DeleteOnFailure,
+		Logger: logger.Logger{
+			Sink: r.LogWriter,
+		},
+	}
+
+	var result terraform.Result
+	var actionErr error
+
+	// TODO: handle plan
+	if req.Params.Action == models.DestroyAction {
+		result, actionErr = action.Destroy()
+	} else {
+		result, actionErr = action.Apply()
+	}
+	if actionErr != nil {
+		return models.OutResponse{}, actionErr
+	}
+
+	version := result.Version
+	if req.Params.PlanOnly {
+		version.PlanOnly = "true" // Concourse demands version fields are strings
+	}
+
+	metadata := []models.MetadataField{}
+	for key, value := range result.SanitizedOutput() {
+		metadata = append(metadata, models.MetadataField{
+			Name:  key,
+			Value: value,
+		})
+	}
+
+	tfVersion, err := client.Version()
+	if err != nil {
+		return models.OutResponse{}, err
+	}
+	metadata = append(metadata, models.MetadataField{
+		Name:  "terraform_version",
+		Value: tfVersion,
+	})
+
+	resp := models.OutResponse{
+		Version:  version,
+		Metadata: metadata,
+	}
+
+	return resp, nil
+}
+
+func (r Runner) runWithLegacyStorage(req models.OutRequest, terraformModel models.Terraform) (models.OutResponse, error) {
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-out")
 	if err != nil {
 		return models.OutResponse{}, fmt.Errorf("Failed to create tmp dir at '%s'", os.TempDir())
@@ -43,43 +142,16 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	}
 	storageDriver := storage.BuildDriver(storageModel)
 
-	terraformModel := req.Source.Terraform.Merge(req.Params.Terraform)
-	if terraformModel.VarFiles != nil {
-		for i := range terraformModel.VarFiles {
-			terraformModel.VarFiles[i] = path.Join(r.SourceDir, terraformModel.VarFiles[i])
-		}
-	}
-	if err = terraformModel.ParseVarsFromFiles(); err != nil {
-		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.var_files`: %s", err)
-	}
-	if err = terraformModel.ParseImportsFromFile(); err != nil {
-		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.imports_file`: %s", err)
-	}
-
-	if len(terraformModel.Source) == 0 && terraformModel.PlanRun == false {
-		return models.OutResponse{}, errors.New("Missing required field `terraform.source`")
-	}
-
 	envName, err := r.buildEnvName(req, storageDriver)
 	if err != nil {
 		return models.OutResponse{}, err
 	}
 	terraformModel.Vars["env_name"] = envName
-	terraformModel.Vars["build_id"] = os.Getenv("BUILD_ID")
-	terraformModel.Vars["build_name"] = os.Getenv("BUILD_NAME")
-	terraformModel.Vars["build_job_name"] = os.Getenv("BUILD_JOB_NAME")
-	terraformModel.Vars["build_pipeline_name"] = os.Getenv("BUILD_PIPELINE_NAME")
-	terraformModel.Vars["build_team_name"] = os.Getenv("BUILD_TEAM_NAME")
-	terraformModel.Vars["atc_external_url"] = os.Getenv("ATC_EXTERNAL_URL")
 
 	terraformModel.PlanFileLocalPath = path.Join(tmpDir, "plan")
 	terraformModel.PlanFileRemotePath = fmt.Sprintf("%s.plan", envName)
 	terraformModel.StateFileLocalPath = path.Join(tmpDir, "terraform.tfstate")
 	terraformModel.StateFileRemotePath = fmt.Sprintf("%s.tfstate", envName)
-
-	if err = terraformModel.Validate(); err != nil {
-		return models.OutResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
-	}
 
 	client := terraform.NewClient(
 		terraformModel,
@@ -95,15 +167,17 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		RemotePath:    terraformModel.PlanFileRemotePath,
 		StorageDriver: storageDriver,
 	}
-	action := terraform.Action{
+	action := terraform.LegacyStorageAction{
 		Client:          client,
 		StateFile:       stateFile,
 		PlanFile:        planFile,
 		DeleteOnFailure: terraformModel.DeleteOnFailure,
-		Logger:          logger,
+		Logger: logger.Logger{
+			Sink: r.LogWriter,
+		},
 	}
 
-	var result terraform.Result
+	var result terraform.LegacyStorageResult
 	var actionErr error
 
 	if req.Params.PlanOnly {
@@ -148,6 +222,7 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 }
 
 func (r Runner) buildEnvName(req models.OutRequest, storageDriver storage.Storage) (string, error) {
+	// TODO: handle case where migrated_from is present
 	envName := ""
 	if len(req.Params.EnvNameFile) > 0 {
 		contents, err := ioutil.ReadFile(req.Params.EnvNameFile)
@@ -158,6 +233,7 @@ func (r Runner) buildEnvName(req models.OutRequest, storageDriver storage.Storag
 	} else if len(req.Params.EnvName) > 0 {
 		envName = req.Params.EnvName
 	} else if req.Params.GenerateRandomName {
+		// TODO: make this work with workspaces
 		var randomName string
 		for i := 0; i < NameClashRetries; i++ {
 			randomName = r.Namer.RandomName()

@@ -92,8 +92,8 @@ var _ = Describe("Check with Terraform Backend", func() {
 	AfterEach(func() {
 		_ = os.RemoveAll(workingDir)
 		// TODO: do we need to delete parent folder?
-		// awsVerifier.DeleteObjectFromS3(bucket, pathToPrevS3Fixture)
-		// awsVerifier.DeleteObjectFromS3(bucket, pathToCurrS3Fixture)
+		awsVerifier.DeleteObjectFromS3(bucket, pathToPrevS3Fixture)
+		awsVerifier.DeleteObjectFromS3(bucket, pathToCurrS3Fixture)
 	})
 
 	// TODO: write a test to ensure check can be run twice in a row

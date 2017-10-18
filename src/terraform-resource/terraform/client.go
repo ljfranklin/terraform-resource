@@ -29,6 +29,8 @@ type Client interface {
 	Version() (string, error)
 	Import() error
 	WorkspaceList() ([]string, error)
+	WorkspaceNew(string) error
+	WorkspaceDelete(string) error
 	StatePull(string) ([]byte, error)
 }
 
@@ -64,7 +66,9 @@ func (c client) InitWithBackend(envName string) error {
 	initArgs = append(initArgs, c.model.Source)
 
 	initCmd := c.terraformCmd(initArgs, nil)
-	if output, err := initCmd.CombinedOutput(); err != nil {
+	var err error
+	var output []byte
+	if output, err = initCmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", err, output)
 	}
 
@@ -100,18 +104,6 @@ func (c client) InitWithoutBackend() error {
 }
 
 func (c client) Apply() error {
-	err := c.InitWithoutBackend()
-	if err != nil {
-		return err
-	}
-
-	var sourcePath string
-	if c.model.PlanRun {
-		sourcePath = c.model.PlanFileLocalPath
-	} else {
-		sourcePath = c.model.Source
-	}
-
 	applyArgs := []string{
 		"apply",
 		"-backup='-'",  // no need to backup state file
@@ -125,12 +117,14 @@ func (c client) Apply() error {
 		applyArgs = append(applyArgs, fmt.Sprintf("-state-out=%s", c.model.StateFileLocalPath))
 	}
 
-	applyArgs = append(applyArgs, sourcePath)
+	if c.model.PlanRun {
+		applyArgs = append(applyArgs, c.model.PlanFileLocalPath)
+	}
 
 	applyCmd := c.terraformCmd(applyArgs, nil)
 	applyCmd.Stdout = c.logWriter
 	applyCmd.Stderr = c.logWriter
-	err = applyCmd.Run()
+	err := applyCmd.Run()
 	if err != nil {
 		return fmt.Errorf("Failed to run Terraform command: %s", err)
 	}
@@ -139,11 +133,6 @@ func (c client) Apply() error {
 }
 
 func (c client) Destroy() error {
-	err := c.InitWithoutBackend()
-	if err != nil {
-		return err
-	}
-
 	destroyArgs := []string{
 		"destroy",
 		"-backup='-'", // no need to backup state file
@@ -151,12 +140,11 @@ func (c client) Destroy() error {
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 	destroyArgs = append(destroyArgs, c.varFlags()...)
-	destroyArgs = append(destroyArgs, c.model.Source)
 
 	destroyCmd := c.terraformCmd(destroyArgs, nil)
 	destroyCmd.Stdout = c.logWriter
 	destroyCmd.Stderr = c.logWriter
-	err = destroyCmd.Run()
+	err := destroyCmd.Run()
 	if err != nil {
 		return fmt.Errorf("Failed to run Terraform command: %s", err)
 	}
@@ -165,11 +153,6 @@ func (c client) Destroy() error {
 }
 
 func (c client) Plan() error {
-	err := c.InitWithoutBackend()
-	if err != nil {
-		return err
-	}
-
 	planArgs := []string{
 		"plan",
 		"-input=false", // do not prompt for inputs
@@ -177,12 +160,11 @@ func (c client) Plan() error {
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 	planArgs = append(planArgs, c.varFlags()...)
-	planArgs = append(planArgs, c.model.Source)
 
 	planCmd := c.terraformCmd(planArgs, nil)
 	planCmd.Stdout = c.logWriter
 	planCmd.Stderr = c.logWriter
-	err = planCmd.Run()
+	err := planCmd.Run()
 	if err != nil {
 		return fmt.Errorf("Failed to run Terraform command: %s", err)
 	}
@@ -271,11 +253,6 @@ func (c client) Import() error {
 		return nil
 	}
 
-	err := c.InitWithoutBackend()
-	if err != nil {
-		return err
-	}
-
 	for tfID, iaasID := range c.model.Imports {
 		exists, err := c.resourceExists(tfID)
 		if err != nil {
@@ -310,7 +287,6 @@ func (c client) WorkspaceList() ([]string, error) {
 	cmd := c.terraformCmd([]string{
 		"workspace",
 		"list",
-		c.model.Source,
 	}, nil)
 	rawOutput, err := cmd.CombinedOutput()
 	if err != nil {
@@ -330,6 +306,36 @@ func (c client) WorkspaceList() ([]string, error) {
 	return envs, nil
 }
 
+func (c client) WorkspaceNew(envName string) error {
+	cmd := c.terraformCmd([]string{
+		"workspace",
+		"new",
+		envName,
+	}, nil)
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("Error: %s, Output: %s", err, output)
+	}
+
+	return nil
+}
+
+func (c client) WorkspaceDelete(envName string) error {
+	cmd := c.terraformCmd([]string{
+		"workspace",
+		"delete",
+		envName,
+	}, []string{
+		"TF_WORKSPACE=default",
+	})
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("Error: %s, Output: %s", err, output)
+	}
+
+	return nil
+}
+
 func (c client) StatePull(envName string) ([]byte, error) {
 	cmd := c.terraformCmd([]string{
 		"state",
@@ -337,6 +343,7 @@ func (c client) StatePull(envName string) ([]byte, error) {
 	}, []string{
 		fmt.Sprintf("TF_WORKSPACE=%s", envName),
 	})
+
 	rawOutput, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("Error: %s, Output: %s", err, rawOutput)
@@ -367,6 +374,8 @@ func (c client) resourceExists(tfID string) (bool, error) {
 
 func (c client) terraformCmd(args []string, env []string) *exec.Cmd {
 	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
+
+	cmd.Dir = c.model.Source
 
 	cmd.Env = []string{
 		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),

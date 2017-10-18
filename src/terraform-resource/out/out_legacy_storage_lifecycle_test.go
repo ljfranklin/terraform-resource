@@ -19,7 +19,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Out Lifecycle", func() {
+var _ = Describe("Out Legacy Storage Lifecycle", func() {
 
 	var (
 		envName       string
@@ -30,7 +30,7 @@ var _ = Describe("Out Lifecycle", func() {
 	)
 
 	BeforeEach(func() {
-		envName = helpers.RandomString("out-test")
+		envName = helpers.RandomString("out-legacy-test")
 		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
 		planFilePath = path.Join(bucketPath, fmt.Sprintf("%s.plan", envName))
 		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-lifecycle"))

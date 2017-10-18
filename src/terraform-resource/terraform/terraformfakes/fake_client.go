@@ -54,14 +54,27 @@ type FakeClient struct {
 	planReturnsOnCall map[int]struct {
 		result1 error
 	}
-	OutputStub        func() (map[string]map[string]interface{}, error)
+	OutputStub        func(string) (map[string]map[string]interface{}, error)
 	outputMutex       sync.RWMutex
-	outputArgsForCall []struct{}
-	outputReturns     struct {
+	outputArgsForCall []struct {
+		arg1 string
+	}
+	outputReturns struct {
 		result1 map[string]map[string]interface{}
 		result2 error
 	}
 	outputReturnsOnCall map[int]struct {
+		result1 map[string]map[string]interface{}
+		result2 error
+	}
+	OutputWithLegacyStorageStub        func() (map[string]map[string]interface{}, error)
+	outputWithLegacyStorageMutex       sync.RWMutex
+	outputWithLegacyStorageArgsForCall []struct{}
+	outputWithLegacyStorageReturns     struct {
+		result1 map[string]map[string]interface{}
+		result2 error
+	}
+	outputWithLegacyStorageReturnsOnCall map[int]struct {
 		result1 map[string]map[string]interface{}
 		result2 error
 	}
@@ -96,17 +109,39 @@ type FakeClient struct {
 		result1 []string
 		result2 error
 	}
-	StatePullStub        func(string) (map[string]interface{}, error)
+	WorkspaceNewStub        func(string) error
+	workspaceNewMutex       sync.RWMutex
+	workspaceNewArgsForCall []struct {
+		arg1 string
+	}
+	workspaceNewReturns struct {
+		result1 error
+	}
+	workspaceNewReturnsOnCall map[int]struct {
+		result1 error
+	}
+	WorkspaceDeleteStub        func(string) error
+	workspaceDeleteMutex       sync.RWMutex
+	workspaceDeleteArgsForCall []struct {
+		arg1 string
+	}
+	workspaceDeleteReturns struct {
+		result1 error
+	}
+	workspaceDeleteReturnsOnCall map[int]struct {
+		result1 error
+	}
+	StatePullStub        func(string) ([]byte, error)
 	statePullMutex       sync.RWMutex
 	statePullArgsForCall []struct {
 		arg1 string
 	}
 	statePullReturns struct {
-		result1 map[string]interface{}
+		result1 []byte
 		result2 error
 	}
 	statePullReturnsOnCall map[int]struct {
-		result1 map[string]interface{}
+		result1 []byte
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -321,14 +356,16 @@ func (fake *FakeClient) PlanReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeClient) Output() (map[string]map[string]interface{}, error) {
+func (fake *FakeClient) Output(arg1 string) (map[string]map[string]interface{}, error) {
 	fake.outputMutex.Lock()
 	ret, specificReturn := fake.outputReturnsOnCall[len(fake.outputArgsForCall)]
-	fake.outputArgsForCall = append(fake.outputArgsForCall, struct{}{})
-	fake.recordInvocation("Output", []interface{}{})
+	fake.outputArgsForCall = append(fake.outputArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("Output", []interface{}{arg1})
 	fake.outputMutex.Unlock()
 	if fake.OutputStub != nil {
-		return fake.OutputStub()
+		return fake.OutputStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -340,6 +377,12 @@ func (fake *FakeClient) OutputCallCount() int {
 	fake.outputMutex.RLock()
 	defer fake.outputMutex.RUnlock()
 	return len(fake.outputArgsForCall)
+}
+
+func (fake *FakeClient) OutputArgsForCall(i int) string {
+	fake.outputMutex.RLock()
+	defer fake.outputMutex.RUnlock()
+	return fake.outputArgsForCall[i].arg1
 }
 
 func (fake *FakeClient) OutputReturns(result1 map[string]map[string]interface{}, result2 error) {
@@ -359,6 +402,49 @@ func (fake *FakeClient) OutputReturnsOnCall(i int, result1 map[string]map[string
 		})
 	}
 	fake.outputReturnsOnCall[i] = struct {
+		result1 map[string]map[string]interface{}
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) OutputWithLegacyStorage() (map[string]map[string]interface{}, error) {
+	fake.outputWithLegacyStorageMutex.Lock()
+	ret, specificReturn := fake.outputWithLegacyStorageReturnsOnCall[len(fake.outputWithLegacyStorageArgsForCall)]
+	fake.outputWithLegacyStorageArgsForCall = append(fake.outputWithLegacyStorageArgsForCall, struct{}{})
+	fake.recordInvocation("OutputWithLegacyStorage", []interface{}{})
+	fake.outputWithLegacyStorageMutex.Unlock()
+	if fake.OutputWithLegacyStorageStub != nil {
+		return fake.OutputWithLegacyStorageStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.outputWithLegacyStorageReturns.result1, fake.outputWithLegacyStorageReturns.result2
+}
+
+func (fake *FakeClient) OutputWithLegacyStorageCallCount() int {
+	fake.outputWithLegacyStorageMutex.RLock()
+	defer fake.outputWithLegacyStorageMutex.RUnlock()
+	return len(fake.outputWithLegacyStorageArgsForCall)
+}
+
+func (fake *FakeClient) OutputWithLegacyStorageReturns(result1 map[string]map[string]interface{}, result2 error) {
+	fake.OutputWithLegacyStorageStub = nil
+	fake.outputWithLegacyStorageReturns = struct {
+		result1 map[string]map[string]interface{}
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeClient) OutputWithLegacyStorageReturnsOnCall(i int, result1 map[string]map[string]interface{}, result2 error) {
+	fake.OutputWithLegacyStorageStub = nil
+	if fake.outputWithLegacyStorageReturnsOnCall == nil {
+		fake.outputWithLegacyStorageReturnsOnCall = make(map[int]struct {
+			result1 map[string]map[string]interface{}
+			result2 error
+		})
+	}
+	fake.outputWithLegacyStorageReturnsOnCall[i] = struct {
 		result1 map[string]map[string]interface{}
 		result2 error
 	}{result1, result2}
@@ -490,7 +576,103 @@ func (fake *FakeClient) WorkspaceListReturnsOnCall(i int, result1 []string, resu
 	}{result1, result2}
 }
 
-func (fake *FakeClient) StatePull(arg1 string) (map[string]interface{}, error) {
+func (fake *FakeClient) WorkspaceNew(arg1 string) error {
+	fake.workspaceNewMutex.Lock()
+	ret, specificReturn := fake.workspaceNewReturnsOnCall[len(fake.workspaceNewArgsForCall)]
+	fake.workspaceNewArgsForCall = append(fake.workspaceNewArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("WorkspaceNew", []interface{}{arg1})
+	fake.workspaceNewMutex.Unlock()
+	if fake.WorkspaceNewStub != nil {
+		return fake.WorkspaceNewStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.workspaceNewReturns.result1
+}
+
+func (fake *FakeClient) WorkspaceNewCallCount() int {
+	fake.workspaceNewMutex.RLock()
+	defer fake.workspaceNewMutex.RUnlock()
+	return len(fake.workspaceNewArgsForCall)
+}
+
+func (fake *FakeClient) WorkspaceNewArgsForCall(i int) string {
+	fake.workspaceNewMutex.RLock()
+	defer fake.workspaceNewMutex.RUnlock()
+	return fake.workspaceNewArgsForCall[i].arg1
+}
+
+func (fake *FakeClient) WorkspaceNewReturns(result1 error) {
+	fake.WorkspaceNewStub = nil
+	fake.workspaceNewReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) WorkspaceNewReturnsOnCall(i int, result1 error) {
+	fake.WorkspaceNewStub = nil
+	if fake.workspaceNewReturnsOnCall == nil {
+		fake.workspaceNewReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.workspaceNewReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) WorkspaceDelete(arg1 string) error {
+	fake.workspaceDeleteMutex.Lock()
+	ret, specificReturn := fake.workspaceDeleteReturnsOnCall[len(fake.workspaceDeleteArgsForCall)]
+	fake.workspaceDeleteArgsForCall = append(fake.workspaceDeleteArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("WorkspaceDelete", []interface{}{arg1})
+	fake.workspaceDeleteMutex.Unlock()
+	if fake.WorkspaceDeleteStub != nil {
+		return fake.WorkspaceDeleteStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.workspaceDeleteReturns.result1
+}
+
+func (fake *FakeClient) WorkspaceDeleteCallCount() int {
+	fake.workspaceDeleteMutex.RLock()
+	defer fake.workspaceDeleteMutex.RUnlock()
+	return len(fake.workspaceDeleteArgsForCall)
+}
+
+func (fake *FakeClient) WorkspaceDeleteArgsForCall(i int) string {
+	fake.workspaceDeleteMutex.RLock()
+	defer fake.workspaceDeleteMutex.RUnlock()
+	return fake.workspaceDeleteArgsForCall[i].arg1
+}
+
+func (fake *FakeClient) WorkspaceDeleteReturns(result1 error) {
+	fake.WorkspaceDeleteStub = nil
+	fake.workspaceDeleteReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) WorkspaceDeleteReturnsOnCall(i int, result1 error) {
+	fake.WorkspaceDeleteStub = nil
+	if fake.workspaceDeleteReturnsOnCall == nil {
+		fake.workspaceDeleteReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.workspaceDeleteReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) StatePull(arg1 string) ([]byte, error) {
 	fake.statePullMutex.Lock()
 	ret, specificReturn := fake.statePullReturnsOnCall[len(fake.statePullArgsForCall)]
 	fake.statePullArgsForCall = append(fake.statePullArgsForCall, struct {
@@ -519,24 +701,24 @@ func (fake *FakeClient) StatePullArgsForCall(i int) string {
 	return fake.statePullArgsForCall[i].arg1
 }
 
-func (fake *FakeClient) StatePullReturns(result1 map[string]interface{}, result2 error) {
+func (fake *FakeClient) StatePullReturns(result1 []byte, result2 error) {
 	fake.StatePullStub = nil
 	fake.statePullReturns = struct {
-		result1 map[string]interface{}
+		result1 []byte
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeClient) StatePullReturnsOnCall(i int, result1 map[string]interface{}, result2 error) {
+func (fake *FakeClient) StatePullReturnsOnCall(i int, result1 []byte, result2 error) {
 	fake.StatePullStub = nil
 	if fake.statePullReturnsOnCall == nil {
 		fake.statePullReturnsOnCall = make(map[int]struct {
-			result1 map[string]interface{}
+			result1 []byte
 			result2 error
 		})
 	}
 	fake.statePullReturnsOnCall[i] = struct {
-		result1 map[string]interface{}
+		result1 []byte
 		result2 error
 	}{result1, result2}
 }
@@ -556,12 +738,18 @@ func (fake *FakeClient) Invocations() map[string][][]interface{} {
 	defer fake.planMutex.RUnlock()
 	fake.outputMutex.RLock()
 	defer fake.outputMutex.RUnlock()
+	fake.outputWithLegacyStorageMutex.RLock()
+	defer fake.outputWithLegacyStorageMutex.RUnlock()
 	fake.versionMutex.RLock()
 	defer fake.versionMutex.RUnlock()
 	fake.importMutex.RLock()
 	defer fake.importMutex.RUnlock()
 	fake.workspaceListMutex.RLock()
 	defer fake.workspaceListMutex.RUnlock()
+	fake.workspaceNewMutex.RLock()
+	defer fake.workspaceNewMutex.RUnlock()
+	fake.workspaceDeleteMutex.RLock()
+	defer fake.workspaceDeleteMutex.RUnlock()
 	fake.statePullMutex.RLock()
 	defer fake.statePullMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

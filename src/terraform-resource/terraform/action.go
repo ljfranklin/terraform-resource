@@ -2,23 +2,21 @@ package terraform
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"terraform-resource/logger"
-	"terraform-resource/storage"
+	"terraform-resource/models"
 )
 
 type Action struct {
 	Client          Client
-	PlanFile        storage.PlanFile
-	StateFile       storage.StateFile
 	Logger          logger.Logger
+	EnvName         string
 	DeleteOnFailure bool
 }
 
 type Result struct {
-	Version storage.Version
+	Version models.Version
 	Output  map[string]map[string]interface{}
 }
 
@@ -60,7 +58,6 @@ func (a *Action) Apply() (Result, error) {
 		err = fmt.Errorf("Apply Error: %s", err)
 	}
 
-	alreadyDeleted := false
 	if err != nil && a.DeleteOnFailure {
 		a.Logger.Warn("Cleaning Up Partially Created Resources...")
 
@@ -68,15 +65,6 @@ func (a *Action) Apply() (Result, error) {
 		if destroyErr != nil {
 			a.Logger.Error("Failed To Run Terraform Destroy!")
 			err = fmt.Errorf("%s\nDestroy Error: %s", err, destroyErr)
-		} else {
-			alreadyDeleted = true
-		}
-	}
-
-	if err != nil && alreadyDeleted == false {
-		uploadErr := a.uploadTaintedStatefile()
-		if uploadErr != nil {
-			err = fmt.Errorf("Destroy Error: %s\nUpload Error: %s", err, uploadErr)
 		}
 	}
 
@@ -91,43 +79,28 @@ func (a *Action) attemptApply() (Result, error) {
 	a.Logger.InfoSection("Terraform Apply")
 	defer a.Logger.EndSection()
 
+	if err := a.createWorkspaceIfNotExists(); err != nil {
+		return Result{}, err
+	}
+
 	if err := a.Client.Apply(); err != nil {
 		return Result{}, err
 	}
 
-	if a.StateFile.IsTainted() {
-		_, err := a.StateFile.Delete()
-		if err != nil {
-			return Result{}, err
-		}
-		a.StateFile = a.StateFile.ConvertFromTainted()
-	}
-
-	storageVersion, err := a.StateFile.Upload()
+	serial, err := a.currentSerial()
 	if err != nil {
 		return Result{}, err
 	}
-
-	// Does a plan exist on the bucket ?
-	planExist, err := a.PlanFile.Exists()
-	if err != nil {
-		return Result{}, err
-	}
-
-	// if yes, then, delete it
-	if planExist {
-		if _, err = a.PlanFile.Delete(); err != nil {
-			return Result{}, err
-		}
-	}
-
-	clientOutput, err := a.Client.OutputWithLegacyStorage()
+	clientOutput, err := a.Client.Output(a.EnvName)
 	if err != nil {
 		return Result{}, err
 	}
 	return Result{
-		Output:  clientOutput,
-		Version: storageVersion,
+		Output: clientOutput,
+		Version: models.Version{
+			EnvName: a.EnvName,
+			Serial:  serial,
+		},
 	}, nil
 }
 
@@ -138,15 +111,6 @@ func (a *Action) Destroy() (Result, error) {
 	}
 
 	result, err := a.attemptDestroy()
-
-	if err != nil {
-		a.Logger.Error("Failed To Run Terraform Destroy!")
-		uploadErr := a.uploadTaintedStatefile()
-		if uploadErr != nil {
-			err = fmt.Errorf("Destroy Error: %s\nUpload Error: %s", err, uploadErr)
-		}
-	}
-
 	if err == nil {
 		a.Logger.Success("Successfully Ran Terraform Destroy!")
 	}
@@ -162,119 +126,67 @@ func (a *Action) attemptDestroy() (Result, error) {
 		return Result{}, err
 	}
 
-	_, err := a.PlanFile.Delete()
-	if err != nil {
-		return Result{}, err
-	}
-	storageVersion, err := a.StateFile.Delete()
-	if err != nil {
-		return Result{}, err
-	}
-	return Result{
-		Output:  map[string]map[string]interface{}{},
-		Version: storageVersion,
-	}, nil
-}
-
-func (a *Action) Plan() (Result, error) {
-	err := a.setup()
-	if err != nil {
-		return Result{}, err
-	}
-
-	result, err := a.attemptPlan()
-	if err != nil {
-		a.Logger.Error("Failed To Run Terraform Plan!")
-		err = fmt.Errorf("Plan Error: %s", err)
-	}
-
-	if err == nil {
-		a.Logger.Success("Successfully Ran Terraform Plan!")
-	}
-
-	return result, err
-}
-
-func (a *Action) attemptPlan() (Result, error) {
-	a.Logger.InfoSection("Terraform Plan")
-	defer a.Logger.EndSection()
-
-	if err := a.Client.Plan(); err != nil {
-		return Result{}, err
-	}
-
-	storageVersion, err := a.PlanFile.Upload()
-	if err != nil {
+	if err := a.Client.WorkspaceDelete(a.EnvName); err != nil {
 		return Result{}, err
 	}
 
 	return Result{
-		Output:  map[string]map[string]interface{}{},
-		Version: storageVersion,
+		Output: map[string]map[string]interface{}{},
+		Version: models.Version{
+			EnvName: a.EnvName,
+		},
 	}, nil
 }
 
 func (a *Action) setup() error {
-	stateFileExists, err := a.StateFile.Exists()
-	if err != nil {
+	if err := a.Client.InitWithBackend(a.EnvName); err != nil {
 		return err
 	}
 
-	planFileExists, err := a.PlanFile.Exists()
-	if err != nil {
-		return err
-	}
-
-	if stateFileExists == false {
-		stateFileExists, err = a.StateFile.ExistsAsTainted()
-		if err != nil {
-			return err
-		}
-		if stateFileExists {
-			a.StateFile = a.StateFile.ConvertToTainted()
-		}
-	}
-
-	if planFileExists {
-		_, err = a.PlanFile.Download()
-		if err != nil {
-			return err
-		}
-	}
-
-	if stateFileExists {
-		_, err = a.StateFile.Download()
-		if err != nil {
-			return err
-		}
-	}
-
-	err = a.Client.Import()
-	if err != nil {
-		return err
-	}
+	// TODO: re-add import
+	// if err := a.Client.Import(); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
 
-func (a *Action) uploadTaintedStatefile() error {
-	errMsg := ""
-	_, deleteErr := a.StateFile.Delete()
-	if deleteErr != nil {
-		errMsg = fmt.Sprintf("Delete original state file error: %s", deleteErr)
-	}
-	a.StateFile = a.StateFile.ConvertToTainted()
-
-	_, uploadErr := a.StateFile.Upload()
-	if uploadErr != nil {
-		errMsg = fmt.Sprintf("%s\nUpload Error: %s", errMsg, uploadErr)
+func (a *Action) currentSerial() (int, error) {
+	rawState, err := a.Client.StatePull(a.EnvName)
+	if err != nil {
+		return -1, err
 	}
 
-	if len(errMsg) > 0 {
-		return errors.New(errMsg)
+	// TODO: read this into a struct
+	tfState := map[string]interface{}{}
+	if err = json.Unmarshal(rawState, &tfState); err != nil {
+		return -1, fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawState)
 	}
 
-	a.Logger.Success(fmt.Sprintf("IMPORTANT - Uploaded State File for manual cleanup to '%s'", a.StateFile.RemotePath))
+	serial, ok := tfState["serial"].(float64)
+	if !ok {
+		return -1, fmt.Errorf("Expected number value for 'serial' but got '%#v'", tfState["serial"])
+	}
+
+	return int(serial), nil
+}
+
+func (a *Action) createWorkspaceIfNotExists() error {
+	workspaces, err := a.Client.WorkspaceList()
+	if err != nil {
+		return err
+	}
+
+	workspaceExists := false
+	for _, space := range workspaces {
+		if space == a.EnvName {
+			workspaceExists = true
+		}
+	}
+
+	if !workspaceExists {
+		return a.Client.WorkspaceNew(a.EnvName)
+	}
 
 	return nil
 }
