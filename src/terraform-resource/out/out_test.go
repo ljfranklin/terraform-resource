@@ -789,10 +789,6 @@ var _ = Describe("Out", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(logWriter.String()).To(ContainSubstring("invalid_object"))
 			awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
-
-			originalStateFilePath := stateFilePath
-			stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate.tainted", envName))
-			awsVerifier.ExpectS3FileToNotExist(bucket, originalStateFilePath)
 			awsVerifier.ExpectS3FileToExist(bucket, stateFilePath)
 
 			// cleanup
@@ -800,7 +796,6 @@ var _ = Describe("Out", func() {
 			_, err = runner.Run(req)
 			Expect(err).ToNot(HaveOccurred())
 			awsVerifier.ExpectS3FileToNotExist(bucket, s3ObjectPath)
-			awsVerifier.ExpectS3FileToNotExist(bucket, originalStateFilePath)
 			awsVerifier.ExpectS3FileToNotExist(bucket, stateFilePath)
 		})
 
