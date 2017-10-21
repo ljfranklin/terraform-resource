@@ -15,17 +15,17 @@ import (
 	"terraform-resource/models"
 	"terraform-resource/namer/namerfakes"
 	"terraform-resource/out"
+	"terraform-resource/storage"
 	"terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Out", func() {
+var _ = Describe("Out - Legacy Storage", func() {
 
 	var (
-		backendType       string
-		backendConfig     map[string]interface{}
+		storageModel      storage.Model
 		envName           string
 		stateFilePath     string
 		s3ObjectPath      string
@@ -37,7 +37,6 @@ var _ = Describe("Out", func() {
 		createYAMLTmpFile func(string, interface{}) string
 		calculateMD5      func(string) string
 		logWriter         bytes.Buffer
-		workspacePath     string
 	)
 
 	BeforeEach(func() {
@@ -45,12 +44,8 @@ var _ = Describe("Out", func() {
 		if region == "" {
 			region = "us-east-1"
 		}
-
-		// TODO: workspace_prefix can't include nested dir
-		workspacePath = helpers.RandomString("out-backend-test")
-
 		envName = helpers.RandomString("out-test")
-		stateFilePath = path.Join(workspacePath, envName, "terraform.tfstate")
+		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
 		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-test"))
 
 		os.Setenv("BUILD_ID", "sample-build-id")
@@ -60,14 +55,12 @@ var _ = Describe("Out", func() {
 		os.Setenv("BUILD_TEAM_NAME", "sample-build-team-name")
 		os.Setenv("ATC_EXTERNAL_URL", "sample-atc-external-url")
 
-		backendType = "s3"
-		backendConfig = map[string]interface{}{
-			"bucket":               bucket,
-			"key":                  "terraform.tfstate",
-			"access_key":           accessKey,
-			"secret_key":           secretKey,
-			"region":               region,
-			"workspace_key_prefix": workspacePath,
+		storageModel = storage.Model{
+			Bucket:          bucket,
+			BucketPath:      bucketPath,
+			AccessKeyID:     accessKey,
+			SecretAccessKey: secretKey,
+			RegionName:      region,
 		}
 
 		var err error
@@ -97,10 +90,7 @@ var _ = Describe("Out", func() {
 	It("creates IaaS resources from a local terraform source", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
+				Storage: storageModel,
 			},
 			Params: models.OutParams{
 				EnvName: envName,
@@ -130,10 +120,7 @@ var _ = Describe("Out", func() {
 	It("creates IaaS resources from a terraform module", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
+				Storage: storageModel,
 			},
 			Params: models.OutParams{
 				EnvName: envName,
@@ -161,10 +148,9 @@ var _ = Describe("Out", func() {
 	It("creates IaaS resources from `source.terraform.vars`", func() {
 		req := models.OutRequest{
 			Source: models.Source{
+				Storage: storageModel,
 				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-					Source:        "fixtures/aws/",
+					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -190,10 +176,9 @@ var _ = Describe("Out", func() {
 	It("creates IaaS resources from `source.terraform` and `put.params.terraform`", func() {
 		req := models.OutRequest{
 			Source: models.Source{
+				Storage: storageModel,
 				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-					Source:        "fixtures/aws/",
+					Source: "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key": accessKey,
 						"secret_key": "bad-secret-key", // will be overridden
@@ -226,10 +211,7 @@ var _ = Describe("Out", func() {
 	It("creates build information as variables", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
+				Storage: storageModel,
 			},
 			Params: models.OutParams{
 				EnvName: envName,
@@ -278,10 +260,9 @@ var _ = Describe("Out", func() {
 		It("creates IaaS resources from request vars and file vars", func() {
 			req := models.OutRequest{
 				Source: models.Source{
+					Storage: storageModel,
 					Terraform: models.Terraform{
-						BackendType:   backendType,
-						BackendConfig: backendConfig,
-						Source:        "fixtures/aws/",
+						Source: "fixtures/aws/",
 						Vars: map[string]interface{}{
 							"access_key": accessKey,
 							// will be overridden
@@ -317,10 +298,9 @@ var _ = Describe("Out", func() {
 	It("sets env variables from `source.terraform` and `put.params.terraform`", func() {
 		req := models.OutRequest{
 			Source: models.Source{
+				Storage: storageModel,
 				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-					Source:        "fixtures/aws-env/",
+					Source: "fixtures/aws-env/",
 					Env: map[string]string{
 						"AWS_ACCESS_KEY_ID":     accessKey,
 						"AWS_SECRET_ACCESS_KEY": "bad-secret-key", // will be overridden
@@ -354,10 +334,7 @@ var _ = Describe("Out", func() {
 	It("allows hashes and lists in metadata", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
+				Storage: storageModel,
 			},
 			Params: models.OutParams{
 				EnvName: envName,
@@ -385,10 +362,7 @@ var _ = Describe("Out", func() {
 	It("allows an empty set of outputs", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
+				Storage: storageModel,
 			},
 			Params: models.OutParams{
 				EnvName: envName,
@@ -413,10 +387,7 @@ var _ = Describe("Out", func() {
 	It("redacts sensitive outputs in metadata and logs", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
+				Storage: storageModel,
 			},
 			Params: models.OutParams{
 				EnvName: envName,
@@ -445,10 +416,7 @@ var _ = Describe("Out", func() {
 	It("returns an error if an input var is malformed", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
+				Storage: storageModel,
 			},
 			Params: models.OutParams{
 				EnvName: envName,
@@ -481,10 +449,7 @@ var _ = Describe("Out", func() {
 		spaceName := strings.Replace(envName, "-", " ", -1)
 		req := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
+				Storage: storageModel,
 			},
 			Params: models.OutParams{
 				EnvName: spaceName,
@@ -513,10 +478,7 @@ var _ = Describe("Out", func() {
 		spaceName := fmt.Sprintf(" %s \n", envName)
 		req := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
+				Storage: storageModel,
 			},
 			Params: models.OutParams{
 				EnvName: spaceName,
@@ -561,10 +523,7 @@ var _ = Describe("Out", func() {
 		It("Allows env name to be specified via env_name_file", func() {
 			req := models.OutRequest{
 				Source: models.Source{
-					Terraform: models.Terraform{
-						BackendType:   backendType,
-						BackendConfig: backendConfig,
-					},
+					Storage: storageModel,
 				},
 				Params: models.OutParams{
 					EnvNameFile: envNameFile,
@@ -594,10 +553,7 @@ var _ = Describe("Out", func() {
 
 		req := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
+				Storage: storageModel,
 			},
 			Params: models.OutParams{
 				GenerateRandomName: true,
@@ -624,14 +580,10 @@ var _ = Describe("Out", func() {
 	})
 
 	It("encrypts the state file when server_side_encryption is given", func() {
-		backendConfig["encrypt"] = true
-
+		storageModel.ServerSideEncryption = "AES256"
 		req := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
+				Storage: storageModel,
 			},
 			Params: models.OutParams{
 				EnvName: envName,
@@ -663,15 +615,10 @@ var _ = Describe("Out", func() {
 			Skip("S3_KMS_KEY_ID is not set, skipping sse_kms_key_id test...")
 		}
 
-		backendConfig["encrypt"] = true
-		backendConfig["kms_key_id"] = kmsKeyID
-
+		storageModel.SSEKMSKeyId = kmsKeyID
 		req := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
+				Storage: storageModel,
 			},
 			Params: models.OutParams{
 				EnvName: envName,
@@ -716,10 +663,7 @@ var _ = Describe("Out", func() {
 
 			req := models.OutRequest{
 				Source: models.Source{
-					Terraform: models.Terraform{
-						BackendType:   backendType,
-						BackendConfig: backendConfig,
-					},
+					Storage: storageModel,
 				},
 				Params: models.OutParams{
 					GenerateRandomName: true,
@@ -756,10 +700,7 @@ var _ = Describe("Out", func() {
 		BeforeEach(func() {
 			req = models.OutRequest{
 				Source: models.Source{
-					Terraform: models.Terraform{
-						BackendType:   backendType,
-						BackendConfig: backendConfig,
-					},
+					Storage: storageModel,
 				},
 				Params: models.OutParams{
 					EnvName: envName,
@@ -804,6 +745,27 @@ var _ = Describe("Out", func() {
 			awsVerifier.ExpectS3FileToNotExist(bucket, stateFilePath)
 		})
 
+		It("untaints the state file after the next successful put", func() {
+			runner := out.Runner{
+				SourceDir: workingDir,
+				LogWriter: &logWriter,
+			}
+			_, err := runner.Run(req)
+			Expect(err).To(HaveOccurred())
+			Expect(logWriter.String()).To(ContainSubstring("invalid_object"))
+
+			taintedStateFilePath := path.Join(bucketPath, fmt.Sprintf("%s.tfstate.tainted", envName))
+			awsVerifier.ExpectS3FileToNotExist(bucket, stateFilePath)
+			awsVerifier.ExpectS3FileToExist(bucket, taintedStateFilePath)
+
+			req.Params.Terraform.Vars["invalid_object_count"] = "0"
+			_, err = runner.Run(req)
+			Expect(err).ToNot(HaveOccurred())
+			awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
+			awsVerifier.ExpectS3FileToExist(bucket, stateFilePath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, taintedStateFilePath)
+		})
+
 		It("deletes all resources on failure if delete_on_failure is true", func() {
 			req.Params.Terraform.DeleteOnFailure = true
 
@@ -821,6 +783,62 @@ var _ = Describe("Out", func() {
 			stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate.tainted", envName))
 			awsVerifier.ExpectS3FileToNotExist(bucket, originalStateFilePath)
 			awsVerifier.ExpectS3FileToNotExist(bucket, stateFilePath)
+		})
+	})
+
+	Context("when an s3 compatible storage is used", func() {
+		var s3Verifier *helpers.AWSVerifier
+
+		BeforeEach(func() {
+			storageModel = storage.Model{
+				Endpoint:        s3CompatibleEndpoint,
+				Bucket:          s3CompatibleBucket,
+				BucketPath:      bucketPath,
+				AccessKeyID:     s3CompatibleAccessKey,
+				SecretAccessKey: s3CompatibleSecretKey,
+				RegionName:      region,
+			}
+
+			s3Verifier = helpers.NewAWSVerifier(
+				s3CompatibleAccessKey,
+				s3CompatibleSecretKey,
+				region,
+				s3CompatibleEndpoint,
+			)
+		})
+
+		AfterEach(func() {
+			s3Verifier.DeleteObjectFromS3(s3CompatibleBucket, stateFilePath)
+		})
+
+		It("stores the state file successfully", func() {
+			req := models.OutRequest{
+				Source: models.Source{
+					Storage: storageModel,
+				},
+				Params: models.OutParams{
+					EnvName: envName,
+					Terraform: models.Terraform{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key":     accessKey,
+							"secret_key":     secretKey,
+							"bucket":         bucket,
+							"object_key":     s3ObjectPath,
+							"object_content": "terraform-is-neat",
+							"region":         region,
+						},
+					},
+				},
+			}
+			expectedMetadata := map[string]string{
+				"env_name":    envName,
+				"content_md5": calculateMD5("terraform-is-neat"),
+			}
+
+			assertOutBehavior(req, expectedMetadata)
+
+			s3Verifier.ExpectS3FileToExist(s3CompatibleBucket, stateFilePath)
 		})
 	})
 

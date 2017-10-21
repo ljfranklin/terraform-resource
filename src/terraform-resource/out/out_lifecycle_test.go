@@ -57,7 +57,7 @@ var _ = Describe("Out Backend Lifecycle", func() {
 		awsVerifier.DeleteObjectFromS3(bucket, stateFilePath)
 	})
 
-	FIt("creates, updates, and deletes infrastructure", func() {
+	It("creates, updates, and deletes infrastructure", func() {
 		outRequest := models.OutRequest{
 			Source: models.Source{
 				Terraform: models.Terraform{

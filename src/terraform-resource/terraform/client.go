@@ -58,7 +58,7 @@ func (c client) InitWithBackend(envName string) error {
 		"-backend=true",
 	}
 	for key, value := range c.model.BackendConfig {
-		initArgs = append(initArgs, fmt.Sprintf("-backend-config='%s=%s'", key, value))
+		initArgs = append(initArgs, fmt.Sprintf("-backend-config='%s=%v'", key, value))
 	}
 	if c.model.PluginDir != "" {
 		initArgs = append(initArgs, fmt.Sprintf("-plugin-dir=%s", c.model.PluginDir))
@@ -76,7 +76,8 @@ func (c client) InitWithBackend(envName string) error {
 }
 
 func (c client) writeBackendOverride() error {
-	// TODO: fix bug with override file in empty directory
+	// TODO: use an override file once this PR is merged:
+	// https://github.com/hashicorp/terraform/pull/16415
 	// backendPath := path.Join(c.model.Source, "resource_backend_override.tf")
 	backendPath := path.Join(c.model.Source, "resource_backend.tf")
 	backendContent := fmt.Sprintf(`terraform { backend "%s" {} }`, c.model.BackendType)

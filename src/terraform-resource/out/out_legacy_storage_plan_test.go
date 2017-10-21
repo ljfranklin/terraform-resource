@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Out Plan", func() {
+var _ = Describe("Out Legacy Storage Plan", func() {
 
 	var (
 		envName       string
