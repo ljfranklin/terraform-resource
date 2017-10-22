@@ -35,7 +35,7 @@ var _ = Describe("Workspaces", func() {
 			BeforeEach(func() {
 				fakeTerraform = &terraformfakes.FakeClient{}
 				fakeTerraform.WorkspaceListReturns([]string{"some-env"}, nil)
-				fakeTerraform.StatePullReturns(map[string]interface{}{"serial": float64(7)}, nil)
+				fakeTerraform.StatePullReturns([]byte(`{"serial": 7}`), nil)
 			})
 
 			It("returns a Version with the given serial number", func() {
@@ -94,7 +94,7 @@ var _ = Describe("Workspaces", func() {
 			BeforeEach(func() {
 				fakeTerraform = &terraformfakes.FakeClient{}
 				fakeTerraform.WorkspaceListReturns([]string{"some-env"}, nil)
-				fakeTerraform.StatePullReturns(map[string]interface{}{"serial": "nan"}, nil)
+				fakeTerraform.StatePullReturns([]byte(`{"serial": "nan"}`), nil)
 			})
 
 			It("returns the error", func() {

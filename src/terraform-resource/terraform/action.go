@@ -83,6 +83,10 @@ func (a *Action) attemptApply() (Result, error) {
 		return Result{}, err
 	}
 
+	if err := a.Client.Import(a.EnvName); err != nil {
+		return Result{}, err
+	}
+
 	if err := a.Client.Apply(); err != nil {
 		return Result{}, err
 	}
@@ -122,6 +126,10 @@ func (a *Action) attemptDestroy() (Result, error) {
 	a.Logger.WarnSection("Terraform Destroy")
 	defer a.Logger.EndSection()
 
+	if err := a.Client.Import(a.EnvName); err != nil {
+		return Result{}, err
+	}
+
 	if err := a.Client.Destroy(); err != nil {
 		return Result{}, err
 	}
@@ -140,10 +148,6 @@ func (a *Action) attemptDestroy() (Result, error) {
 
 func (a *Action) setup() error {
 	if err := a.Client.InitWithBackend(); err != nil {
-		return err
-	}
-
-	if err := a.Client.Import(a.EnvName); err != nil {
 		return err
 	}
 
