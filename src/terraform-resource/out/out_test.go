@@ -83,7 +83,7 @@ var _ = Describe("Out", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		fixtureEnvName = helpers.RandomString("s3-test-fixture")
-		pathToS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", fixtureEnvName))
+		pathToS3Fixture = path.Join(workspacePath, fixtureEnvName, "terraform.tfstate")
 
 		namer = namerfakes.FakeNamer{}
 	})

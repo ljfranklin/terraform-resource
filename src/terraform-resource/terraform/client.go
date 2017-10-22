@@ -19,7 +19,7 @@ import (
 //go:generate counterfeiter . Client
 
 type Client interface {
-	InitWithBackend(string) error
+	InitWithBackend() error
 	InitWithoutBackend() error
 	Apply() error
 	Destroy() error
@@ -27,7 +27,8 @@ type Client interface {
 	Output(string) (map[string]map[string]interface{}, error)
 	OutputWithLegacyStorage() (map[string]map[string]interface{}, error)
 	Version() (string, error)
-	Import() error
+	Import(string) error
+	ImportWithLegacyStorage() error
 	WorkspaceList() ([]string, error)
 	WorkspaceNew(string) error
 	WorkspaceDelete(string) error
@@ -46,7 +47,7 @@ func NewClient(model models.Terraform, logWriter io.Writer) Client {
 	}
 }
 
-func (c client) InitWithBackend(envName string) error {
+func (c client) InitWithBackend() error {
 	if err := c.writeBackendOverride(); err != nil {
 		return err
 	}
@@ -113,6 +114,7 @@ func (c client) Apply() error {
 	}
 	if c.model.PlanRun == false {
 		applyArgs = append(applyArgs, c.varFlags()...)
+		// TODO: remove state flag for backend?
 		applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.model.StateFileLocalPath))
 	} else {
 		applyArgs = append(applyArgs, fmt.Sprintf("-state-out=%s", c.model.StateFileLocalPath))
@@ -249,13 +251,46 @@ func (c client) Version() (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
-func (c client) Import() error {
+func (c client) Import(envName string) error {
 	if len(c.model.Imports) == 0 {
 		return nil
 	}
 
 	for tfID, iaasID := range c.model.Imports {
-		exists, err := c.resourceExists(tfID)
+		exists, err := c.resourceExists(tfID, envName)
+		if err != nil {
+			return fmt.Errorf("Failed to check for existence of resource %s %s.\nError: %s", tfID, iaasID, err)
+		}
+		if exists {
+			c.logWriter.Write([]byte(fmt.Sprintf("Skipping import of `%s: %s` as it already exists in the statefile...\n", tfID, iaasID)))
+			continue
+		}
+
+		c.logWriter.Write([]byte(fmt.Sprintf("Importing `%s: %s`...\n", tfID, iaasID)))
+		importArgs := []string{
+			"import",
+		}
+		importArgs = append(importArgs, c.varFlags()...)
+		importArgs = append(importArgs, tfID)
+		importArgs = append(importArgs, iaasID)
+
+		importCmd := c.terraformCmd(importArgs, nil)
+		rawOutput, err := importCmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("Failed to import resource %s %s.\nError: %s\nOutput: %s", tfID, iaasID, err, rawOutput)
+		}
+	}
+
+	return nil
+}
+
+func (c client) ImportWithLegacyStorage() error {
+	if len(c.model.Imports) == 0 {
+		return nil
+	}
+
+	for tfID, iaasID := range c.model.Imports {
+		exists, err := c.resourceExistsLegacyStorage(tfID)
 		if err != nil {
 			return fmt.Errorf("Failed to check for existence of resource %s %s.\nError: %s", tfID, iaasID, err)
 		}
@@ -268,7 +303,6 @@ func (c client) Import() error {
 		importArgs := []string{
 			"import",
 			fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
-			fmt.Sprintf("-config=%s", c.model.Source),
 		}
 		importArgs = append(importArgs, c.varFlags()...)
 		importArgs = append(importArgs, tfID)
@@ -353,7 +387,24 @@ func (c client) StatePull(envName string) ([]byte, error) {
 	return rawOutput, nil
 }
 
-func (c client) resourceExists(tfID string) (bool, error) {
+func (c client) resourceExists(tfID string, envName string) (bool, error) {
+	cmd := c.terraformCmd([]string{
+		"state",
+		"list",
+		tfID,
+	}, []string{
+		fmt.Sprintf("TF_WORKSPACE=%s", envName),
+	})
+	rawOutput, err := cmd.CombinedOutput()
+	if err != nil {
+		return false, fmt.Errorf("Error: %s, Output: %s", err, rawOutput)
+	}
+
+	// command returns the ID of the resource if it exists
+	return (len(strings.TrimSpace(string(rawOutput))) > 0), nil
+}
+
+func (c client) resourceExistsLegacyStorage(tfID string) (bool, error) {
 	if _, err := os.Stat(c.model.StateFileLocalPath); os.IsNotExist(err) {
 		return false, nil
 	}
@@ -377,7 +428,6 @@ func (c client) terraformCmd(args []string, env []string) *exec.Cmd {
 	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
 
 	cmd.Dir = c.model.Source
-
 	cmd.Env = []string{
 		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
 		"CHECKPOINT_DISABLE=1",

@@ -95,6 +95,7 @@ var _ = Describe("Out Legacy Storage Plan", func() {
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
+					Source:  "fixtures/aws/",
 					PlanRun: true,
 				},
 			},
@@ -169,7 +170,6 @@ var _ = Describe("Out Legacy Storage Plan", func() {
 			planFilePath,
 		)
 		Expect(err).ToNot(HaveOccurred())
-
 	})
 
 	It("takes the existing statefile into account when generating a plan", func() {
@@ -239,6 +239,7 @@ var _ = Describe("Out Legacy Storage Plan", func() {
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
+					Source:  "fixtures/aws/",
 					PlanRun: true,
 				},
 			},

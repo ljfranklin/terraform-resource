@@ -139,14 +139,13 @@ func (a *Action) attemptDestroy() (Result, error) {
 }
 
 func (a *Action) setup() error {
-	if err := a.Client.InitWithBackend(a.EnvName); err != nil {
+	if err := a.Client.InitWithBackend(); err != nil {
 		return err
 	}
 
-	// TODO: re-add import
-	// if err := a.Client.Import(); err != nil {
-	// 	return err
-	// }
+	if err := a.Client.Import(a.EnvName); err != nil {
+		return err
+	}
 
 	return nil
 }

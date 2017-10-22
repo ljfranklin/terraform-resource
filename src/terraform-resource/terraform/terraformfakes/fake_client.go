@@ -7,12 +7,10 @@ import (
 )
 
 type FakeClient struct {
-	InitWithBackendStub        func(string) error
+	InitWithBackendStub        func() error
 	initWithBackendMutex       sync.RWMutex
-	initWithBackendArgsForCall []struct {
-		arg1 string
-	}
-	initWithBackendReturns struct {
+	initWithBackendArgsForCall []struct{}
+	initWithBackendReturns     struct {
 		result1 error
 	}
 	initWithBackendReturnsOnCall map[int]struct {
@@ -89,13 +87,24 @@ type FakeClient struct {
 		result1 string
 		result2 error
 	}
-	ImportStub        func() error
+	ImportStub        func(string) error
 	importMutex       sync.RWMutex
-	importArgsForCall []struct{}
-	importReturns     struct {
+	importArgsForCall []struct {
+		arg1 string
+	}
+	importReturns struct {
 		result1 error
 	}
 	importReturnsOnCall map[int]struct {
+		result1 error
+	}
+	ImportWithLegacyStorageStub        func() error
+	importWithLegacyStorageMutex       sync.RWMutex
+	importWithLegacyStorageArgsForCall []struct{}
+	importWithLegacyStorageReturns     struct {
+		result1 error
+	}
+	importWithLegacyStorageReturnsOnCall map[int]struct {
 		result1 error
 	}
 	WorkspaceListStub        func() ([]string, error)
@@ -148,16 +157,14 @@ type FakeClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeClient) InitWithBackend(arg1 string) error {
+func (fake *FakeClient) InitWithBackend() error {
 	fake.initWithBackendMutex.Lock()
 	ret, specificReturn := fake.initWithBackendReturnsOnCall[len(fake.initWithBackendArgsForCall)]
-	fake.initWithBackendArgsForCall = append(fake.initWithBackendArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	fake.recordInvocation("InitWithBackend", []interface{}{arg1})
+	fake.initWithBackendArgsForCall = append(fake.initWithBackendArgsForCall, struct{}{})
+	fake.recordInvocation("InitWithBackend", []interface{}{})
 	fake.initWithBackendMutex.Unlock()
 	if fake.InitWithBackendStub != nil {
-		return fake.InitWithBackendStub(arg1)
+		return fake.InitWithBackendStub()
 	}
 	if specificReturn {
 		return ret.result1
@@ -169,12 +176,6 @@ func (fake *FakeClient) InitWithBackendCallCount() int {
 	fake.initWithBackendMutex.RLock()
 	defer fake.initWithBackendMutex.RUnlock()
 	return len(fake.initWithBackendArgsForCall)
-}
-
-func (fake *FakeClient) InitWithBackendArgsForCall(i int) string {
-	fake.initWithBackendMutex.RLock()
-	defer fake.initWithBackendMutex.RUnlock()
-	return fake.initWithBackendArgsForCall[i].arg1
 }
 
 func (fake *FakeClient) InitWithBackendReturns(result1 error) {
@@ -493,14 +494,16 @@ func (fake *FakeClient) VersionReturnsOnCall(i int, result1 string, result2 erro
 	}{result1, result2}
 }
 
-func (fake *FakeClient) Import() error {
+func (fake *FakeClient) Import(arg1 string) error {
 	fake.importMutex.Lock()
 	ret, specificReturn := fake.importReturnsOnCall[len(fake.importArgsForCall)]
-	fake.importArgsForCall = append(fake.importArgsForCall, struct{}{})
-	fake.recordInvocation("Import", []interface{}{})
+	fake.importArgsForCall = append(fake.importArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("Import", []interface{}{arg1})
 	fake.importMutex.Unlock()
 	if fake.ImportStub != nil {
-		return fake.ImportStub()
+		return fake.ImportStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
@@ -512,6 +515,12 @@ func (fake *FakeClient) ImportCallCount() int {
 	fake.importMutex.RLock()
 	defer fake.importMutex.RUnlock()
 	return len(fake.importArgsForCall)
+}
+
+func (fake *FakeClient) ImportArgsForCall(i int) string {
+	fake.importMutex.RLock()
+	defer fake.importMutex.RUnlock()
+	return fake.importArgsForCall[i].arg1
 }
 
 func (fake *FakeClient) ImportReturns(result1 error) {
@@ -529,6 +538,46 @@ func (fake *FakeClient) ImportReturnsOnCall(i int, result1 error) {
 		})
 	}
 	fake.importReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) ImportWithLegacyStorage() error {
+	fake.importWithLegacyStorageMutex.Lock()
+	ret, specificReturn := fake.importWithLegacyStorageReturnsOnCall[len(fake.importWithLegacyStorageArgsForCall)]
+	fake.importWithLegacyStorageArgsForCall = append(fake.importWithLegacyStorageArgsForCall, struct{}{})
+	fake.recordInvocation("ImportWithLegacyStorage", []interface{}{})
+	fake.importWithLegacyStorageMutex.Unlock()
+	if fake.ImportWithLegacyStorageStub != nil {
+		return fake.ImportWithLegacyStorageStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.importWithLegacyStorageReturns.result1
+}
+
+func (fake *FakeClient) ImportWithLegacyStorageCallCount() int {
+	fake.importWithLegacyStorageMutex.RLock()
+	defer fake.importWithLegacyStorageMutex.RUnlock()
+	return len(fake.importWithLegacyStorageArgsForCall)
+}
+
+func (fake *FakeClient) ImportWithLegacyStorageReturns(result1 error) {
+	fake.ImportWithLegacyStorageStub = nil
+	fake.importWithLegacyStorageReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) ImportWithLegacyStorageReturnsOnCall(i int, result1 error) {
+	fake.ImportWithLegacyStorageStub = nil
+	if fake.importWithLegacyStorageReturnsOnCall == nil {
+		fake.importWithLegacyStorageReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.importWithLegacyStorageReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -744,6 +793,8 @@ func (fake *FakeClient) Invocations() map[string][][]interface{} {
 	defer fake.versionMutex.RUnlock()
 	fake.importMutex.RLock()
 	defer fake.importMutex.RUnlock()
+	fake.importWithLegacyStorageMutex.RLock()
+	defer fake.importWithLegacyStorageMutex.RUnlock()
 	fake.workspaceListMutex.RLock()
 	defer fake.workspaceListMutex.RUnlock()
 	fake.workspaceNewMutex.RLock()

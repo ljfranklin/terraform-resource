@@ -81,7 +81,7 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 	)
 
 	targetEnvName := req.Version.EnvName
-	if err := client.InitWithBackend(targetEnvName); err != nil {
+	if err := client.InitWithBackend(); err != nil {
 		return models.InResponse{}, err
 	}
 

@@ -18,7 +18,7 @@ func New(client terraform.Client) *Workspaces {
 }
 
 func (w Workspaces) LatestVersionForEnv(envName string) (models.Version, error) {
-	err := w.client.InitWithBackend(envName)
+	err := w.client.InitWithBackend()
 	if err != nil {
 		return models.Version{}, err
 	}

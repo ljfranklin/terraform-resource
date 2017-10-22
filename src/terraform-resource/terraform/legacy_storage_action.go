@@ -253,7 +253,7 @@ func (a *LegacyStorageAction) setup() error {
 		return err
 	}
 
-	if err := a.Client.Import(); err != nil {
+	if err := a.Client.ImportWithLegacyStorage(); err != nil {
 		return err
 	}
 

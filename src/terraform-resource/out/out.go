@@ -40,7 +40,7 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.imports_file`: %s", err)
 	}
 
-	if len(terraformModel.Source) == 0 && terraformModel.PlanRun == false {
+	if len(terraformModel.Source) == 0 {
 		return models.OutResponse{}, errors.New("Missing required field `terraform.source`")
 	}
 
@@ -68,9 +68,11 @@ func (r Runner) runWithBackend(req models.OutRequest, terraformModel models.Terr
 	}
 	defer os.RemoveAll(tmpDir)
 
-	// TODO: handle EnvNameFile
-	// TODO: handle randomly generated names
-	envName := req.Params.EnvName
+	envName, err := r.buildEnvName(req, terraformModel)
+	if err != nil {
+		return models.OutResponse{}, fmt.Errorf("Failed to create env name: %s", err)
+	}
+
 	terraformModel.Vars["env_name"] = envName
 
 	client := terraform.NewClient(
@@ -142,7 +144,7 @@ func (r Runner) runWithLegacyStorage(req models.OutRequest, terraformModel model
 	}
 	storageDriver := storage.BuildDriver(storageModel)
 
-	envName, err := r.buildEnvName(req, storageDriver)
+	envName, err := r.buildEnvNameFromLegacyStorage(req, storageDriver)
 	if err != nil {
 		return models.OutResponse{}, err
 	}
@@ -221,7 +223,7 @@ func (r Runner) runWithLegacyStorage(req models.OutRequest, terraformModel model
 	return resp, nil
 }
 
-func (r Runner) buildEnvName(req models.OutRequest, storageDriver storage.Storage) (string, error) {
+func (r Runner) buildEnvName(req models.OutRequest, terraformModel models.Terraform) (string, error) {
 	// TODO: handle case where migrated_from is present
 	envName := ""
 	if len(req.Params.EnvNameFile) > 0 {
@@ -233,7 +235,34 @@ func (r Runner) buildEnvName(req models.OutRequest, storageDriver storage.Storag
 	} else if len(req.Params.EnvName) > 0 {
 		envName = req.Params.EnvName
 	} else if req.Params.GenerateRandomName {
-		// TODO: make this work with workspaces
+		var err error
+		envName, err = r.generateRandomName(terraformModel)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if len(envName) == 0 {
+		return "", fmt.Errorf("Must specify `put.params.env_name`, `put.params.env_name_file`, or `put.params.generate_random_name`")
+	}
+	envName = strings.TrimSpace(envName)
+	envName = strings.Replace(envName, " ", "-", -1)
+
+	return envName, nil
+}
+
+func (r Runner) buildEnvNameFromLegacyStorage(req models.OutRequest, storageDriver storage.Storage) (string, error) {
+	// TODO: handle case where migrated_from is present
+	envName := ""
+	if len(req.Params.EnvNameFile) > 0 {
+		contents, err := ioutil.ReadFile(req.Params.EnvNameFile)
+		if err != nil {
+			return "", fmt.Errorf("Failed to read `env_name_file`: %s", err)
+		}
+		envName = string(contents)
+	} else if len(req.Params.EnvName) > 0 {
+		envName = req.Params.EnvName
+	} else if req.Params.GenerateRandomName {
 		var randomName string
 		for i := 0; i < NameClashRetries; i++ {
 			randomName = r.Namer.RandomName()
@@ -267,4 +296,41 @@ func doesEnvNameClash(envName string, storageDriver storage.Storage) (bool, erro
 		return false, err
 	}
 	return version.IsZero() == false, nil
+}
+
+func (r Runner) generateRandomName(terraformModel models.Terraform) (string, error) {
+	client := terraform.NewClient(
+		terraformModel,
+		r.LogWriter,
+	)
+
+	if err := client.InitWithBackend(); err != nil {
+		return "", err
+	}
+
+	existingEnvs, err := client.WorkspaceList()
+	if err != nil {
+		return "", err
+	}
+
+	var envName string
+	for i := 0; i < NameClashRetries; i++ {
+		randomName := r.Namer.RandomName()
+		clash := false
+		for _, e := range existingEnvs {
+			if e == randomName {
+				clash = true
+				break
+			}
+		}
+		if clash == false {
+			envName = randomName
+			break
+		}
+	}
+	if len(envName) == 0 {
+		return "", fmt.Errorf("Failed to generate a non-clashing random name after %d attempts", NameClashRetries)
+	}
+
+	return envName, nil
 }
