@@ -228,13 +228,21 @@ func (c Client) terraformCmd(args []string) *exec.Cmd {
 }
 
 func (c Client) runInit() error {
-	initCmd := c.terraformCmd([]string{
+	initArgs := []string{
 		"init",
 		"-input=false",
 		"-get=true",
 		"-backend=false", // resource doesn't support built-in backends yet
-		c.Model.Source,
-	})
+	}
+
+	if c.Model.PluginDir != "" {
+		initArgs = append(initArgs, fmt.Sprintf("-plugin-dir=%s", c.Model.PluginDir))
+	}
+
+	initArgs = append(initArgs, c.Model.Source)
+
+	initCmd := c.terraformCmd(initArgs)
+
 	if output, err := initCmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", err, output)
 	}
