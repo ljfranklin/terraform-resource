@@ -86,6 +86,10 @@ func (c client) writeBackendOverride() error {
 }
 
 func (c client) InitWithoutBackend() error {
+	if err := c.clearTerraformState(); err != nil {
+		return err
+	}
+
 	initArgs := []string{
 		"init",
 		"-input=false",
@@ -103,6 +107,17 @@ func (c client) InitWithoutBackend() error {
 	}
 
 	return nil
+}
+
+// necessary to switch from backend to non-backend in `migrated_from_storage` code paths
+func (c client) clearTerraformState() error {
+	configPath := path.Join(c.model.Source, ".terraform")
+	if err := os.RemoveAll(configPath); err != nil {
+		return err
+	}
+
+	backendConfig := path.Join(c.model.Source, "resource_backend.tf")
+	return os.RemoveAll(backendConfig)
 }
 
 func (c client) Apply() error {

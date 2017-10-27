@@ -18,6 +18,8 @@ type Runner struct {
 	LogWriter io.Writer
 }
 
+type EnvNotFoundError error
+
 func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	if err := req.Version.Validate(); err != nil {
 		return models.InResponse{}, fmt.Errorf("Invalid Version request: %s", err)
@@ -37,7 +39,9 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	defer os.RemoveAll(tmpDir)
 
 	var resp models.InResponse
-	if req.Source.BackendType != "" {
+	if req.Source.BackendType != "" && req.Source.MigratedFromStorage != (storage.Model{}) {
+		resp, err = r.inWithMigratedFromStorage(req, tmpDir)
+	} else if req.Source.BackendType != "" {
 		resp, err = r.inWithBackend(req, tmpDir)
 	} else {
 		resp, err = r.inWithLegacyStorage(req, tmpDir)
@@ -55,6 +59,20 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	nameFile.WriteString(req.Version.EnvName)
 
 	return resp, nil
+}
+
+func (r Runner) inWithMigratedFromStorage(req models.InRequest, tmpDir string) (models.InResponse, error) {
+	resp, err := r.inWithBackend(req, tmpDir)
+	if err == nil {
+		return resp, nil
+	}
+
+	if _, ok := err.(EnvNotFoundError); ok {
+		req.Source.Storage = req.Source.MigratedFromStorage
+		return r.inWithLegacyStorage(req, tmpDir)
+	}
+
+	return models.InResponse{}, err
 }
 
 func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InResponse, error) {
@@ -96,12 +114,12 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 		}
 	}
 	if !foundEnv {
-		return models.InResponse{}, fmt.Errorf(
+		return models.InResponse{}, EnvNotFoundError(fmt.Errorf(
 			"Workspace '%s' does not exist in backend."+
 				"\nIf you intended to run the `destroy` action, add `put.get_params.action: destroy`."+
 				"\nThis is a temporary requirement until Concourse supports a `delete` step.",
 			targetEnvName,
-		)
+		))
 	}
 
 	tfOutput, err := client.Output(targetEnvName)
@@ -179,12 +197,12 @@ func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models
 			return resp, nil
 		}
 
-		return models.InResponse{}, fmt.Errorf(
+		return models.InResponse{}, EnvNotFoundError(fmt.Errorf(
 			"State file does not exist with key '%s'."+
 				"\nIf you intended to run the `destroy` action, add `put.get_params.action: destroy`."+
 				"\nThis is a temporary requirement until Concourse supports a `delete` step.",
 			stateFilename,
-		)
+		))
 	}
 
 	terraformModel := models.Terraform{
@@ -215,6 +233,10 @@ func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models
 		return models.InResponse{}, fmt.Errorf("Failed to download state file from storage backend: %s", err)
 	}
 	version := models.NewVersionFromLegacyStorage(storageVersion)
+
+	if err := client.InitWithoutBackend(); err != nil {
+		return models.InResponse{}, fmt.Errorf("Failed to initialize terraform.\nError: %s", err)
+	}
 
 	tfOutput, err := client.OutputWithLegacyStorage()
 	if err != nil {

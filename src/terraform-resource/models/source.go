@@ -3,7 +3,8 @@ package models
 import "terraform-resource/storage"
 
 type Source struct {
-	Storage   storage.Model `json:"storage"`
-	EnvName   string        `json:"env_name,omitempty"` // optional
-	Terraform               // optional
+	Terraform
+	Storage             storage.Model `json:"storage,omitempty"`               // optional
+	MigratedFromStorage storage.Model `json:"migrated_from_storage,omitempty"` // optional
+	EnvName             string        `json:"env_name,omitempty"`              // optional
 }
