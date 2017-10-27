@@ -135,7 +135,7 @@ var _ = Describe("In with Backend", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(resp.Version.EnvName).To(Equal(prevEnvName))
-			Expect(resp.Version.Serial).To(Equal(0))
+			Expect(resp.Version.Serial).To(BeNumerically(">=", 0))
 
 			metadata := map[string]string{}
 			for _, field := range resp.Metadata {
@@ -214,7 +214,7 @@ var _ = Describe("In with Backend", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(resp.Version.EnvName).To(Equal(modulesEnvName))
-			Expect(resp.Version.Serial).To(Equal(1))
+			Expect(resp.Version.Serial).To(BeNumerically(">=", 1))
 
 			metadata := map[string]string{}
 			for _, field := range resp.Metadata {
@@ -274,7 +274,7 @@ var _ = Describe("In with Backend", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(resp.Version.EnvName).To(Equal(currEnvName))
-				Expect(resp.Version.Serial).To(Equal(1))
+				Expect(resp.Version.Serial).To(BeNumerically(">=", 1))
 
 				expectedOutputPath := path.Join(tmpDir, "metadata")
 				Expect(expectedOutputPath).ToNot(BeAnExistingFile())
@@ -298,7 +298,7 @@ var _ = Describe("In with Backend", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(resp.Version.EnvName).To(Equal(currEnvName))
-				Expect(resp.Version.Serial).To(Equal(1))
+				Expect(resp.Version.Serial).To(BeNumerically(">=", 1))
 
 				expectedOutputPath := path.Join(tmpDir, "metadata")
 				Expect(expectedOutputPath).ToNot(BeAnExistingFile())

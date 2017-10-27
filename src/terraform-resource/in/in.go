@@ -1,6 +1,7 @@
 package in
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -169,12 +170,35 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 		}
 	}
 
+	serial, err := r.getCurrentSerial(client, targetEnvName)
+	if err != nil {
+		return models.InResponse{}, err
+	}
+
 	resp := models.InResponse{
-		// TODO: is this the right Version?
-		Version:  req.Version,
+		Version:  models.Version{EnvName: targetEnvName, Serial: serial},
 		Metadata: metadata,
 	}
 	return resp, nil
+}
+
+// TODO: extract this somewhere
+func (r Runner) getCurrentSerial(client terraform.Client, envName string) (int, error) {
+	rawState, err := client.StatePull(envName)
+	if err != nil {
+		return -1, err
+	}
+
+	tfState := map[string]interface{}{}
+	if err = json.Unmarshal(rawState, &tfState); err != nil {
+		return -1, fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawState)
+	}
+
+	serial, ok := tfState["serial"].(float64)
+	if !ok {
+		return -1, fmt.Errorf("Expected number value for 'serial' but got '%#v'", tfState["serial"])
+	}
+	return int(serial), nil
 }
 
 func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models.InResponse, error) {

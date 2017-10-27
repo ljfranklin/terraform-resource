@@ -97,6 +97,71 @@ var _ = Describe("In with migrated from storage", func() {
 		_ = os.RemoveAll(tmpDir)
 	})
 
+	Context("when state file exists in Backend storage but not Legacy Storage", func() {
+		BeforeEach(func() {
+			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3-backend/terraform-current.tfstate"))
+			Expect(err).ToNot(HaveOccurred())
+			defer currFixture.Close()
+			awsVerifier.UploadObjectToS3(bucket, pathToBackendS3Fixture, currFixture)
+			time.Sleep(1 * time.Second)
+		})
+
+		AfterEach(func() {
+			awsVerifier.DeleteObjectFromS3(bucket, pathToStorageS3Fixture)
+		})
+
+		It("fetches the state file from Backend", func() {
+			inReq.Version = models.Version{
+				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToBackendS3Fixture),
+				EnvName:      envName,
+			}
+
+			runner := in.Runner{
+				OutputDir: tmpDir,
+			}
+			resp, err := runner.Run(inReq)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.Version.EnvName).To(Equal(envName))
+			Expect(resp.Version.Serial).To(Equal(1))
+
+			metadata := map[string]string{}
+			for _, field := range resp.Metadata {
+				metadata[field.Name] = field.Value
+			}
+			Expect(metadata["terraform_version"]).To(MatchRegexp("Terraform v.*"))
+			Expect(metadata["env_name"]).To(Equal("current"))
+			Expect(metadata["secret"]).To(Equal("<sensitive>"))
+
+			expectedOutputPath := path.Join(tmpDir, "metadata")
+			Expect(expectedOutputPath).To(BeAnExistingFile())
+			outputFile, err := os.Open(expectedOutputPath)
+			Expect(err).ToNot(HaveOccurred())
+			defer outputFile.Close()
+
+			outputContents := map[string]interface{}{}
+			err = json.NewDecoder(outputFile).Decode(&outputContents)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(outputContents["env_name"]).To(Equal("current"))
+			Expect(outputContents["map"]).To(Equal(map[string]interface{}{
+				"key-1": "value-1",
+				"key-2": "value-2",
+			}))
+			Expect(outputContents["list"]).To(Equal([]interface{}{
+				"item-1",
+				"item-2",
+			}))
+			Expect(outputContents["secret"]).To(Equal("super-secret"))
+
+			expectedNamePath := path.Join(tmpDir, "name")
+			Expect(expectedNamePath).To(BeAnExistingFile())
+			nameContents, err := ioutil.ReadFile(expectedNamePath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(string(nameContents)).To(Equal(envName))
+		})
+	})
+
 	Context("when state file exists in Legacy Storage but not Backend", func() {
 		BeforeEach(func() {
 			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3-storage/terraform-current.tfstate"))
