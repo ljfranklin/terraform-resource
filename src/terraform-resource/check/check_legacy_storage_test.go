@@ -118,7 +118,7 @@ var _ = Describe("Check with Legacy `storage`", func() {
 			Expect(resp).To(Equal(expectOutput))
 		})
 
-		It("returns an empty version list when current version matches storage version", func() {
+		It("returns the requested version when current version matches storage version", func() {
 			currentLastModified := awsVerifier.GetLastModifiedFromS3(bucket, pathToCurrS3Fixture)
 			checkInput.Version = models.Version{
 				LastModified: currentLastModified,
@@ -129,7 +129,12 @@ var _ = Describe("Check with Legacy `storage`", func() {
 			resp, err := runner.Run(checkInput)
 			Expect(err).ToNot(HaveOccurred())
 
-			expectOutput := []models.Version{}
+			expectOutput := []models.Version{
+				models.Version{
+					LastModified: currentLastModified,
+					EnvName:      currEnvName,
+				},
+			}
 			Expect(resp).To(Equal(expectOutput))
 		})
 	})

@@ -17,7 +17,26 @@ type Runner struct {
 }
 
 func (r Runner) Run(req models.InRequest) ([]models.Version, error) {
-	if req.Source.BackendType != "" {
+	if req.Source.BackendType != "" && req.Source.MigratedFromStorage != (storage.Model{}) {
+		if req.Version.IsZero() && req.Source.EnvName == "" {
+			// Triggering on new versions is only supported in single-env mode:
+			// - expensive to check for changes across all statefiles
+			// - triggering on changes to any environment doesn't seem very useful
+			return []models.Version{}, nil
+		}
+
+		backendVersions, err := r.runWithBackend(req)
+		if err != nil {
+			return []models.Version{}, err
+		}
+
+		if len(backendVersions) > 0 {
+			return backendVersions, nil
+		}
+
+		req.Source.Storage = req.Source.MigratedFromStorage
+		return r.runWithLegacyStorage(req)
+	} else if req.Source.BackendType != "" {
 		return r.runWithBackend(req)
 	}
 	return r.runWithLegacyStorage(req)
@@ -95,7 +114,7 @@ func (r Runner) runWithLegacyStorage(req models.InRequest) ([]models.Version, er
 	}
 
 	resp := []models.Version{}
-	if storageVersion.IsZero() == false && storageVersion.LastModified.After(currentVersionTime) {
+	if storageVersion.IsZero() == false && !storageVersion.LastModified.Before(currentVersionTime) {
 		version := models.NewVersionFromLegacyStorage(storageVersion)
 		resp = append(resp, version)
 	}

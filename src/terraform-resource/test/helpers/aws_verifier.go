@@ -53,7 +53,7 @@ func (a AWSVerifier) ExpectS3BucketToExist(bucketName string) {
 	}
 
 	_, err := a.s3.HeadBucket(params)
-	Expect(err).ToNot(HaveOccurred(),
+	ExpectWithOffset(1, err).ToNot(HaveOccurred(),
 		"Expected S3 bucket '%s' to exist, but it does not",
 		bucketName)
 }
@@ -65,7 +65,7 @@ func (a AWSVerifier) ExpectS3FileToExist(bucketName string, key string) {
 	}
 
 	_, err := a.s3.HeadObject(params)
-	Expect(err).ToNot(HaveOccurred(),
+	ExpectWithOffset(1, err).ToNot(HaveOccurred(),
 		"Expected S3 file '%s' to exist in bucket '%s', but it does not",
 		key,
 		bucketName)
@@ -79,14 +79,14 @@ func (a AWSVerifier) ExpectS3FileToNotExist(bucketName string, key string) {
 	}
 
 	_, err := a.s3.HeadObject(params)
-	Expect(err).To(HaveOccurred(),
+	ExpectWithOffset(1, err).To(HaveOccurred(),
 		"Expected S3 file '%s' to not exist in bucket '%s', but it does",
 		key,
 		bucketName)
 
 	reqErr, ok := err.(awserr.RequestFailure)
-	Expect(ok).To(BeTrue(), "Invalid AWS error type: %s", err)
-	Expect(reqErr.StatusCode()).To(Equal(404))
+	ExpectWithOffset(1, ok).To(BeTrue(), "Invalid AWS error type: %s", err)
+	ExpectWithOffset(1, reqErr.StatusCode()).To(Equal(404))
 }
 
 func (a AWSVerifier) ExpectS3ServerSideEncryption(bucketName string, key string, expectedAlgo string, expectedKMSKeyID ...string) {
@@ -96,15 +96,15 @@ func (a AWSVerifier) ExpectS3ServerSideEncryption(bucketName string, key string,
 	}
 
 	headResp, err := a.s3.HeadObject(params)
-	Expect(err).ToNot(HaveOccurred())
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 
-	Expect(headResp.ServerSideEncryption).ToNot(BeNil(), "Expected ServerSideEncryption to be set, but it was not")
-	Expect(*headResp.ServerSideEncryption).To(Equal(expectedAlgo))
+	ExpectWithOffset(1, headResp.ServerSideEncryption).ToNot(BeNil(), "Expected ServerSideEncryption to be set, but it was not")
+	ExpectWithOffset(1, *headResp.ServerSideEncryption).To(Equal(expectedAlgo))
 
 	if len(expectedKMSKeyID) > 0 {
-		Expect(headResp.SSEKMSKeyId).ToNot(BeNil(), "Expected SSEKMSKeyId to be set, but it was not")
+		ExpectWithOffset(1, headResp.SSEKMSKeyId).ToNot(BeNil(), "Expected SSEKMSKeyId to be set, but it was not")
 		// the returned KeyId may have the `arn::.../` prefix
-		Expect(*headResp.SSEKMSKeyId).To(ContainSubstring(expectedKMSKeyID[0]))
+		ExpectWithOffset(1, *headResp.SSEKMSKeyId).To(ContainSubstring(expectedKMSKeyID[0]))
 	}
 }
 
@@ -115,7 +115,7 @@ func (a AWSVerifier) GetLastModifiedFromS3(bucketName string, key string) string
 	}
 
 	resp, err := a.s3.HeadObject(params)
-	Expect(err).ToNot(HaveOccurred())
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 	return resp.LastModified.Format(storage.TimeFormat)
 }
 
@@ -126,7 +126,7 @@ func (a AWSVerifier) GetMD5FromS3(bucketName string, key string) string {
 	}
 
 	resp, err := a.s3.HeadObject(params)
-	Expect(err).ToNot(HaveOccurred())
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 	return *resp.ETag
 }
 
@@ -137,7 +137,7 @@ func (a AWSVerifier) UploadObjectToS3(bucketName string, key string, content io.
 		Key:    aws.String(key),
 		Body:   content,
 	})
-	Expect(err).ToNot(HaveOccurred())
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 }
 
 func (a AWSVerifier) DeleteObjectFromS3(bucketName string, key string) {
@@ -146,5 +146,5 @@ func (a AWSVerifier) DeleteObjectFromS3(bucketName string, key string) {
 		Key:    aws.String(key),
 	}
 	_, err := a.s3.DeleteObject(deleteInput)
-	Expect(err).ToNot(HaveOccurred())
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 }
