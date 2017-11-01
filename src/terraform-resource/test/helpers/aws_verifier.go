@@ -103,7 +103,8 @@ func (a AWSVerifier) ExpectS3ServerSideEncryption(bucketName string, key string,
 
 	if len(expectedKMSKeyID) > 0 {
 		Expect(headResp.SSEKMSKeyId).ToNot(BeNil(), "Expected SSEKMSKeyId to be set, but it was not")
-		Expect(*headResp.SSEKMSKeyId).To(Equal(expectedKMSKeyID[0]))
+		// the returned KeyId may have the `arn::.../` prefix
+		Expect(*headResp.SSEKMSKeyId).To(ContainSubstring(expectedKMSKeyID[0]))
 	}
 }
 
