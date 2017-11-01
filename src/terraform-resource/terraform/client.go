@@ -77,10 +77,7 @@ func (c client) InitWithBackend() error {
 }
 
 func (c client) writeBackendOverride() error {
-	// TODO: use an override file once this PR is merged:
-	// https://github.com/hashicorp/terraform/pull/16415
-	// backendPath := path.Join(c.model.Source, "resource_backend_override.tf")
-	backendPath := path.Join(c.model.Source, "resource_backend.tf")
+	backendPath := path.Join(c.model.Source, "resource_backend_override.tf")
 	backendContent := fmt.Sprintf(`terraform { backend "%s" {} }`, c.model.BackendType)
 	return ioutil.WriteFile(backendPath, []byte(backendContent), 0755)
 }
@@ -116,7 +113,7 @@ func (c client) clearTerraformState() error {
 		return err
 	}
 
-	backendConfig := path.Join(c.model.Source, "resource_backend.tf")
+	backendConfig := path.Join(c.model.Source, "resource_backend_override.tf")
 	return os.RemoveAll(backendConfig)
 }
 
