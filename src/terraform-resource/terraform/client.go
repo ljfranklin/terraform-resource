@@ -31,6 +31,7 @@ type Client interface {
 	ImportWithLegacyStorage() error
 	WorkspaceList() ([]string, error)
 	WorkspaceNew(string) error
+	WorkspaceNewFromExistingStateFile(string, string) error
 	WorkspaceDelete(string) error
 	StatePull(string) ([]byte, error)
 }
@@ -357,6 +358,21 @@ func (c client) WorkspaceNew(envName string) error {
 	cmd := c.terraformCmd([]string{
 		"workspace",
 		"new",
+		envName,
+	}, nil)
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("Error: %s, Output: %s", err, output)
+	}
+
+	return nil
+}
+
+func (c client) WorkspaceNewFromExistingStateFile(envName string, localStateFilePath string) error {
+	cmd := c.terraformCmd([]string{
+		"workspace",
+		"new",
+		fmt.Sprintf("-state=%s", localStateFilePath),
 		envName,
 	}, nil)
 

@@ -55,7 +55,10 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		return models.OutResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
 	}
 
-	if req.Source.BackendType == "" {
+	// TODO: raise error on invalid permutations
+	if req.Source.BackendType != "" && req.Source.MigratedFromStorage != (storage.Model{}) {
+		return r.runWithMigratedFromStorage(req, terraformModel)
+	} else if req.Source.BackendType == "" {
 		return r.runWithLegacyStorage(req, terraformModel)
 	}
 	return r.runWithBackend(req, terraformModel)
@@ -79,6 +82,7 @@ func (r Runner) runWithBackend(req models.OutRequest, terraformModel models.Terr
 		terraformModel,
 		r.LogWriter,
 	)
+
 	action := terraform.Action{
 		Client:          client,
 		EnvName:         envName,
@@ -223,6 +227,100 @@ func (r Runner) runWithLegacyStorage(req models.OutRequest, terraformModel model
 	return resp, nil
 }
 
+func (r Runner) runWithMigratedFromStorage(req models.OutRequest, terraformModel models.Terraform) (models.OutResponse, error) {
+	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-out")
+	if err != nil {
+		return models.OutResponse{}, fmt.Errorf("Failed to create tmp dir at '%s'", os.TempDir())
+	}
+	defer os.RemoveAll(tmpDir)
+
+	storageModel := req.Source.MigratedFromStorage
+	if err := storageModel.Validate(); err != nil {
+		return models.OutResponse{}, fmt.Errorf("Failed to validate storage Model: %s", err)
+	}
+	storageDriver := storage.BuildDriver(storageModel)
+
+	var envName string
+	if req.Params.GenerateRandomName {
+		envName, err = r.generateRandomNameForMigratedFrom(terraformModel, storageDriver)
+		if err != nil {
+			return models.OutResponse{}, err
+		}
+	} else {
+		envName, err = r.buildEnvName(req, terraformModel)
+		if err != nil {
+			return models.OutResponse{}, fmt.Errorf("Failed to create env name: %s", err)
+		}
+	}
+
+	terraformModel.Vars["env_name"] = envName
+
+	client := terraform.NewClient(
+		terraformModel,
+		r.LogWriter,
+	)
+
+	terraformModel.StateFileLocalPath = path.Join(tmpDir, "terraform.tfstate")
+	terraformModel.StateFileRemotePath = fmt.Sprintf("%s.tfstate", envName)
+
+	stateFile := storage.StateFile{
+		LocalPath:     terraformModel.StateFileLocalPath,
+		RemotePath:    terraformModel.StateFileRemotePath,
+		StorageDriver: storageDriver,
+	}
+	action := terraform.MigratedFromStorageAction{
+		StateFile:       stateFile,
+		Client:          client,
+		EnvName:         envName,
+		DeleteOnFailure: terraformModel.DeleteOnFailure,
+		Logger: logger.Logger{
+			Sink: r.LogWriter,
+		},
+	}
+
+	var result terraform.MigratedFromStorageResult
+	var actionErr error
+
+	// TODO: handle plan
+	if req.Params.Action == models.DestroyAction {
+		result, actionErr = action.Destroy()
+	} else {
+		result, actionErr = action.Apply()
+	}
+	if actionErr != nil {
+		return models.OutResponse{}, actionErr
+	}
+
+	version := result.Version
+	if req.Params.PlanOnly {
+		version.PlanOnly = "true" // Concourse demands version fields are strings
+	}
+
+	metadata := []models.MetadataField{}
+	for key, value := range result.SanitizedOutput() {
+		metadata = append(metadata, models.MetadataField{
+			Name:  key,
+			Value: value,
+		})
+	}
+
+	tfVersion, err := client.Version()
+	if err != nil {
+		return models.OutResponse{}, err
+	}
+	metadata = append(metadata, models.MetadataField{
+		Name:  "terraform_version",
+		Value: tfVersion,
+	})
+
+	resp := models.OutResponse{
+		Version:  version,
+		Metadata: metadata,
+	}
+
+	return resp, nil
+}
+
 func (r Runner) buildEnvName(req models.OutRequest, terraformModel models.Terraform) (string, error) {
 	// TODO: handle case where migrated_from is present
 	envName := ""
@@ -263,6 +361,7 @@ func (r Runner) buildEnvNameFromLegacyStorage(req models.OutRequest, storageDriv
 	} else if len(req.Params.EnvName) > 0 {
 		envName = req.Params.EnvName
 	} else if req.Params.GenerateRandomName {
+		// TODO: re-use private clash method
 		var randomName string
 		for i := 0; i < NameClashRetries; i++ {
 			randomName = r.Namer.RandomName()
@@ -321,6 +420,50 @@ func (r Runner) generateRandomName(terraformModel models.Terraform) (string, err
 			if e == randomName {
 				clash = true
 				break
+			}
+		}
+		if clash == false {
+			envName = randomName
+			break
+		}
+	}
+	if len(envName) == 0 {
+		return "", fmt.Errorf("Failed to generate a non-clashing random name after %d attempts", NameClashRetries)
+	}
+
+	return envName, nil
+}
+
+// TODO: remove some duplication
+func (r Runner) generateRandomNameForMigratedFrom(terraformModel models.Terraform, storageDriver storage.Storage) (string, error) {
+	client := terraform.NewClient(
+		terraformModel,
+		r.LogWriter,
+	)
+
+	if err := client.InitWithBackend(); err != nil {
+		return "", err
+	}
+
+	existingEnvs, err := client.WorkspaceList()
+	if err != nil {
+		return "", err
+	}
+
+	var envName string
+	for i := 0; i < NameClashRetries; i++ {
+		randomName := r.Namer.RandomName()
+		clash := false
+		for _, e := range existingEnvs {
+			if e == randomName {
+				clash = true
+				break
+			}
+		}
+		if clash == false {
+			clash, err = doesEnvNameClash(randomName, storageDriver)
+			if err != nil {
+				return "", err
 			}
 		}
 		if clash == false {
