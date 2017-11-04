@@ -173,6 +173,10 @@ var _ = Describe("Out - Migrated From Storage", func() {
 			awsVerifier.ExpectS3FileToExist(bucket, storageS3ObjectPath)
 		})
 
+		AfterEach(func() {
+			awsVerifier.DeleteObjectFromS3(bucket, storageS3ObjectPath)
+		})
+
 		It("migrates the env to the Backend", func() {
 			req := models.OutRequest{
 				Source: models.Source{
@@ -210,12 +214,301 @@ var _ = Describe("Out - Migrated From Storage", func() {
 			awsVerifier.ExpectS3FileToExist(bucket, backendStateFilePath)
 			awsVerifier.ExpectS3FileToExist(bucket, fmt.Sprintf("%s.migrated", storageStateFilePath))
 		})
+
+		It("migrates the env even if the Apply fails", func() {
+			req := models.OutRequest{
+				Source: models.Source{
+					Terraform: models.Terraform{
+						BackendType:   backendType,
+						BackendConfig: backendConfig,
+					},
+					MigratedFromStorage: storageModel,
+				},
+				Params: models.OutParams{
+					EnvName: envName,
+					Terraform: models.Terraform{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key":           accessKey,
+							"secret_key":           secretKey,
+							"bucket":               bucket,
+							"object_key":           s3ObjectPath,
+							"object_content":       "terraform-is-neat",
+							"region":               region,
+							"invalid_object_count": 1,
+						},
+					},
+				},
+			}
+			runner := out.Runner{
+				SourceDir: workingDir,
+				LogWriter: &logWriter,
+			}
+			_, err := runner.Run(req)
+
+			Expect(err).To(HaveOccurred())
+			Expect(logWriter.String()).To(ContainSubstring("invalid_object"))
+
+			awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, storageS3ObjectPath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, storageStateFilePath)
+			awsVerifier.ExpectS3FileToExist(bucket, backendStateFilePath)
+			awsVerifier.ExpectS3FileToExist(bucket, fmt.Sprintf("%s.migrated", storageStateFilePath))
+		})
+
+		It("destroys a legacy storage env if action=destroy", func() {
+			req := models.OutRequest{
+				Source: models.Source{
+					Terraform: models.Terraform{
+						BackendType:   backendType,
+						BackendConfig: backendConfig,
+					},
+					MigratedFromStorage: storageModel,
+				},
+				Params: models.OutParams{
+					EnvName: envName,
+					Action:  "destroy",
+					Terraform: models.Terraform{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key":     accessKey,
+							"secret_key":     secretKey,
+							"bucket":         bucket,
+							"object_key":     s3ObjectPath,
+							"object_content": "terraform-is-neat",
+							"region":         region,
+						},
+					},
+				},
+			}
+			runner := out.Runner{
+				SourceDir: workingDir,
+				LogWriter: &logWriter,
+				Namer:     &namer,
+			}
+			resp, err := runner.Run(req)
+			Expect(err).ToNot(HaveOccurred(), "Logs: %s", logWriter.String())
+			Expect(resp.Version.EnvName).To(Equal(envName))
+
+			awsVerifier.ExpectS3FileToNotExist(bucket, s3ObjectPath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, storageS3ObjectPath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, storageStateFilePath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, backendStateFilePath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, fmt.Sprintf("%s.migrated", storageStateFilePath))
+		})
 	})
-	// TODO: can we migrate a legacy tainted env?
-	//
-	// TODO: can we destroy a backend env?
-	//
-	// TODO: can we destroy a legacy env?
+
+	Context("when the tainted env exists in Legacy Storage", func() {
+		var (
+			storageS3ObjectPath string
+		)
+
+		BeforeEach(func() {
+			storageS3ObjectPath = helpers.RandomString("out-migrated-s3-object")
+
+			req := models.OutRequest{
+				Source: models.Source{
+					Storage: storageModel,
+				},
+				Params: models.OutParams{
+					EnvName: envName,
+					Terraform: models.Terraform{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key":           accessKey,
+							"secret_key":           secretKey,
+							"bucket":               bucket,
+							"object_key":           storageS3ObjectPath,
+							"object_content":       "terraform-is-neat",
+							"region":               region,
+							"invalid_object_count": 1,
+						},
+					},
+				},
+			}
+			runner := out.Runner{
+				SourceDir: workingDir,
+				LogWriter: &logWriter,
+			}
+			_, err := runner.Run(req)
+
+			Expect(err).To(HaveOccurred())
+			Expect(logWriter.String()).To(ContainSubstring("invalid_object"))
+
+			awsVerifier.ExpectS3FileToExist(bucket, storageS3ObjectPath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, storageStateFilePath)
+			awsVerifier.ExpectS3FileToExist(bucket, fmt.Sprintf("%s.tainted", storageStateFilePath))
+		})
+
+		AfterEach(func() {
+			awsVerifier.DeleteObjectFromS3(bucket, storageS3ObjectPath)
+		})
+
+		It("migrates the tainted env to the Backend", func() {
+			req := models.OutRequest{
+				Source: models.Source{
+					Terraform: models.Terraform{
+						BackendType:   backendType,
+						BackendConfig: backendConfig,
+					},
+					MigratedFromStorage: storageModel,
+				},
+				Params: models.OutParams{
+					EnvName: envName,
+					Terraform: models.Terraform{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key":     accessKey,
+							"secret_key":     secretKey,
+							"bucket":         bucket,
+							"object_key":     s3ObjectPath,
+							"object_content": "terraform-is-neat",
+							"region":         region,
+						},
+					},
+				},
+			}
+			expectedMetadata := map[string]string{
+				"env_name":    envName,
+				"content_md5": calculateMD5("terraform-is-neat"),
+			}
+
+			assertOutBehavior(req, expectedMetadata)
+
+			awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, storageS3ObjectPath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, storageStateFilePath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, fmt.Sprintf("%s.tainted", storageStateFilePath))
+			awsVerifier.ExpectS3FileToExist(bucket, backendStateFilePath)
+			awsVerifier.ExpectS3FileToExist(bucket, fmt.Sprintf("%s.migrated", storageStateFilePath))
+		})
+
+		It("destroys the tained env when action=destroy", func() {
+			req := models.OutRequest{
+				Source: models.Source{
+					Terraform: models.Terraform{
+						BackendType:   backendType,
+						BackendConfig: backendConfig,
+					},
+					MigratedFromStorage: storageModel,
+				},
+				Params: models.OutParams{
+					EnvName: envName,
+					Action:  "destroy",
+					Terraform: models.Terraform{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key":     accessKey,
+							"secret_key":     secretKey,
+							"bucket":         bucket,
+							"object_key":     s3ObjectPath,
+							"object_content": "terraform-is-neat",
+							"region":         region,
+						},
+					},
+				},
+			}
+			runner := out.Runner{
+				SourceDir: workingDir,
+				LogWriter: &logWriter,
+				Namer:     &namer,
+			}
+			resp, err := runner.Run(req)
+			Expect(err).ToNot(HaveOccurred(), "Logs: %s", logWriter.String())
+			Expect(resp.Version.EnvName).To(Equal(envName))
+
+			awsVerifier.ExpectS3FileToNotExist(bucket, s3ObjectPath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, storageS3ObjectPath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, storageStateFilePath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, fmt.Sprintf("%s.tainted", storageStateFilePath))
+			awsVerifier.ExpectS3FileToNotExist(bucket, backendStateFilePath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, fmt.Sprintf("%s.migrated", storageStateFilePath))
+		})
+	})
+
+	Context("when the env exists in Backend", func() {
+		var (
+			backendS3ObjectPath string
+		)
+
+		BeforeEach(func() {
+			backendS3ObjectPath = helpers.RandomString("out-migrated-s3-object")
+
+			req := models.OutRequest{
+				Source: models.Source{
+					Terraform: models.Terraform{
+						BackendType:   backendType,
+						BackendConfig: backendConfig,
+					},
+					MigratedFromStorage: storageModel,
+				},
+				Params: models.OutParams{
+					EnvName: envName,
+					Terraform: models.Terraform{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key":     accessKey,
+							"secret_key":     secretKey,
+							"bucket":         bucket,
+							"object_key":     backendS3ObjectPath,
+							"object_content": "terraform-is-neat",
+							"region":         region,
+						},
+					},
+				},
+			}
+			expectedMetadata := map[string]string{
+				"env_name":    envName,
+				"content_md5": calculateMD5("terraform-is-neat"),
+			}
+			assertOutBehavior(req, expectedMetadata)
+
+			awsVerifier.ExpectS3FileToExist(bucket, backendStateFilePath)
+			awsVerifier.ExpectS3FileToExist(bucket, backendS3ObjectPath)
+		})
+
+		AfterEach(func() {
+			awsVerifier.DeleteObjectFromS3(bucket, backendS3ObjectPath)
+		})
+
+		It("destroys the env when action=destroy", func() {
+			req := models.OutRequest{
+				Source: models.Source{
+					Terraform: models.Terraform{
+						BackendType:   backendType,
+						BackendConfig: backendConfig,
+					},
+					MigratedFromStorage: storageModel,
+				},
+				Params: models.OutParams{
+					EnvName: envName,
+					Action:  "destroy",
+					Terraform: models.Terraform{
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key":     accessKey,
+							"secret_key":     secretKey,
+							"bucket":         bucket,
+							"object_key":     backendS3ObjectPath,
+							"object_content": "terraform-is-neat",
+							"region":         region,
+						},
+					},
+				},
+			}
+			runner := out.Runner{
+				SourceDir: workingDir,
+				LogWriter: &logWriter,
+				Namer:     &namer,
+			}
+			resp, err := runner.Run(req)
+			Expect(err).ToNot(HaveOccurred(), "Logs: %s", logWriter.String())
+			Expect(resp.Version.EnvName).To(Equal(envName))
+
+			awsVerifier.ExpectS3FileToNotExist(bucket, backendS3ObjectPath)
+			awsVerifier.ExpectS3FileToNotExist(bucket, backendStateFilePath)
+		})
+	})
 
 	It("returns an error if random name clashes with an existing Backend env", func() {
 		// pick a name that always clashes with Backend env

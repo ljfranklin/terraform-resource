@@ -160,5 +160,5 @@ func (s StateFile) migratedRemotePath() string {
 	if strings.HasSuffix(s.RemotePath, ".migrated") {
 		return s.RemotePath
 	}
-	return fmt.Sprintf("%s.migrated", s.RemotePath)
+	return fmt.Sprintf("%s.migrated", s.untaintedRemotePath())
 }

@@ -81,23 +81,22 @@ func (a *MigratedFromStorageAction) attemptApply() (MigratedFromStorageResult, e
 	a.Logger.InfoSection("Terraform Apply")
 	defer a.Logger.EndSection()
 
-	stateFileExists, err := a.StateFile.Exists()
+	legacyStateFileExists, err := a.StateFile.Exists()
 	if err != nil {
 		return MigratedFromStorageResult{}, err
 	}
 
-	// TODO: handle tainted statefiles
-	// if stateFileExists == false {
-	// 	stateFileExists, err = a.StateFile.ExistsAsTainted()
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	if stateFileExists {
-	// 		a.StateFile = a.StateFile.ConvertToTainted()
-	// 	}
-	// }
+	if legacyStateFileExists == false {
+		legacyStateFileExists, err = a.StateFile.ExistsAsTainted()
+		if err != nil {
+			return MigratedFromStorageResult{}, err
+		}
+		if legacyStateFileExists {
+			a.StateFile = a.StateFile.ConvertToTainted()
+		}
+	}
 
-	if stateFileExists {
+	if legacyStateFileExists {
 		_, err = a.StateFile.Download()
 		if err != nil {
 			return MigratedFromStorageResult{}, err
@@ -108,6 +107,16 @@ func (a *MigratedFromStorageAction) attemptApply() (MigratedFromStorageResult, e
 		}
 	} else {
 		if err := a.createWorkspaceIfNotExists(); err != nil {
+			return MigratedFromStorageResult{}, err
+		}
+	}
+
+	if legacyStateFileExists {
+		migratedStateFile := a.StateFile.ConvertToMigrated()
+		if _, err := migratedStateFile.Upload(); err != nil {
+			return MigratedFromStorageResult{}, err
+		}
+		if _, err := a.StateFile.Delete(); err != nil {
 			return MigratedFromStorageResult{}, err
 		}
 	}
@@ -126,14 +135,6 @@ func (a *MigratedFromStorageAction) attemptApply() (MigratedFromStorageResult, e
 	}
 	clientOutput, err := a.Client.Output(a.EnvName)
 	if err != nil {
-		return MigratedFromStorageResult{}, err
-	}
-
-	migratedStateFile := a.StateFile.ConvertToMigrated()
-	if _, err := migratedStateFile.Upload(); err != nil {
-		return MigratedFromStorageResult{}, err
-	}
-	if _, err := a.StateFile.Delete(); err != nil {
 		return MigratedFromStorageResult{}, err
 	}
 
@@ -163,6 +164,39 @@ func (a *MigratedFromStorageAction) Destroy() (MigratedFromStorageResult, error)
 func (a *MigratedFromStorageAction) attemptDestroy() (MigratedFromStorageResult, error) {
 	a.Logger.WarnSection("Terraform Destroy")
 	defer a.Logger.EndSection()
+
+	legacyStateFileExists, err := a.StateFile.Exists()
+	if err != nil {
+		return MigratedFromStorageResult{}, err
+	}
+
+	if legacyStateFileExists == false {
+		legacyStateFileExists, err = a.StateFile.ExistsAsTainted()
+		if err != nil {
+			return MigratedFromStorageResult{}, err
+		}
+		if legacyStateFileExists {
+			a.StateFile = a.StateFile.ConvertToTainted()
+		}
+	}
+
+	if legacyStateFileExists {
+		_, err = a.StateFile.Download()
+		if err != nil {
+			return MigratedFromStorageResult{}, err
+		}
+
+		if err = a.importExistingStateFileIntoNewWorkspace(); err != nil {
+			return MigratedFromStorageResult{}, err
+		}
+	}
+
+	if legacyStateFileExists {
+		_, err = a.StateFile.Delete()
+		if err != nil {
+			return MigratedFromStorageResult{}, err
+		}
+	}
 
 	if err := a.Client.Import(a.EnvName); err != nil {
 		return MigratedFromStorageResult{}, err
