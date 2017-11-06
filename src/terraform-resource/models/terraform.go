@@ -18,6 +18,7 @@ type Terraform struct {
 	PlanRun             bool                   `json:"plan_run,omitempty"`          // optional
 	OutputModule        string                 `json:"output_module,omitempty"`     // optional
 	ImportFiles         []string               `json:"import_files,omitempty"`      // optional
+	PluginDir           string                 `json:"plugin_dir,omitempty"`        // optional
 	PlanFileLocalPath   string                 `json:"-"`                           // not specified pipeline
 	PlanFileRemotePath  string                 `json:"-"`                           // not specified pipeline
 	StateFileLocalPath  string                 `json:"-"`                           // not specified pipeline
@@ -101,6 +102,10 @@ func (m Terraform) Merge(other Terraform) Terraform {
 
 	if other.ImportFiles != nil {
 		m.ImportFiles = other.ImportFiles
+	}
+
+	if other.PluginDir != "" {
+		m.PluginDir = other.PluginDir
 	}
 
 	if other.Imports != nil {

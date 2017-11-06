@@ -95,6 +95,7 @@ var _ = Describe("Terraform Models", func() {
 				DeleteOnFailure:     true,
 				ImportFiles:         []string{"fake-imports-path"},
 				Imports:             map[string]string{"fake-key": "fake-value"},
+				PluginDir:           "fake-plugin-path",
 			}
 
 			finalModel := baseModel.Merge(mergeModel)
@@ -104,6 +105,7 @@ var _ = Describe("Terraform Models", func() {
 			Expect(finalModel.DeleteOnFailure).To(BeTrue())
 			Expect(finalModel.ImportFiles).To(Equal([]string{"fake-imports-path"}))
 			Expect(finalModel.Imports).To(Equal(map[string]string{"fake-key": "fake-value"}))
+			Expect(finalModel.PluginDir).To(Equal("fake-plugin-path"))
 		})
 
 		It("returns original vars and vars from Merged model", func() {
