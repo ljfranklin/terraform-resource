@@ -1,6 +1,7 @@
 package in_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -27,6 +28,7 @@ var _ = Describe("In with migrated from storage", func() {
 		pathToStorageS3Fixture string
 		pathToBackendS3Fixture string
 		tmpDir                 string
+		logWriter              bytes.Buffer
 	)
 
 	BeforeEach(func() {
@@ -118,6 +120,7 @@ var _ = Describe("In with migrated from storage", func() {
 
 			runner := in.Runner{
 				OutputDir: tmpDir,
+				LogWriter: &logWriter,
 			}
 			resp, err := runner.Run(inReq)
 			Expect(err).ToNot(HaveOccurred())
@@ -183,6 +186,7 @@ var _ = Describe("In with migrated from storage", func() {
 
 			runner := in.Runner{
 				OutputDir: tmpDir,
+				LogWriter: &logWriter,
 			}
 			resp, err := runner.Run(inReq)
 			Expect(err).ToNot(HaveOccurred())
@@ -243,6 +247,7 @@ var _ = Describe("In with migrated from storage", func() {
 			It("returns the deleted version, but does not create the metadata file", func() {
 				runner := in.Runner{
 					OutputDir: tmpDir,
+					LogWriter: &logWriter,
 				}
 				resp, err := runner.Run(inReq)
 				Expect(err).ToNot(HaveOccurred())
@@ -267,6 +272,7 @@ var _ = Describe("In with migrated from storage", func() {
 			It("returns an error", func() {
 				runner := in.Runner{
 					OutputDir: tmpDir,
+					LogWriter: &logWriter,
 				}
 				_, err := runner.Run(inReq)
 				Expect(err).To(HaveOccurred())

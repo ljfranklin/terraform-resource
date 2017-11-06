@@ -9,6 +9,7 @@ import (
 	"path"
 
 	"terraform-resource/encoder"
+	"terraform-resource/logger"
 	"terraform-resource/models"
 	"terraform-resource/storage"
 	"terraform-resource/terraform"
@@ -202,6 +203,11 @@ func (r Runner) getCurrentSerial(client terraform.Client, envName string) (int, 
 }
 
 func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models.InResponse, error) {
+	logger := logger.Logger{
+		Sink: r.LogWriter,
+	}
+	logger.Warn(fmt.Sprintf("%s\n", storage.DeprecationWarning))
+
 	storageModel := req.Source.Storage
 	if err := storageModel.Validate(); err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to validate storage Model: %s", err)

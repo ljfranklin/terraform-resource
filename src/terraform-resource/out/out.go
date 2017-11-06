@@ -136,6 +136,12 @@ func (r Runner) runWithBackend(req models.OutRequest, terraformModel models.Terr
 }
 
 func (r Runner) runWithLegacyStorage(req models.OutRequest, terraformModel models.Terraform) (models.OutResponse, error) {
+
+	logger := logger.Logger{
+		Sink: r.LogWriter,
+	}
+	logger.Warn(fmt.Sprintf("%s\n", storage.DeprecationWarning))
+
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-out")
 	if err != nil {
 		return models.OutResponse{}, fmt.Errorf("Failed to create tmp dir at '%s'", os.TempDir())
@@ -178,9 +184,7 @@ func (r Runner) runWithLegacyStorage(req models.OutRequest, terraformModel model
 		StateFile:       stateFile,
 		PlanFile:        planFile,
 		DeleteOnFailure: terraformModel.DeleteOnFailure,
-		Logger: logger.Logger{
-			Sink: r.LogWriter,
-		},
+		Logger:          logger,
 	}
 
 	var result terraform.LegacyStorageResult

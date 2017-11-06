@@ -842,6 +842,38 @@ var _ = Describe("Out - Legacy Storage", func() {
 		})
 	})
 
+	It("prints a deprecation warning for `storage`", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: &logWriter,
+			Namer:     &namer,
+		}
+		_, err := runner.Run(req)
+		Expect(err).ToNot(HaveOccurred(), "Logs: %s", logWriter.String())
+
+		Expect(logWriter.String()).To(MatchRegexp("storage.*deprecated"))
+	})
+
 	assertOutBehavior = func(outRequest models.OutRequest, expectedMetadata map[string]string) {
 		runner := out.Runner{
 			SourceDir: workingDir,

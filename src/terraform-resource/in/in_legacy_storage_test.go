@@ -1,6 +1,7 @@
 package in_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -30,6 +31,7 @@ var _ = Describe("In with legacy storage", func() {
 		pathToCurrS3Fixture    string
 		pathToModulesS3Fixture string
 		tmpDir                 string
+		logWriter              bytes.Buffer
 	)
 
 	BeforeEach(func() {
@@ -115,7 +117,6 @@ var _ = Describe("In with legacy storage", func() {
 		})
 
 		It("fetches the state file matching the provided version", func() {
-
 			inReq.Version = models.Version{
 				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToPrevS3Fixture),
 				EnvName:      prevEnvName,
@@ -123,6 +124,7 @@ var _ = Describe("In with legacy storage", func() {
 
 			runner := in.Runner{
 				OutputDir: tmpDir,
+				LogWriter: &logWriter,
 			}
 			resp, err := runner.Run(inReq)
 			Expect(err).ToNot(HaveOccurred())
@@ -177,6 +179,7 @@ var _ = Describe("In with legacy storage", func() {
 
 			runner := in.Runner{
 				OutputDir: tmpDir,
+				LogWriter: &logWriter,
 			}
 			_, err := runner.Run(inReq)
 			Expect(err).ToNot(HaveOccurred())
@@ -200,6 +203,7 @@ var _ = Describe("In with legacy storage", func() {
 
 			runner := in.Runner{
 				OutputDir: tmpDir,
+				LogWriter: &logWriter,
 			}
 			resp, err := runner.Run(inReq)
 			Expect(err).ToNot(HaveOccurred())
@@ -244,6 +248,22 @@ var _ = Describe("In with legacy storage", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(nameContents)).To(Equal(modulesEnvName))
 		})
+
+		It("prints a deprecation warning for `storage`", func() {
+			inReq.Version = models.Version{
+				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToPrevS3Fixture),
+				EnvName:      prevEnvName,
+			}
+
+			runner := in.Runner{
+				OutputDir: tmpDir,
+				LogWriter: &logWriter,
+			}
+			_, err := runner.Run(inReq)
+			Expect(err).ToNot(HaveOccurred(), "Logs: %s", logWriter.String())
+
+			Expect(logWriter.String()).To(MatchRegexp("storage.*deprecated"))
+		})
 	})
 
 	Context("when state file does not exist on S3", func() {
@@ -262,6 +282,7 @@ var _ = Describe("In with legacy storage", func() {
 
 				runner := in.Runner{
 					OutputDir: tmpDir,
+					LogWriter: &logWriter,
 				}
 				resp, err := runner.Run(inReq)
 				Expect(err).ToNot(HaveOccurred())
@@ -286,6 +307,7 @@ var _ = Describe("In with legacy storage", func() {
 			It("returns the version, but does not create the metadata file", func() {
 				runner := in.Runner{
 					OutputDir: tmpDir,
+					LogWriter: &logWriter,
 				}
 				resp, err := runner.Run(inReq)
 				Expect(err).ToNot(HaveOccurred())
@@ -310,6 +332,7 @@ var _ = Describe("In with legacy storage", func() {
 			It("returns an error", func() {
 				runner := in.Runner{
 					OutputDir: tmpDir,
+					LogWriter: &logWriter,
 				}
 				_, err := runner.Run(inReq)
 				Expect(err).To(HaveOccurred())
