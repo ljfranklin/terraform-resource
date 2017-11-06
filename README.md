@@ -9,6 +9,8 @@ See [DEVELOPMENT](DEVELOPMENT.md) if you're interested in submitting a PR :+1:
 
 ## Source Configuration
 
+> **Important!:** The `source.storage` field has been replaced by `source.backend_type` and `source.backend_config` to leverage the built-in Terraform backends. If you currently use `source.storage` in your pipeline, follow the instructions in the [Backend Migration](#backend-migration) section.
+
 * `backend_type`: *Required.* The name of the [Terraform backend](https://www.terraform.io/docs/backends/types/index.html) the resource will use to store statefiles, e.g. `s3` or `consul`.
 
   > **Note:** Only a [subset of the backends](https://www.terraform.io/docs/state/workspaces.html) support the multiple workspace feature this resource requires.
@@ -25,8 +27,6 @@ See [Terraform Input Variables](https://www.terraform.io/intro/getting-started/v
 Since Concourse currently only supports [interpolating strings](https://github.com/concourse/concourse/issues/545) into the pipeline config, you may need to use Terraform helpers like [split](https://www.terraform.io/docs/configuration/interpolation.html#split_delim_string_) to handle lists and maps as inputs.
 
 * `env`: *Optional.* Similar to `vars`, this collection of key-value pairs can be used to pass environment variables to Terraform, e.g. "AWS_ACCESS_KEY_ID".
-
-> **Important!:** The `source.storage` field has been replaced by `source.backend` to leverage the built-in Terraform backends. If you currently use `source.storage` in your pipeline, follow the instructions in the [Backend Migration](#backend-migration) section.
 
 #### Source Example
 
@@ -215,12 +215,12 @@ The latest version of this resource instead uses the build-in [Terraform Backend
 If you have an existing pipeline that uses `source.storage`, your statefiles will need to be migrated into the new backend directory structure using the following steps:
 
 1. Rename `source.storage` to `source.migrate_from_storage` in your pipeline config. All fields within `source.storage` should remain unchanged, only the top-level key should be renamed.
-1. Add `source.backend_type` and `source.backend_config` fields as described under [Source Configuration](#source-configuration).
-1. Update your pipeline: `fly set-pipeline`.
-1. The next time your pipeline performs a `put` to the Terraform resource:
+2. Add `source.backend_type` and `source.backend_config` fields as described under [Source Configuration](#source-configuration).
+3. Update your pipeline: `fly set-pipeline`.
+4. The next time your pipeline performs a `put` to the Terraform resource:
   - The resource will copy the statefile for the modified environment into the new directory structure.
   - The resource will rename the old statefile in S3 to `$ENV_NAME.migrated`.
-1. Once all statefiles have been migrated and everything is working as expected, you may:
+5. Once all statefiles have been migrated and everything is working as expected, you may:
   - Remove the old `.migrated` statefiles.
   - Remove the `source.migrate_from_storage` from your pipeline config.
 
