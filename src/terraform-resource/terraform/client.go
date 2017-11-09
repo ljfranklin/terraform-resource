@@ -65,7 +65,6 @@ func (c client) InitWithBackend() error {
 	if c.model.PluginDir != "" {
 		initArgs = append(initArgs, fmt.Sprintf("-plugin-dir=%s", c.model.PluginDir))
 	}
-	initArgs = append(initArgs, c.model.Source)
 
 	initCmd := c.terraformCmd(initArgs, nil)
 	var err error
@@ -97,7 +96,6 @@ func (c client) InitWithoutBackend() error {
 	if c.model.PluginDir != "" {
 		initArgs = append(initArgs, fmt.Sprintf("-plugin-dir=%s", c.model.PluginDir))
 	}
-	initArgs = append(initArgs, c.model.Source)
 	initCmd := c.terraformCmd(initArgs, nil)
 
 	if output, err := initCmd.CombinedOutput(); err != nil {
@@ -462,6 +460,10 @@ func (c client) terraformCmd(args []string, env []string) *exec.Cmd {
 	}
 	for _, e := range env {
 		cmd.Env = append(cmd.Env, e)
+	}
+
+	for key, value := range c.model.Env {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
 	}
 
 	return cmd
