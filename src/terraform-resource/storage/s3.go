@@ -39,6 +39,7 @@ func NewS3(m Model) Storage {
 		Credentials:      creds,
 		S3ForcePathStyle: aws.Bool(true),
 		MaxRetries:       aws.Int(maxRetries),
+		Logger:           nil,
 	}
 	if len(m.Endpoint) > 0 {
 		awsConfig.Endpoint = aws.String(m.Endpoint)
