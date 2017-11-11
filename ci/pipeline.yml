@@ -285,6 +285,136 @@ jobs:
             pull_tag: test
             cache: true
 
+  ###################
+  ## BACKEND TESTS ##
+  ###################
+
+  - name: push-backend-dev-image
+    serial_groups: [track3]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        resource: resource-backend-src
+        trigger: true
+      - task: build-artifacts
+        file: resource-src/ci/tasks/build-dev-artifacts.yml
+      - put: terraform-backend-dev-image
+        params:
+          build: build-artifacts/
+
+  - name: test-backend-unit
+    serial_groups: [track3]
+    on_failure: *failure-alert
+    plan:
+      - aggregate:
+        - get: resource-src
+          resource: resource-backend-src
+          trigger: true
+          passed: [push-backend-dev-image]
+        - get: terraform-backend-dev-image
+          passed: [push-backend-dev-image]
+      - task: test-backend-unit
+        image: terraform-backend-dev-image
+        file: resource-src/ci/tasks/test-unit.yml
+        params:
+          AWS_ACCESS_KEY:           {{ec2_access_key}}
+          AWS_SECRET_KEY:           {{ec2_secret_key}}
+          AWS_BUCKET:               {{storage_bucket}}
+          AWS_BUCKET_SUBFOLDER:     terraform-test-unit
+          S3_COMPATIBLE_BUCKET:     {{s3_compatible_bucket}}
+          S3_COMPATIBLE_ENDPOINT:   {{s3_compatible_endpoint}}
+          S3_COMPATIBLE_ACCESS_KEY: {{s3_compatible_access_key}}
+          S3_COMPATIBLE_SECRET_KEY: {{s3_compatible_secret_key}}
+          S3_KMS_KEY_ID:            {{s3_kms_key_id}}
+
+  - name: push-backend-test-image
+    serial_groups: [track3]
+    on_failure: *failure-alert
+    plan:
+      - aggregate:
+        - get: resource-src
+          resource: resource-backend-src
+          trigger: true
+          passed: [test-backend-unit]
+        - get: terraform-backend-dev-image
+          passed: [test-backend-unit]
+      - task: build-artifacts
+        image: terraform-backend-dev-image
+        file: resource-src/ci/tasks/build-prod-artifacts.yml
+      - put: terraform-backend-test-image
+        params:
+          build: build-artifacts/
+          cache: true
+      - task: wait-for-resource-type-to-update
+        image: terraform-backend-dev-image
+        config:
+          platform: linux
+          run:
+            path: sleep
+            args:
+              - 120 # concourse updates resource images every minute
+
+  - name: create-env-with-backend
+    serial_groups: [track3]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        resource: resource-backend-src
+        trigger: true
+        passed: [push-backend-test-image]
+      - put: terraform-backend
+        params:
+          env_name: terraform-backend-ci
+          vars:
+            object_key: ci-pipeline/track3
+            object_content: "terraform is neat!"
+
+  - name: update-backend-via-params
+    serial_groups: [track3]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        resource: resource-backend-src
+        trigger: true
+        passed: [create-env-with-backend]
+      - put: terraform
+        params:
+          env_name: terraform-backend-ci
+          vars:
+            # update the file contents
+            object_content: "terraform is still neat!"
+      - *show-outputs
+
+  - name: destroy-backend-env
+    serial_groups: [track3]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        resource: resource-backend-src
+        trigger: true
+        passed: [update-backend-via-params]
+      - put: terraform-backend
+        params:
+          env_name: terraform-backend-ci
+          action: destroy
+        get_params:
+          action: destroy
+
+  # TODO: migrated_from_storage test
+
+  - name: push-backend-beta-image
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        resource: resource-backend-src
+        passed: [destroy-backend-env]
+        trigger: true
+      - put: terraform-backend-beta-image
+        params:
+          pull_repository: ljfranklin/terraform-resource
+          pull_tag: backend-test
+          cache: true
+
 resource_types:
 - name: terraform
   type: docker-image
@@ -292,6 +422,11 @@ resource_types:
     # use tag `latest` for stable release
     repository: ljfranklin/terraform-resource
     tag: test
+- name: terraform-backend
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+    tag: backend-test
 - name: slack-notification
   type: docker-image
   source:
@@ -304,6 +439,12 @@ resources:
   source:
     uri: git@github.com:ljfranklin/terraform-resource.git
     branch: master
+    private_key: {{git_private_key}}
+- name: resource-backend-src
+  type: git
+  source:
+    uri: git@github.com:ljfranklin/terraform-resource.git
+    branch: WIP-tf-backends
     private_key: {{git_private_key}}
 - name: terraform-github-release
   type: github-release
@@ -342,6 +483,30 @@ resources:
     email: {{docker_email}}
     username: {{docker_username}}
     password: {{docker_password}}
+- name: terraform-backend-dev-image
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+    tag: backend-dev
+    email: {{docker_email}}
+    username: {{docker_username}}
+    password: {{docker_password}}
+- name: terraform-backend-test-image
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+    tag: backend-test
+    email: {{docker_email}}
+    username: {{docker_username}}
+    password: {{docker_password}}
+- name: terraform-backend-beta-image
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+    tag: beta-backend
+    email: {{docker_email}}
+    username: {{docker_username}}
+    password: {{docker_password}}
 - name: locks
   type: pool
   source:
@@ -359,6 +524,21 @@ resources:
       bucket:            {{storage_bucket}}
       bucket_path:       ci-pipeline
     terraform_source: resource-src/fixtures/module
+    vars:
+      access_key:  {{ec2_access_key}}
+      secret_key:  {{ec2_secret_key}}
+      bucket:      {{storage_bucket}}
+- name: terraform-backend
+  type: terraform-backend
+  source:
+    backend_type: s3
+    backend_config:
+      access_key:  {{storage_access_key}}
+      secret_key:  {{storage_secret_key}}
+      bucket:      {{storage_bucket}}
+      region:      {{storage_region}}
+      key:         terraform-backend-ci/terraform.tfstate
+    terraform_source: resource-src/fixtures/aws
     vars:
       access_key:  {{ec2_access_key}}
       secret_key:  {{ec2_secret_key}}
