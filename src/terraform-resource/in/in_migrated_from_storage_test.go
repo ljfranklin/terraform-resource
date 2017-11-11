@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strconv"
 	"time"
 
 	"terraform-resource/in"
@@ -126,7 +127,9 @@ var _ = Describe("In with migrated from storage", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(resp.Version.EnvName).To(Equal(envName))
-			Expect(resp.Version.Serial).To(Equal(1))
+			serial, err := strconv.Atoi(resp.Version.Serial)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(serial).To(Equal(1))
 
 			metadata := map[string]string{}
 			for _, field := range resp.Metadata {

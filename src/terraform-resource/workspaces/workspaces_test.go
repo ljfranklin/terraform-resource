@@ -43,7 +43,7 @@ var _ = Describe("Workspaces", func() {
 
 				version, err := spaces.LatestVersionForEnv("some-env")
 				Expect(err).To(BeNil())
-				Expect(version).To(Equal(models.Version{EnvName: "some-env", Serial: 7}))
+				Expect(version).To(Equal(models.Version{EnvName: "some-env", Serial: "7"}))
 			})
 		})
 

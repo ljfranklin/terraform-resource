@@ -15,7 +15,7 @@ const (
 )
 
 type Version struct {
-	Serial       int    `json:"serial"`
+	Serial       string `json:"serial"`
 	EnvName      string `json:"env_name"`
 	LastModified string `json:"last_modified,omitempty"` // optional
 	PlanOnly     string `json:"plan_only,omitempty"`     //optional

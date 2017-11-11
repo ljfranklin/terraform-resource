@@ -326,7 +326,6 @@ func (r Runner) runWithMigratedFromStorage(req models.OutRequest, terraformModel
 }
 
 func (r Runner) buildEnvName(req models.OutRequest, terraformModel models.Terraform) (string, error) {
-	// TODO: handle case where migrated_from is present
 	envName := ""
 	if len(req.Params.EnvNameFile) > 0 {
 		contents, err := ioutil.ReadFile(req.Params.EnvNameFile)

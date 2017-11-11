@@ -14,7 +14,7 @@ var _ = Describe("Version", func() {
 	Describe("#Validate", func() {
 		It("returns nil if required fields are provided", func() {
 			model := models.Version{
-				Serial:  1,
+				Serial:  "1",
 				EnvName: "fake-env",
 			}
 

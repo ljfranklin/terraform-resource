@@ -135,7 +135,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 
 				expectOutput := []models.Version{
 					models.Version{
-						Serial:  1,
+						Serial:  "1",
 						EnvName: currEnvName,
 					},
 				}
@@ -144,7 +144,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 
 			It("returns the latest version when the given version matches latest version", func() {
 				checkInput.Version = models.Version{
-					Serial:  1,
+					Serial:  "1",
 					EnvName: currEnvName,
 				}
 
@@ -154,7 +154,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 
 				expectOutput := []models.Version{
 					models.Version{
-						Serial:  1,
+						Serial:  "1",
 						EnvName: currEnvName,
 					},
 				}
@@ -163,7 +163,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 
 			It("returns the latest version when the given version has a lower serial number", func() {
 				checkInput.Version = models.Version{
-					Serial:  0,
+					Serial:  "0",
 					EnvName: currEnvName,
 				}
 
@@ -173,7 +173,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 
 				expectOutput := []models.Version{
 					models.Version{
-						Serial:  1,
+						Serial:  "1",
 						EnvName: currEnvName,
 					},
 				}
@@ -182,7 +182,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 
 			It("returns an empty version list when the given version has a higher serial number", func() {
 				checkInput.Version = models.Version{
-					Serial:  2,
+					Serial:  "2",
 					EnvName: currEnvName,
 				}
 
@@ -211,7 +211,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 
 			It("returns the latest version when the given version matches latest version", func() {
 				checkInput.Version = models.Version{
-					Serial:  1,
+					Serial:  "1",
 					EnvName: currEnvName,
 				}
 
@@ -221,7 +221,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 
 				expectOutput := []models.Version{
 					models.Version{
-						Serial:  1,
+						Serial:  "1",
 						EnvName: currEnvName,
 					},
 				}

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strconv"
 	"time"
 
 	"terraform-resource/in"
@@ -125,7 +126,7 @@ var _ = Describe("In with Backend", func() {
 
 			inReq.Version = models.Version{
 				EnvName: prevEnvName,
-				Serial:  0,
+				Serial:  "0",
 			}
 
 			runner := in.Runner{
@@ -135,7 +136,9 @@ var _ = Describe("In with Backend", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(resp.Version.EnvName).To(Equal(prevEnvName))
-			Expect(resp.Version.Serial).To(BeNumerically(">=", 0))
+			serial, err := strconv.Atoi(resp.Version.Serial)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(serial).To(BeNumerically(">=", 0))
 
 			metadata := map[string]string{}
 			for _, field := range resp.Metadata {
@@ -177,7 +180,7 @@ var _ = Describe("In with Backend", func() {
 			inReq.Params.OutputStatefile = true
 			inReq.Version = models.Version{
 				EnvName: prevEnvName,
-				Serial:  0,
+				Serial:  "0",
 			}
 
 			runner := in.Runner{
@@ -204,7 +207,7 @@ var _ = Describe("In with Backend", func() {
 			inReq.Params.OutputModule = "module_1"
 			inReq.Version = models.Version{
 				EnvName: modulesEnvName,
-				Serial:  1,
+				Serial:  "1",
 			}
 
 			runner := in.Runner{
@@ -214,7 +217,9 @@ var _ = Describe("In with Backend", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(resp.Version.EnvName).To(Equal(modulesEnvName))
-			Expect(resp.Version.Serial).To(BeNumerically(">=", 1))
+			serial, err := strconv.Atoi(resp.Version.Serial)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(serial).To(BeNumerically(">=", 1))
 
 			metadata := map[string]string{}
 			for _, field := range resp.Metadata {
@@ -261,7 +266,7 @@ var _ = Describe("In with Backend", func() {
 				inReq.Params.Action = models.DestroyAction
 				inReq.Version = models.Version{
 					EnvName: currEnvName,
-					Serial:  1,
+					Serial:  "1",
 				}
 			})
 
@@ -274,7 +279,9 @@ var _ = Describe("In with Backend", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(resp.Version.EnvName).To(Equal(currEnvName))
-				Expect(resp.Version.Serial).To(BeNumerically(">=", 1))
+				serial, err := strconv.Atoi(resp.Version.Serial)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(serial).To(BeNumerically(">=", 1))
 
 				expectedOutputPath := path.Join(tmpDir, "metadata")
 				Expect(expectedOutputPath).ToNot(BeAnExistingFile())
@@ -285,7 +292,7 @@ var _ = Describe("In with Backend", func() {
 			BeforeEach(func() {
 				inReq.Version = models.Version{
 					EnvName:  currEnvName,
-					Serial:   1,
+					Serial:   "1",
 					PlanOnly: "true",
 				}
 			})
@@ -298,7 +305,9 @@ var _ = Describe("In with Backend", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(resp.Version.EnvName).To(Equal(currEnvName))
-				Expect(resp.Version.Serial).To(BeNumerically(">=", 1))
+				serial, err := strconv.Atoi(resp.Version.Serial)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(serial).To(BeNumerically(">=", 1))
 
 				expectedOutputPath := path.Join(tmpDir, "metadata")
 				Expect(expectedOutputPath).ToNot(BeAnExistingFile())
@@ -310,7 +319,7 @@ var _ = Describe("In with Backend", func() {
 				inReq.Params.Action = ""
 				inReq.Version = models.Version{
 					EnvName: "missing-env-name",
-					Serial:  0,
+					Serial:  "0",
 				}
 			})
 

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"time"
 
 	"terraform-resource/models"
@@ -150,7 +151,11 @@ var _ = Describe("Out Backend Lifecycle", func() {
 		expectedMD5 = fmt.Sprintf("%x", md5.Sum([]byte("terraform-is-still-neat")))
 		Expect(fields["content_md5"]).To(Equal(expectedMD5))
 
-		Expect(updateOutput.Version.Serial).To(BeNumerically(">", createOutput.Version.Serial))
+		createSerial, err := strconv.Atoi(createOutput.Version.Serial)
+		Expect(err).ToNot(HaveOccurred())
+		updateSerial, err := strconv.Atoi(updateOutput.Version.Serial)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(updateSerial).To(BeNumerically(">", createSerial))
 
 		By("ensuring that state file has been updated")
 

@@ -3,6 +3,7 @@ package terraform
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"terraform-resource/logger"
 	"terraform-resource/models"
@@ -154,24 +155,24 @@ func (a *Action) setup() error {
 	return nil
 }
 
-func (a *Action) currentSerial() (int, error) {
+func (a *Action) currentSerial() (string, error) {
 	rawState, err := a.Client.StatePull(a.EnvName)
 	if err != nil {
-		return -1, err
+		return "", err
 	}
 
 	// TODO: read this into a struct
 	tfState := map[string]interface{}{}
 	if err = json.Unmarshal(rawState, &tfState); err != nil {
-		return -1, fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawState)
+		return "", fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawState)
 	}
 
 	serial, ok := tfState["serial"].(float64)
 	if !ok {
-		return -1, fmt.Errorf("Expected number value for 'serial' but got '%#v'", tfState["serial"])
+		return "", fmt.Errorf("Expected number value for 'serial' but got '%#v'", tfState["serial"])
 	}
 
-	return int(serial), nil
+	return strconv.Itoa(int(serial)), nil
 }
 
 func (a *Action) createWorkspaceIfNotExists() error {

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strconv"
 
 	"terraform-resource/encoder"
 	"terraform-resource/logger"
@@ -188,22 +189,23 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 }
 
 // TODO: extract this somewhere
-func (r Runner) getCurrentSerial(client terraform.Client, envName string) (int, error) {
+func (r Runner) getCurrentSerial(client terraform.Client, envName string) (string, error) {
 	rawState, err := client.StatePull(envName)
 	if err != nil {
-		return -1, err
+		return "", err
 	}
 
 	tfState := map[string]interface{}{}
 	if err = json.Unmarshal(rawState, &tfState); err != nil {
-		return -1, fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawState)
+		return "", fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawState)
 	}
 
 	serial, ok := tfState["serial"].(float64)
 	if !ok {
-		return -1, fmt.Errorf("Expected number value for 'serial' but got '%#v'", tfState["serial"])
+		return "", fmt.Errorf("Expected number value for 'serial' but got '%#v'", tfState["serial"])
 	}
-	return int(serial), nil
+
+	return strconv.Itoa(int(serial)), nil
 }
 
 func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models.InResponse, error) {

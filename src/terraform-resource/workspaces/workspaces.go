@@ -3,6 +3,7 @@ package workspaces
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"terraform-resource/models"
 	"terraform-resource/terraform"
 )
@@ -47,7 +48,7 @@ func (w Workspaces) LatestVersionForEnv(envName string) (models.Version, error) 
 		return models.Version{}, fmt.Errorf("Expected number value for 'serial' but got '%#v'", tfState["serial"])
 	}
 
-	return models.Version{EnvName: envName, Serial: int(serial)}, nil
+	return models.Version{EnvName: envName, Serial: strconv.Itoa(int(serial))}, nil
 }
 
 func (w Workspaces) spaceExists(envName string) (bool, error) {

@@ -146,7 +146,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 				expectOutput := []models.Version{
 					models.Version{
-						Serial:  1,
+						Serial:  "1",
 						EnvName: backendEnvName,
 					},
 				}
@@ -155,7 +155,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 			It("returns the latest version when the given version matches latest version", func() {
 				checkInput.Version = models.Version{
-					Serial:  1,
+					Serial:  "1",
 					EnvName: backendEnvName,
 				}
 
@@ -165,7 +165,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 				expectOutput := []models.Version{
 					models.Version{
-						Serial:  1,
+						Serial:  "1",
 						EnvName: backendEnvName,
 					},
 				}
@@ -189,7 +189,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 			It("returns the latest version when the given backend version matches latest version", func() {
 				checkInput.Version = models.Version{
-					Serial:  1,
+					Serial:  "1",
 					EnvName: backendEnvName,
 				}
 
@@ -199,7 +199,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 				expectOutput := []models.Version{
 					models.Version{
-						Serial:  1,
+						Serial:  "1",
 						EnvName: backendEnvName,
 					},
 				}
@@ -251,7 +251,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 				expectOutput := []models.Version{
 					models.Version{
-						Serial:  1,
+						Serial:  "1",
 						EnvName: backendEnvName,
 					},
 				}
@@ -260,7 +260,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 			It("returns the latest version when the given version matches latest version", func() {
 				checkInput.Version = models.Version{
-					Serial:  1,
+					Serial:  "1",
 					EnvName: backendEnvName,
 				}
 
@@ -270,7 +270,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 				expectOutput := []models.Version{
 					models.Version{
-						Serial:  1,
+						Serial:  "1",
 						EnvName: backendEnvName,
 					},
 				}
@@ -294,7 +294,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 			It("returns the latest version when the given version matches latest version", func() {
 				checkInput.Version = models.Version{
-					Serial:  1,
+					Serial:  "1",
 					EnvName: backendEnvName,
 				}
 
@@ -304,7 +304,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 				expectOutput := []models.Version{
 					models.Version{
-						Serial:  1,
+						Serial:  "1",
 						EnvName: backendEnvName,
 					},
 				}
