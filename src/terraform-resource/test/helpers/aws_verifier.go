@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"io"
+	"time"
 
 	"terraform-resource/storage"
 
@@ -64,28 +65,42 @@ func (a AWSVerifier) ExpectS3FileToExist(bucketName string, key string) {
 		Key:    aws.String(key),
 	}
 
-	_, err := a.s3.HeadObject(params)
-	ExpectWithOffset(1, err).ToNot(HaveOccurred(),
+	var lastErr error
+	for i := 0; i < 5; i++ {
+		_, lastErr = a.s3.HeadObject(params)
+		if lastErr == nil {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	ExpectWithOffset(1, lastErr).ToNot(HaveOccurred(),
 		"Expected S3 file '%s' to exist in bucket '%s', but it does not",
 		key,
 		bucketName)
 }
 
 func (a AWSVerifier) ExpectS3FileToNotExist(bucketName string, key string) {
-
 	params := &awss3.HeadObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(key),
 	}
 
-	_, err := a.s3.HeadObject(params)
-	ExpectWithOffset(1, err).To(HaveOccurred(),
+	var lastErr error
+	for i := 0; i < 5; i++ {
+		_, lastErr = a.s3.HeadObject(params)
+		if lastErr != nil {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	ExpectWithOffset(1, lastErr).To(HaveOccurred(),
 		"Expected S3 file '%s' to not exist in bucket '%s', but it does",
 		key,
 		bucketName)
-
-	reqErr, ok := err.(awserr.RequestFailure)
-	ExpectWithOffset(1, ok).To(BeTrue(), "Invalid AWS error type: %s", err)
+	reqErr, ok := lastErr.(awserr.RequestFailure)
+	ExpectWithOffset(1, ok).To(BeTrue(), "Invalid AWS error type: %s", lastErr)
 	ExpectWithOffset(1, reqErr.StatusCode()).To(Equal(404))
 }
 
