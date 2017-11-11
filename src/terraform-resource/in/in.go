@@ -34,6 +34,10 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		return resp, nil
 	}
 
+	if err := req.Source.Validate(); err != nil {
+		return models.InResponse{}, err
+	}
+
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-in")
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to create tmp dir at '%s'", os.TempDir())

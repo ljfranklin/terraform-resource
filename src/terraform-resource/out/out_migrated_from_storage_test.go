@@ -32,10 +32,9 @@ var _ = Describe("Out - Migrated From Storage", func() {
 		workingDir           string
 		namer                namerfakes.FakeNamer
 		assertOutBehavior    func(models.OutRequest, map[string]string)
-		// createYAMLTmpFile func(string, interface{}) string
-		calculateMD5  func(string) string
-		logWriter     bytes.Buffer
-		workspacePath string
+		calculateMD5         func(string) string
+		logWriter            bytes.Buffer
+		workspacePath        string
 	)
 
 	BeforeEach(func() {

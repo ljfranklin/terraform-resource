@@ -27,7 +27,12 @@ type Runner struct {
 }
 
 func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
-	terraformModel := req.Source.Terraform.Merge(req.Params.Terraform)
+	req.Source.Terraform = req.Source.Terraform.Merge(req.Params.Terraform)
+	if err := req.Source.Validate(); err != nil {
+		return models.OutResponse{}, err
+	}
+
+	terraformModel := req.Source.Terraform
 	if terraformModel.VarFiles != nil {
 		for i := range terraformModel.VarFiles {
 			terraformModel.VarFiles[i] = path.Join(r.SourceDir, terraformModel.VarFiles[i])
@@ -51,11 +56,6 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	terraformModel.Vars["build_team_name"] = os.Getenv("BUILD_TEAM_NAME")
 	terraformModel.Vars["atc_external_url"] = os.Getenv("ATC_EXTERNAL_URL")
 
-	if err := terraformModel.Validate(); err != nil {
-		return models.OutResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
-	}
-
-	// TODO: raise error on invalid permutations
 	if req.Source.BackendType != "" && req.Source.MigratedFromStorage != (storage.Model{}) {
 		return r.runWithMigratedFromStorage(req, terraformModel)
 	} else if req.Source.BackendType == "" {

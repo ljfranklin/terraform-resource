@@ -17,6 +17,10 @@ type Runner struct {
 }
 
 func (r Runner) Run(req models.InRequest) ([]models.Version, error) {
+	if err := req.Source.Validate(); err != nil {
+		return []models.Version{}, err
+	}
+
 	if req.Source.BackendType != "" && req.Source.MigratedFromStorage != (storage.Model{}) {
 		if req.Version.IsZero() && req.Source.EnvName == "" {
 			// Triggering on new versions is only supported in single-env mode:
