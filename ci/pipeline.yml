@@ -377,11 +377,11 @@ jobs:
         resource: resource-backend-src
         trigger: true
         passed: [create-env-with-backend]
-      - put: terraform
+      - put: terraform-backend
         params:
           env_name: terraform-backend-ci
           vars:
-            # update the file contents
+            object_key: ci-pipeline/track3
             object_content: "terraform is still neat!"
       - *show-outputs
 
@@ -397,6 +397,9 @@ jobs:
         params:
           env_name: terraform-backend-ci
           action: destroy
+          vars:
+            object_key: ci-pipeline/track3
+            object_content: "terraform is still neat!"
         get_params:
           action: destroy
 
