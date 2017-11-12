@@ -540,11 +540,12 @@ resources:
   source:
     backend_type: s3
     backend_config:
-      access_key:  {{storage_access_key}}
-      secret_key:  {{storage_secret_key}}
-      bucket:      {{storage_bucket}}
-      region:      {{storage_region}}
-      key:         terraform-backend-ci/terraform.tfstate
+      access_key:           {{storage_access_key}}
+      secret_key:           {{storage_secret_key}}
+      bucket:               {{storage_bucket}}
+      region:               {{storage_region}}
+      key:                  terraform.tfstate
+      workspace_key_prefix: terraform-backend-ci
     terraform_source: resource-src/fixtures/aws
     vars:
       access_key:  {{ec2_access_key}}
