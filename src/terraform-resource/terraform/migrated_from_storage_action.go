@@ -199,6 +199,10 @@ func (a *MigratedFromStorageAction) attemptDestroy() (MigratedFromStorageResult,
 		}
 	}
 
+	if err := a.Client.WorkspaceSelect(a.EnvName); err != nil {
+		return MigratedFromStorageResult{}, err
+	}
+
 	if err := a.Client.Import(a.EnvName); err != nil {
 		return MigratedFromStorageResult{}, err
 	}
@@ -264,9 +268,8 @@ func (a *MigratedFromStorageAction) createWorkspaceIfNotExists() error {
 		}
 	}
 
-	if !workspaceExists {
-		return a.Client.WorkspaceNew(a.EnvName)
+	if workspaceExists {
+		return a.Client.WorkspaceSelect(a.EnvName)
 	}
-
-	return nil
+	return a.Client.WorkspaceNew(a.EnvName)
 }
