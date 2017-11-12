@@ -127,6 +127,10 @@ func (a *Action) attemptDestroy() (Result, error) {
 	a.Logger.WarnSection("Terraform Destroy")
 	defer a.Logger.EndSection()
 
+	if err := a.Client.WorkspaceSelect(a.EnvName); err != nil {
+		return Result{}, err
+	}
+
 	if err := a.Client.Import(a.EnvName); err != nil {
 		return Result{}, err
 	}
@@ -188,9 +192,8 @@ func (a *Action) createWorkspaceIfNotExists() error {
 		}
 	}
 
-	if !workspaceExists {
-		return a.Client.WorkspaceNew(a.EnvName)
+	if workspaceExists {
+		return a.Client.WorkspaceSelect(a.EnvName)
 	}
-
-	return nil
+	return a.Client.WorkspaceNew(a.EnvName)
 }

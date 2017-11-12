@@ -23,11 +23,12 @@ import (
 var _ = Describe("Out Backend Lifecycle", func() {
 
 	var (
-		envName       string
-		stateFilePath string
-		s3ObjectPath  string
-		workingDir    string
-		workspacePath string
+		envName         string
+		stateFilePath   string
+		s3ObjectPath    string
+		workingDir      string
+		workspacePath   string
+		resetWorkingDir func()
 	)
 
 	BeforeEach(func() {
@@ -39,17 +40,7 @@ var _ = Describe("Out Backend Lifecycle", func() {
 		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-lifecycle"))
 		stateFilePath = path.Join(workspacePath, envName, "terraform.tfstate")
 
-		var err error
-		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test")
-		Expect(err).ToNot(HaveOccurred())
-
-		// ensure relative paths resolve correctly
-		err = os.Chdir(workingDir)
-		Expect(err).ToNot(HaveOccurred())
-
-		fixturesDir := path.Join(helpers.ProjectRoot(), "fixtures")
-		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
-		Expect(err).ToNot(HaveOccurred())
+		resetWorkingDir()
 	})
 
 	AfterEach(func() {
@@ -139,6 +130,8 @@ var _ = Describe("Out Backend Lifecycle", func() {
 
 		By("running 'out' to update the S3 file")
 
+		resetWorkingDir()
+
 		outRequest.Params.Terraform.Vars["object_content"] = "terraform-is-still-neat"
 		updateOutput, err := runner.Run(outRequest)
 		Expect(err).ToNot(HaveOccurred())
@@ -176,6 +169,8 @@ var _ = Describe("Out Backend Lifecycle", func() {
 		Expect(updateOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
 
 		By("running 'out' to delete the S3 file")
+
+		resetWorkingDir()
 
 		outRequest.Params.Action = models.DestroyAction
 		deleteOutput, err := runner.Run(outRequest)
@@ -259,4 +254,20 @@ var _ = Describe("Out Backend Lifecycle", func() {
 
 		Expect(deleteOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
 	})
+
+	resetWorkingDir = func() {
+		err := os.RemoveAll(workingDir)
+		Expect(err).ToNot(HaveOccurred())
+
+		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test")
+		Expect(err).ToNot(HaveOccurred())
+
+		// ensure relative paths resolve correctly
+		err = os.Chdir(workingDir)
+		Expect(err).ToNot(HaveOccurred())
+
+		fixturesDir := path.Join(helpers.ProjectRoot(), "fixtures")
+		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
+		Expect(err).ToNot(HaveOccurred())
+	}
 })

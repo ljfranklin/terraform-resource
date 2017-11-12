@@ -141,6 +141,17 @@ type FakeClient struct {
 	workspaceNewFromExistingStateFileReturnsOnCall map[int]struct {
 		result1 error
 	}
+	WorkspaceSelectStub        func(string) error
+	workspaceSelectMutex       sync.RWMutex
+	workspaceSelectArgsForCall []struct {
+		arg1 string
+	}
+	workspaceSelectReturns struct {
+		result1 error
+	}
+	workspaceSelectReturnsOnCall map[int]struct {
+		result1 error
+	}
 	WorkspaceDeleteStub        func(string) error
 	workspaceDeleteMutex       sync.RWMutex
 	workspaceDeleteArgsForCall []struct {
@@ -734,6 +745,54 @@ func (fake *FakeClient) WorkspaceNewFromExistingStateFileReturnsOnCall(i int, re
 	}{result1}
 }
 
+func (fake *FakeClient) WorkspaceSelect(arg1 string) error {
+	fake.workspaceSelectMutex.Lock()
+	ret, specificReturn := fake.workspaceSelectReturnsOnCall[len(fake.workspaceSelectArgsForCall)]
+	fake.workspaceSelectArgsForCall = append(fake.workspaceSelectArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("WorkspaceSelect", []interface{}{arg1})
+	fake.workspaceSelectMutex.Unlock()
+	if fake.WorkspaceSelectStub != nil {
+		return fake.WorkspaceSelectStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.workspaceSelectReturns.result1
+}
+
+func (fake *FakeClient) WorkspaceSelectCallCount() int {
+	fake.workspaceSelectMutex.RLock()
+	defer fake.workspaceSelectMutex.RUnlock()
+	return len(fake.workspaceSelectArgsForCall)
+}
+
+func (fake *FakeClient) WorkspaceSelectArgsForCall(i int) string {
+	fake.workspaceSelectMutex.RLock()
+	defer fake.workspaceSelectMutex.RUnlock()
+	return fake.workspaceSelectArgsForCall[i].arg1
+}
+
+func (fake *FakeClient) WorkspaceSelectReturns(result1 error) {
+	fake.WorkspaceSelectStub = nil
+	fake.workspaceSelectReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) WorkspaceSelectReturnsOnCall(i int, result1 error) {
+	fake.WorkspaceSelectStub = nil
+	if fake.workspaceSelectReturnsOnCall == nil {
+		fake.workspaceSelectReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.workspaceSelectReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeClient) WorkspaceDelete(arg1 string) error {
 	fake.workspaceDeleteMutex.Lock()
 	ret, specificReturn := fake.workspaceDeleteReturnsOnCall[len(fake.workspaceDeleteArgsForCall)]
@@ -862,6 +921,8 @@ func (fake *FakeClient) Invocations() map[string][][]interface{} {
 	defer fake.workspaceNewMutex.RUnlock()
 	fake.workspaceNewFromExistingStateFileMutex.RLock()
 	defer fake.workspaceNewFromExistingStateFileMutex.RUnlock()
+	fake.workspaceSelectMutex.RLock()
+	defer fake.workspaceSelectMutex.RUnlock()
 	fake.workspaceDeleteMutex.RLock()
 	defer fake.workspaceDeleteMutex.RUnlock()
 	fake.statePullMutex.RLock()

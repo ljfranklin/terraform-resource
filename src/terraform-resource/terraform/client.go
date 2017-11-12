@@ -32,6 +32,7 @@ type Client interface {
 	WorkspaceList() ([]string, error)
 	WorkspaceNew(string) error
 	WorkspaceNewFromExistingStateFile(string, string) error
+	WorkspaceSelect(string) error
 	WorkspaceDelete(string) error
 	StatePull(string) ([]byte, error)
 }
@@ -350,6 +351,20 @@ func (c client) WorkspaceList() ([]string, error) {
 	}
 
 	return envs, nil
+}
+
+func (c client) WorkspaceSelect(envName string) error {
+	cmd := c.terraformCmd([]string{
+		"workspace",
+		"select",
+		envName,
+	}, nil)
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("Error: %s, Output: %s", err, output)
+	}
+
+	return nil
 }
 
 func (c client) WorkspaceNew(envName string) error {

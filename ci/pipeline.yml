@@ -362,12 +362,14 @@ jobs:
         resource: resource-backend-src
         trigger: true
         passed: [push-backend-test-image]
-      - put: terraform-backend
+      - put: terraform
+        resource: terraform-backend
         params:
           env_name: terraform-backend-ci
           vars:
             object_key: ci-pipeline/track3
             object_content: "terraform is neat!"
+      - *show-outputs
 
   - name: update-backend-via-params
     serial_groups: [track3]
@@ -377,7 +379,8 @@ jobs:
         resource: resource-backend-src
         trigger: true
         passed: [create-env-with-backend]
-      - put: terraform-backend
+      - put: terraform
+        resource: terraform-backend
         params:
           env_name: terraform-backend-ci
           vars:
@@ -393,7 +396,8 @@ jobs:
         resource: resource-backend-src
         trigger: true
         passed: [update-backend-via-params]
-      - put: terraform-backend
+      - put: terraform
+        resource: terraform-backend
         params:
           env_name: terraform-backend-ci
           action: destroy
