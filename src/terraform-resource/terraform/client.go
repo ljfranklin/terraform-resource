@@ -36,6 +36,7 @@ func (c Client) Apply() error {
 		"apply",
 		"-backup='-'",  // no need to backup state file
 		"-input=false", // do not prompt for inputs
+		"-auto-approve",
 	}
 	if c.Model.PlanRun == false {
 		applyArgs = append(applyArgs, c.varFlags()...)
