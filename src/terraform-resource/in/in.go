@@ -84,7 +84,6 @@ func (r Runner) inWithMigratedFromStorage(req models.InRequest, tmpDir string) (
 
 func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InResponse, error) {
 	if req.Version.IsPlan() {
-		// TODO: should we output plan file here?
 		resp := models.InResponse{
 			Version: req.Version,
 		}

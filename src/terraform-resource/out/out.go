@@ -353,7 +353,6 @@ func (r Runner) buildEnvName(req models.OutRequest, terraformModel models.Terraf
 }
 
 func (r Runner) buildEnvNameFromLegacyStorage(req models.OutRequest, storageDriver storage.Storage) (string, error) {
-	// TODO: handle case where migrated_from is present
 	envName := ""
 	if len(req.Params.EnvNameFile) > 0 {
 		contents, err := ioutil.ReadFile(req.Params.EnvNameFile)

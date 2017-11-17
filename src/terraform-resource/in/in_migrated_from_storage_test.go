@@ -58,7 +58,6 @@ var _ = Describe("In with migrated from storage", func() {
 		)
 		envName = helpers.RandomString("s3-test-fixture-migrated")
 
-		// TODO: workspace_prefix can't include nested dir
 		workspacePath := helpers.RandomString("in-backend-test")
 
 		pathToStorageS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
@@ -91,7 +90,6 @@ var _ = Describe("In with migrated from storage", func() {
 		tmpDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-in-test")
 		Expect(err).ToNot(HaveOccurred())
 
-		// TODO: should production code be changing dir instead?
 		err = os.Chdir(tmpDir)
 		Expect(err).ToNot(HaveOccurred())
 	})

@@ -59,7 +59,6 @@ var _ = Describe("In with Backend", func() {
 		currEnvName = helpers.RandomString("s3-test-fixture-current")
 		modulesEnvName = helpers.RandomString("s3-test-fixture-modules")
 
-		// TODO: workspace_prefix can't include nested dir
 		workspacePath := helpers.RandomString("in-backend-test")
 
 		pathToPrevS3Fixture = path.Join(workspacePath, prevEnvName, "terraform.tfstate")
@@ -86,7 +85,6 @@ var _ = Describe("In with Backend", func() {
 		tmpDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-in-test")
 		Expect(err).ToNot(HaveOccurred())
 
-		// TODO: should production code be changing dir instead?
 		err = os.Chdir(tmpDir)
 		Expect(err).ToNot(HaveOccurred())
 	})
@@ -116,14 +114,12 @@ var _ = Describe("In with Backend", func() {
 		})
 
 		AfterEach(func() {
-			// TODO: remove parent dir
 			awsVerifier.DeleteObjectFromS3(bucket, pathToPrevS3Fixture)
 			awsVerifier.DeleteObjectFromS3(bucket, pathToCurrS3Fixture)
 			awsVerifier.DeleteObjectFromS3(bucket, pathToModulesS3Fixture)
 		})
 
 		It("fetches the state file matching the provided version", func() {
-
 			inReq.Version = models.Version{
 				EnvName: prevEnvName,
 				Serial:  "0",

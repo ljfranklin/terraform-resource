@@ -42,7 +42,6 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 		bucketPath := os.Getenv("AWS_BUCKET_SUBFOLDER")
 		Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_SUBFOLDER must be set")
-		// create nested folder to all running in parallel
 		bucketPath = path.Join(bucketPath, helpers.RandomString("check-storage-test"))
 
 		region := os.Getenv("AWS_REGION") // optional
@@ -69,7 +68,6 @@ var _ = Describe("Check with Migrated From Storage", func() {
 		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
 		Expect(err).ToNot(HaveOccurred())
 
-		// TODO: workspace_prefix can't include nested dir
 		workspacePath := helpers.RandomString("check-backend-test")
 
 		backendEnvName = "s3-test-fixture-backend"
@@ -103,7 +101,6 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 	AfterEach(func() {
 		_ = os.RemoveAll(workingDir)
-		// TODO: do we need to delete parent folder?
 		awsVerifier.DeleteObjectFromS3(bucket, pathToBackendStatefile)
 		awsVerifier.DeleteObjectFromS3(bucket, pathToStorageStatefile)
 	})

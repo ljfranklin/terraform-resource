@@ -126,8 +126,9 @@ func (c client) Apply() error {
 	}
 	if c.model.PlanRun == false {
 		applyArgs = append(applyArgs, c.varFlags()...)
-		// TODO: remove state flag for backend?
-		applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.model.StateFileLocalPath))
+		if c.model.StateFileLocalPath != "" {
+			applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.model.StateFileLocalPath))
+		}
 	} else {
 		applyArgs = append(applyArgs, fmt.Sprintf("-state-out=%s", c.model.StateFileLocalPath))
 	}

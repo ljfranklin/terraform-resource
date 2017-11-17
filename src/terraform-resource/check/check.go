@@ -47,7 +47,6 @@ func (r Runner) Run(req models.InRequest) ([]models.Version, error) {
 }
 
 func (r Runner) runWithBackend(req models.InRequest) ([]models.Version, error) {
-	// TODO: do we need to handle IsPlan() versions?
 	if req.Version.IsZero() && req.Source.EnvName == "" {
 		// Triggering on new versions is only supported in single-env mode:
 		// - expensive to check for changes across all statefiles
@@ -85,7 +84,6 @@ func (r Runner) runWithBackend(req models.InRequest) ([]models.Version, error) {
 	}
 
 	resp := []models.Version{}
-	// TODO: need to handle cases where requested version has LastModified?
 	if latestVersion.IsZero() == false && latestVersion.Serial >= req.Version.Serial {
 		resp = append(resp, latestVersion)
 	}

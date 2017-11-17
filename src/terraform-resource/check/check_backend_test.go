@@ -64,7 +64,6 @@ var _ = Describe("Check with Terraform Backend", func() {
 		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
 		Expect(err).ToNot(HaveOccurred())
 
-		// TODO: workspace_prefix can't include nested dir
 		workspacePath := helpers.RandomString("check-backend-test")
 
 		prevEnvName = "s3-test-fixture-previous"
@@ -91,12 +90,9 @@ var _ = Describe("Check with Terraform Backend", func() {
 
 	AfterEach(func() {
 		_ = os.RemoveAll(workingDir)
-		// TODO: do we need to delete parent folder?
 		awsVerifier.DeleteObjectFromS3(bucket, pathToPrevS3Fixture)
 		awsVerifier.DeleteObjectFromS3(bucket, pathToCurrS3Fixture)
 	})
-
-	// TODO: write a test to ensure check can be run twice in a row
 
 	Context("when bucket is empty", func() {
 		It("returns an empty version list", func() {
@@ -191,6 +187,25 @@ var _ = Describe("Check with Terraform Backend", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				expectOutput := []models.Version{}
+				Expect(resp).To(Equal(expectOutput))
+			})
+
+			It("can run twice in a row", func() {
+				runner := check.Runner{}
+
+				expectOutput := []models.Version{
+					models.Version{
+						Serial:  "1",
+						EnvName: currEnvName,
+					},
+				}
+
+				resp, err := runner.Run(checkInput)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(resp).To(Equal(expectOutput))
+
+				resp, err = runner.Run(checkInput)
+				Expect(err).ToNot(HaveOccurred())
 				Expect(resp).To(Equal(expectOutput))
 			})
 		})

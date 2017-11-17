@@ -28,7 +28,6 @@ var _ = Describe("Out Import", func() {
 	BeforeEach(func() {
 		envName = helpers.RandomString("out-test")
 
-		// TODO: workspace_prefix can't include nested dir
 		workspacePath = helpers.RandomString("out-backend-test")
 
 		stateFilePath = path.Join(workspacePath, envName, "terraform.tfstate")

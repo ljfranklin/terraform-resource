@@ -43,7 +43,6 @@ var _ = Describe("Out - Migrated From Storage", func() {
 			region = "us-east-1"
 		}
 
-		// TODO: workspace_prefix can't include nested dir
 		workspacePath = helpers.RandomString("out-backend-test")
 
 		envName = helpers.RandomString("out-test")

@@ -81,7 +81,6 @@ var _ = Describe("In with legacy storage", func() {
 		tmpDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-in-test")
 		Expect(err).ToNot(HaveOccurred())
 
-		// TODO: should production code be changing dir instead?
 		err = os.Chdir(tmpDir)
 		Expect(err).ToNot(HaveOccurred())
 	})

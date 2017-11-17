@@ -34,7 +34,6 @@ var _ = Describe("Out Backend Lifecycle", func() {
 	BeforeEach(func() {
 		envName = helpers.RandomString("out-backend-test")
 
-		// TODO: workspace_prefix can't include nested dir
 		workspacePath = helpers.RandomString("out-backend-test")
 
 		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-lifecycle"))
