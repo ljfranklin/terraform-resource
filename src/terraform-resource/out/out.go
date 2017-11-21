@@ -7,17 +7,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 
 	"terraform-resource/logger"
 	"terraform-resource/models"
 	"terraform-resource/namer"
 	"terraform-resource/storage"
 	"terraform-resource/terraform"
-)
-
-const (
-	NameClashRetries = 10
 )
 
 type Runner struct {
@@ -27,34 +22,15 @@ type Runner struct {
 }
 
 func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
-	req.Source.Terraform = req.Source.Terraform.Merge(req.Params.Terraform)
 	if err := req.Source.Validate(); err != nil {
 		return models.OutResponse{}, err
 	}
 
-	terraformModel := req.Source.Terraform
-	if terraformModel.VarFiles != nil {
-		for i := range terraformModel.VarFiles {
-			terraformModel.VarFiles[i] = path.Join(r.SourceDir, terraformModel.VarFiles[i])
-		}
+	req.Source.Terraform = req.Source.Terraform.Merge(req.Params.Terraform)
+	terraformModel, err := r.buildTerraformModel(req)
+	if err != nil {
+		return models.OutResponse{}, err
 	}
-	if err := terraformModel.ParseVarsFromFiles(); err != nil {
-		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.var_files`: %s", err)
-	}
-	if err := terraformModel.ParseImportsFromFile(); err != nil {
-		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.imports_file`: %s", err)
-	}
-
-	if len(terraformModel.Source) == 0 {
-		return models.OutResponse{}, errors.New("Missing required field `terraform.source`")
-	}
-
-	terraformModel.Vars["build_id"] = os.Getenv("BUILD_ID")
-	terraformModel.Vars["build_name"] = os.Getenv("BUILD_NAME")
-	terraformModel.Vars["build_job_name"] = os.Getenv("BUILD_JOB_NAME")
-	terraformModel.Vars["build_pipeline_name"] = os.Getenv("BUILD_PIPELINE_NAME")
-	terraformModel.Vars["build_team_name"] = os.Getenv("BUILD_TEAM_NAME")
-	terraformModel.Vars["atc_external_url"] = os.Getenv("ATC_EXTERNAL_URL")
 
 	if req.Source.BackendType != "" && req.Source.MigratedFromStorage != (storage.Model{}) {
 		return r.runWithMigratedFromStorage(req, terraformModel)
@@ -105,27 +81,16 @@ func (r Runner) runWithBackend(req models.OutRequest, terraformModel models.Terr
 		return models.OutResponse{}, actionErr
 	}
 
+	// TODO: could this be fixed in custom marshal method?
 	version := result.Version
 	if req.Params.PlanOnly {
 		version.PlanOnly = "true" // Concourse demands version fields are strings
 	}
 
-	metadata := []models.MetadataField{}
-	for key, value := range result.SanitizedOutput() {
-		metadata = append(metadata, models.MetadataField{
-			Name:  key,
-			Value: value,
-		})
-	}
-
-	tfVersion, err := client.Version()
+	metadata, err := r.buildMetadata(result.SanitizedOutput(), client)
 	if err != nil {
-		return models.OutResponse{}, err
+		return models.OutResponse{}, actionErr
 	}
-	metadata = append(metadata, models.MetadataField{
-		Name:  "terraform_version",
-		Value: tfVersion,
-	})
 
 	resp := models.OutResponse{
 		Version:  version,
@@ -206,22 +171,10 @@ func (r Runner) runWithLegacyStorage(req models.OutRequest, terraformModel model
 		version.PlanOnly = "true" // Concourse demands version fields are strings
 	}
 
-	metadata := []models.MetadataField{}
-	for key, value := range result.SanitizedOutput() {
-		metadata = append(metadata, models.MetadataField{
-			Name:  key,
-			Value: value,
-		})
-	}
-
-	tfVersion, err := client.Version()
+	metadata, err := r.buildMetadata(result.SanitizedOutput(), client)
 	if err != nil {
-		return models.OutResponse{}, err
+		return models.OutResponse{}, actionErr
 	}
-	metadata = append(metadata, models.MetadataField{
-		Name:  "terraform_version",
-		Value: tfVersion,
-	})
 
 	resp := models.OutResponse{
 		Version:  version,
@@ -244,17 +197,9 @@ func (r Runner) runWithMigratedFromStorage(req models.OutRequest, terraformModel
 	}
 	storageDriver := storage.BuildDriver(storageModel)
 
-	var envName string
-	if req.Params.GenerateRandomName {
-		envName, err = r.generateRandomNameForMigratedFrom(terraformModel, storageDriver)
-		if err != nil {
-			return models.OutResponse{}, err
-		}
-	} else {
-		envName, err = r.buildEnvName(req, terraformModel)
-		if err != nil {
-			return models.OutResponse{}, fmt.Errorf("Failed to create env name: %s", err)
-		}
+	envName, err := r.buildEnvNameFromMigrated(req, terraformModel, storageDriver)
+	if err != nil {
+		return models.OutResponse{}, err
 	}
 
 	terraformModel.Vars["env_name"] = envName
@@ -300,22 +245,10 @@ func (r Runner) runWithMigratedFromStorage(req models.OutRequest, terraformModel
 		version.PlanOnly = "true" // Concourse demands version fields are strings
 	}
 
-	metadata := []models.MetadataField{}
-	for key, value := range result.SanitizedOutput() {
-		metadata = append(metadata, models.MetadataField{
-			Name:  key,
-			Value: value,
-		})
-	}
-
-	tfVersion, err := client.Version()
+	metadata, err := r.buildMetadata(result.SanitizedOutput(), client)
 	if err != nil {
-		return models.OutResponse{}, err
+		return models.OutResponse{}, actionErr
 	}
-	metadata = append(metadata, models.MetadataField{
-		Name:  "terraform_version",
-		Value: tfVersion,
-	})
 
 	resp := models.OutResponse{
 		Version:  version,
@@ -326,156 +259,85 @@ func (r Runner) runWithMigratedFromStorage(req models.OutRequest, terraformModel
 }
 
 func (r Runner) buildEnvName(req models.OutRequest, terraformModel models.Terraform) (string, error) {
-	envName := ""
-	if len(req.Params.EnvNameFile) > 0 {
-		contents, err := ioutil.ReadFile(req.Params.EnvNameFile)
-		if err != nil {
-			return "", fmt.Errorf("Failed to read `env_name_file`: %s", err)
-		}
-		envName = string(contents)
-	} else if len(req.Params.EnvName) > 0 {
-		envName = req.Params.EnvName
-	} else if req.Params.GenerateRandomName {
-		var err error
-		envName, err = r.generateRandomName(terraformModel)
-		if err != nil {
-			return "", err
-		}
+	tfClientWithoutWorkspace := terraform.NewClient(
+		terraformModel,
+		r.LogWriter,
+	)
+	namer := BackendEnvNamer{
+		Req:             req,
+		TerraformClient: tfClientWithoutWorkspace,
+		Namer:           r.Namer,
 	}
-
-	if len(envName) == 0 {
-		return "", fmt.Errorf("Must specify `put.params.env_name`, `put.params.env_name_file`, or `put.params.generate_random_name`")
-	}
-	envName = strings.TrimSpace(envName)
-	envName = strings.Replace(envName, " ", "-", -1)
-
-	return envName, nil
+	return namer.EnvName()
 }
 
 func (r Runner) buildEnvNameFromLegacyStorage(req models.OutRequest, storageDriver storage.Storage) (string, error) {
-	envName := ""
-	if len(req.Params.EnvNameFile) > 0 {
-		contents, err := ioutil.ReadFile(req.Params.EnvNameFile)
-		if err != nil {
-			return "", fmt.Errorf("Failed to read `env_name_file`: %s", err)
-		}
-		envName = string(contents)
-	} else if len(req.Params.EnvName) > 0 {
-		envName = req.Params.EnvName
-	} else if req.Params.GenerateRandomName {
-		// TODO: re-use private clash method
-		var randomName string
-		for i := 0; i < NameClashRetries; i++ {
-			randomName = r.Namer.RandomName()
-			clash, err := doesEnvNameClash(randomName, storageDriver)
-			if err != nil {
-				return "", err
-			}
-			if clash == false {
-				envName = randomName
-				break
-			}
-		}
-		if len(envName) == 0 {
-			return "", fmt.Errorf("Failed to generate a non-clashing random name after %d attempts", NameClashRetries)
-		}
+	namer := LegacyStorageEnvNamer{
+		Req:           req,
+		StorageDriver: storageDriver,
+		Namer:         r.Namer,
 	}
-
-	if len(envName) == 0 {
-		return "", fmt.Errorf("Must specify `put.params.env_name`, `put.params.env_name_file`, or `put.params.generate_random_name`")
-	}
-	envName = strings.TrimSpace(envName)
-	envName = strings.Replace(envName, " ", "-", -1)
-
-	return envName, nil
+	return namer.EnvName()
 }
 
-func doesEnvNameClash(envName string, storageDriver storage.Storage) (bool, error) {
-	filename := fmt.Sprintf("%s.tfstate", envName)
-	version, err := storageDriver.Version(filename)
-	if err != nil {
-		return false, err
-	}
-	return version.IsZero() == false, nil
-}
-
-func (r Runner) generateRandomName(terraformModel models.Terraform) (string, error) {
-	client := terraform.NewClient(
+func (r Runner) buildEnvNameFromMigrated(req models.OutRequest, terraformModel models.Terraform, storageDriver storage.Storage) (string, error) {
+	tfClientWithoutWorkspace := terraform.NewClient(
 		terraformModel,
 		r.LogWriter,
 	)
-
-	if err := client.InitWithBackend(); err != nil {
-		return "", err
+	namer := MigratedFromStorageEnvNamer{
+		Req:             req,
+		StorageDriver:   storageDriver,
+		Namer:           r.Namer,
+		TerraformClient: tfClientWithoutWorkspace,
 	}
-
-	existingEnvs, err := client.WorkspaceList()
-	if err != nil {
-		return "", err
-	}
-
-	var envName string
-	for i := 0; i < NameClashRetries; i++ {
-		randomName := r.Namer.RandomName()
-		clash := false
-		for _, e := range existingEnvs {
-			if e == randomName {
-				clash = true
-				break
-			}
-		}
-		if clash == false {
-			envName = randomName
-			break
-		}
-	}
-	if len(envName) == 0 {
-		return "", fmt.Errorf("Failed to generate a non-clashing random name after %d attempts", NameClashRetries)
-	}
-
-	return envName, nil
+	return namer.EnvName()
 }
 
-// TODO: remove some duplication
-func (r Runner) generateRandomNameForMigratedFrom(terraformModel models.Terraform, storageDriver storage.Storage) (string, error) {
-	client := terraform.NewClient(
-		terraformModel,
-		r.LogWriter,
-	)
-
-	if err := client.InitWithBackend(); err != nil {
-		return "", err
+func (r Runner) buildTerraformModel(req models.OutRequest) (models.Terraform, error) {
+	terraformModel := req.Source.Terraform
+	if terraformModel.VarFiles != nil {
+		for i := range terraformModel.VarFiles {
+			terraformModel.VarFiles[i] = path.Join(r.SourceDir, terraformModel.VarFiles[i])
+		}
+	}
+	if err := terraformModel.ParseVarsFromFiles(); err != nil {
+		return models.Terraform{}, fmt.Errorf("Failed to parse `terraform.var_files`: %s", err)
+	}
+	if err := terraformModel.ParseImportsFromFile(); err != nil {
+		return models.Terraform{}, fmt.Errorf("Failed to parse `terraform.imports_file`: %s", err)
 	}
 
-	existingEnvs, err := client.WorkspaceList()
+	if len(terraformModel.Source) == 0 {
+		return models.Terraform{}, errors.New("Missing required field `terraform.source`")
+	}
+
+	terraformModel.Vars["build_id"] = os.Getenv("BUILD_ID")
+	terraformModel.Vars["build_name"] = os.Getenv("BUILD_NAME")
+	terraformModel.Vars["build_job_name"] = os.Getenv("BUILD_JOB_NAME")
+	terraformModel.Vars["build_pipeline_name"] = os.Getenv("BUILD_PIPELINE_NAME")
+	terraformModel.Vars["build_team_name"] = os.Getenv("BUILD_TEAM_NAME")
+	terraformModel.Vars["atc_external_url"] = os.Getenv("ATC_EXTERNAL_URL")
+
+	return terraformModel, nil
+}
+
+// TODO: duplication with in.go
+func (r Runner) buildMetadata(outputs map[string]string, client terraform.Client) ([]models.MetadataField, error) {
+	metadata := []models.MetadataField{}
+	for key, value := range outputs {
+		metadata = append(metadata, models.MetadataField{
+			Name:  key,
+			Value: value,
+		})
+	}
+
+	tfVersion, err := client.Version()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	var envName string
-	for i := 0; i < NameClashRetries; i++ {
-		randomName := r.Namer.RandomName()
-		clash := false
-		for _, e := range existingEnvs {
-			if e == randomName {
-				clash = true
-				break
-			}
-		}
-		if clash == false {
-			clash, err = doesEnvNameClash(randomName, storageDriver)
-			if err != nil {
-				return "", err
-			}
-		}
-		if clash == false {
-			envName = randomName
-			break
-		}
-	}
-	if len(envName) == 0 {
-		return "", fmt.Errorf("Failed to generate a non-clashing random name after %d attempts", NameClashRetries)
-	}
-
-	return envName, nil
+	return append(metadata, models.MetadataField{
+		Name:  "terraform_version",
+		Value: tfVersion,
+	}), nil
 }

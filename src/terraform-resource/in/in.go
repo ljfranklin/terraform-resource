@@ -224,6 +224,7 @@ func (r Runner) writeLegacyStateToFile(localStatefilePath string) error {
 	return ioutil.WriteFile(stateFilePath, stateContents, 0777)
 }
 
+// TODO: duplication with out.go
 func (r Runner) sanitizedOutput(result terraform.Result, client terraform.Client) ([]models.MetadataField, error) {
 	metadata := []models.MetadataField{}
 	for key, value := range result.SanitizedOutput() {
