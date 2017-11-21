@@ -57,13 +57,9 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		return models.InResponse{}, err
 	}
 
-	nameFilepath := path.Join(r.OutputDir, "name")
-	nameFile, err := os.Create(nameFilepath)
-	if err != nil {
-		return models.InResponse{}, fmt.Errorf("Failed to create name file at path '%s': %s", nameFilepath, err)
+	if err = r.writeNameToFile(req.Version.EnvName); err != nil {
+		return models.InResponse{}, err
 	}
-	defer nameFile.Close()
-	nameFile.WriteString(req.Version.EnvName)
 
 	return resp, nil
 }
@@ -98,34 +94,19 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 	if req.Params.OutputModule != "" {
 		terraformModel.OutputModule = req.Params.OutputModule
 	}
+	targetEnvName := req.Version.EnvName
 
 	client := terraform.NewClient(
 		terraformModel,
 		r.LogWriter,
 	)
 
-	targetEnvName := req.Version.EnvName
 	if err := client.InitWithBackend(); err != nil {
 		return models.InResponse{}, err
 	}
 
-	spaces, err := client.WorkspaceList()
-	if err != nil {
+	if err := r.ensureEnvExistsInBackend(targetEnvName, client); err != nil {
 		return models.InResponse{}, err
-	}
-	foundEnv := false
-	for _, space := range spaces {
-		if space == targetEnvName {
-			foundEnv = true
-		}
-	}
-	if !foundEnv {
-		return models.InResponse{}, EnvNotFoundError(fmt.Errorf(
-			"Workspace '%s' does not exist in backend."+
-				"\nIf you intended to run the `destroy` action, add `put.get_params.action: destroy`."+
-				"\nThis is a temporary requirement until Concourse supports a `delete` step.",
-			targetEnvName,
-		))
 	}
 
 	tfOutput, err := client.Output(targetEnvName)
@@ -136,46 +117,22 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 		Output: tfOutput,
 	}
 
-	outputFilepath := path.Join(r.OutputDir, "metadata")
-	outputFile, err := os.Create(outputFilepath)
-	if err != nil {
-		return models.InResponse{}, fmt.Errorf("Failed to create output file at path '%s': %s", outputFilepath, err)
-	}
-
-	if err = encoder.NewJSONEncoder(outputFile).Encode(result.RawOutput()); err != nil {
-		return models.InResponse{}, fmt.Errorf("Failed to write output file: %s", err)
-	}
-
-	metadata := []models.MetadataField{}
-	for key, value := range result.SanitizedOutput() {
-		metadata = append(metadata, models.MetadataField{
-			Name:  key,
-			Value: value,
-		})
-	}
-
-	tfVersion, err := client.Version()
-	if err != nil {
+	if err = r.writeRawOutputToFile(result); err != nil {
 		return models.InResponse{}, err
 	}
-	metadata = append(metadata, models.MetadataField{
-		Name:  "terraform_version",
-		Value: tfVersion,
-	})
 
 	if req.Params.OutputStatefile {
-		stateFilePath := path.Join(r.OutputDir, "terraform.tfstate")
-		stateContents, err := client.StatePull(targetEnvName)
-		if err != nil {
-			return models.InResponse{}, err
-		}
-		err = ioutil.WriteFile(stateFilePath, stateContents, 0777)
-		if err != nil {
+		if err = r.writeBackendStateToFile(targetEnvName, client); err != nil {
 			return models.InResponse{}, err
 		}
 	}
 
 	serial, err := r.getCurrentSerial(client, targetEnvName)
+	if err != nil {
+		return models.InResponse{}, err
+	}
+
+	metadata, err := r.sanitizedOutput(result, client)
 	if err != nil {
 		return models.InResponse{}, err
 	}
@@ -207,11 +164,97 @@ func (r Runner) getCurrentSerial(client terraform.Client, envName string) (strin
 	return strconv.Itoa(int(serial)), nil
 }
 
+func (r Runner) ensureEnvExistsInBackend(envName string, client terraform.Client) error {
+	spaces, err := client.WorkspaceList()
+	if err != nil {
+		return err
+	}
+	foundEnv := false
+	for _, space := range spaces {
+		if space == envName {
+			foundEnv = true
+		}
+	}
+	if !foundEnv {
+		return EnvNotFoundError(fmt.Errorf(
+			"Workspace '%s' does not exist in backend."+
+				"\nIf you intended to run the `destroy` action, add `put.get_params.action: destroy`."+
+				"\nThis is a temporary requirement until Concourse supports a `delete` step.",
+			envName,
+		))
+	}
+
+	return nil
+}
+
+func (r Runner) writeNameToFile(envName string) error {
+	nameFilepath := path.Join(r.OutputDir, "name")
+	return ioutil.WriteFile(nameFilepath, []byte(envName), 0644)
+}
+
+func (r Runner) writeRawOutputToFile(result terraform.Result) error {
+	outputFilepath := path.Join(r.OutputDir, "metadata")
+	outputFile, err := os.Create(outputFilepath)
+	if err != nil {
+		return fmt.Errorf("Failed to create output file at path '%s': %s", outputFilepath, err)
+	}
+
+	if err = encoder.NewJSONEncoder(outputFile).Encode(result.RawOutput()); err != nil {
+		return fmt.Errorf("Failed to write output file: %s", err)
+	}
+
+	return nil
+}
+
+func (r Runner) writeBackendStateToFile(envName string, client terraform.Client) error {
+	stateFilePath := path.Join(r.OutputDir, "terraform.tfstate")
+	stateContents, err := client.StatePull(envName)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(stateFilePath, stateContents, 0777)
+}
+
+func (r Runner) writeLegacyStateToFile(localStatefilePath string) error {
+	stateFilePath := path.Join(r.OutputDir, "terraform.tfstate")
+	stateContents, err := ioutil.ReadFile(localStatefilePath)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(stateFilePath, stateContents, 0777)
+}
+
+func (r Runner) sanitizedOutput(result terraform.Result, client terraform.Client) ([]models.MetadataField, error) {
+	metadata := []models.MetadataField{}
+	for key, value := range result.SanitizedOutput() {
+		metadata = append(metadata, models.MetadataField{
+			Name:  key,
+			Value: value,
+		})
+	}
+
+	tfVersion, err := client.Version()
+	if err != nil {
+		return nil, err
+	}
+	return append(metadata, models.MetadataField{
+		Name:  "terraform_version",
+		Value: tfVersion,
+	}), nil
+}
+
 func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models.InResponse, error) {
 	logger := logger.Logger{
 		Sink: r.LogWriter,
 	}
 	logger.Warn(fmt.Sprintf("%s\n", storage.DeprecationWarning))
+
+	if req.Version.IsPlan() {
+		resp := models.InResponse{
+			Version: req.Version,
+		}
+		return resp, nil
+	}
 
 	storageModel := req.Source.Storage
 	if err := storageModel.Validate(); err != nil {
@@ -219,25 +262,11 @@ func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models
 	}
 	storageDriver := storage.BuildDriver(storageModel)
 
+	// TODO: push down knowledge that statefile ends in `.tfstate`
 	stateFilename := fmt.Sprintf("%s.tfstate", req.Version.EnvName)
-	storageVersion, err := storageDriver.Version(stateFilename)
-	if err != nil {
-		return models.InResponse{}, fmt.Errorf("Failed to check for existing state file: %s", err)
-	}
-	if storageVersion.IsZero() {
-		if req.Version.IsPlan() {
-			resp := models.InResponse{
-				Version: req.Version,
-			}
-			return resp, nil
-		}
 
-		return models.InResponse{}, EnvNotFoundError(fmt.Errorf(
-			"State file does not exist with key '%s'."+
-				"\nIf you intended to run the `destroy` action, add `put.get_params.action: destroy`."+
-				"\nThis is a temporary requirement until Concourse supports a `delete` step.",
-			stateFilename,
-		))
+	if err := r.ensureEnvExistsInLegacyStorage(stateFilename, storageDriver); err != nil {
+		return models.InResponse{}, err
 	}
 
 	terraformModel := models.Terraform{
@@ -249,7 +278,7 @@ func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models
 		terraformModel.OutputModule = req.Params.OutputModule
 	}
 
-	if err = terraformModel.Validate(); err != nil {
+	if err := terraformModel.Validate(); err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
 	}
 
@@ -263,13 +292,13 @@ func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models
 		StorageDriver: storageDriver,
 	}
 
-	storageVersion, err = stateFile.Download()
+	storageVersion, err := stateFile.Download()
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to download state file from storage backend: %s", err)
 	}
 	version := models.NewVersionFromLegacyStorage(storageVersion)
 
-	if err := client.InitWithoutBackend(); err != nil {
+	if err = client.InitWithoutBackend(); err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to initialize terraform.\nError: %s", err)
 	}
 
@@ -281,43 +310,19 @@ func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models
 		Output: tfOutput,
 	}
 
-	outputFilepath := path.Join(r.OutputDir, "metadata")
-	outputFile, err := os.Create(outputFilepath)
-	if err != nil {
-		return models.InResponse{}, fmt.Errorf("Failed to create output file at path '%s': %s", outputFilepath, err)
-	}
-
-	if err = encoder.NewJSONEncoder(outputFile).Encode(result.RawOutput()); err != nil {
-		return models.InResponse{}, fmt.Errorf("Failed to write output file: %s", err)
-	}
-
-	metadata := []models.MetadataField{}
-	for key, value := range result.SanitizedOutput() {
-		metadata = append(metadata, models.MetadataField{
-			Name:  key,
-			Value: value,
-		})
-	}
-
-	tfVersion, err := client.Version()
-	if err != nil {
+	if err = r.writeRawOutputToFile(result); err != nil {
 		return models.InResponse{}, err
 	}
-	metadata = append(metadata, models.MetadataField{
-		Name:  "terraform_version",
-		Value: tfVersion,
-	})
 
 	if req.Params.OutputStatefile {
-		stateFilePath := path.Join(r.OutputDir, "terraform.tfstate")
-		stateContents, err := ioutil.ReadFile(terraformModel.StateFileLocalPath)
-		if err != nil {
+		if err = r.writeLegacyStateToFile(terraformModel.StateFileLocalPath); err != nil {
 			return models.InResponse{}, err
 		}
-		err = ioutil.WriteFile(stateFilePath, stateContents, 0777)
-		if err != nil {
-			return models.InResponse{}, err
-		}
+	}
+
+	metadata, err := r.sanitizedOutput(result, client)
+	if err != nil {
+		return models.InResponse{}, err
 	}
 
 	resp := models.InResponse{
@@ -326,4 +331,20 @@ func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models
 	}
 	return resp, nil
 
+}
+
+func (r Runner) ensureEnvExistsInLegacyStorage(stateFilename string, storageDriver storage.Storage) error {
+	storageVersion, err := storageDriver.Version(stateFilename)
+	if err != nil {
+		return fmt.Errorf("Failed to check for existing state file: %s", err)
+	}
+	if storageVersion.IsZero() {
+		return EnvNotFoundError(fmt.Errorf(
+			"State file does not exist with key '%s'."+
+				"\nIf you intended to run the `destroy` action, add `put.get_params.action: destroy`."+
+				"\nThis is a temporary requirement until Concourse supports a `delete` step.",
+			stateFilename,
+		))
+	}
+	return nil
 }
