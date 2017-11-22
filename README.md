@@ -7,11 +7,21 @@ See [DEVELOPMENT](DEVELOPMENT.md) if you're interested in submitting a PR :+1:
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/ljfranklin/terraform-resource.svg)
 
+## Backend Beta
+
+This Beta release of the terraform-resource adds support for build-in [Terraform backends](https://www.terraform.io/docs/backends/types/index.html).
+This gives more options for storing your Terraform statefiles such as Google Cloud Storage and Azure Storage in addition to S3.
+
+Some gotchas:
+
+- To enable Backend support, you must use the `ljfranklin/terraform-resource:beta-backend` image in your pipeline under `resource_types`.
+- Support for `plan_only` and `plan_run` is currently broken with backends as Terraform does not allow you to store plan files in the backend.
+  - Add a thumbs up on [this issue](https://github.com/hashicorp/terraform/issues/16061) if you'd like to see support added.
+- Please open an issue if you hit an error or if the docs are confusing to save some pain for the next person.
+
 ## Source Configuration
 
 > **Important!:** The `source.storage` field has been replaced by `source.backend_type` and `source.backend_config` to leverage the built-in Terraform backends. If you currently use `source.storage` in your pipeline, follow the instructions in the [Backend Migration](#backend-migration) section to ensure your state files are not lost.
-
-> **Note:** To enable Backend support, you must use the `ljfranklin/terraform-resource:beta-backend` image in your pipeline under `resource_types`.
 
 * `backend_type`: *Required.* The name of the [Terraform backend](https://www.terraform.io/docs/backends/types/index.html) the resource will use to store statefiles, e.g. `s3` or `consul`.
 
@@ -108,10 +118,6 @@ Finally, `env_name` is automatically passed as an input `var`.
 
 * `env`: *Optional.* A key-value collection of environment variables to pass to Terraform. See description under `source.env`.
 
-* `plan_only`: *Optional. Default `false`* This boolean will allow terraform to create a plan file and store it on S3. **Warning:** Plan files contain unencrypted credentials like AWS Secret Keys, only store these files in a private bucket.
-
-* `plan_run`: *Optional. Default `false`* This boolean will allow terraform to execute the plan file stored on S3, then delete it.
-
 * `import_files`: *Optional.* A list of files containing existing resources to [import](https://www.terraform.io/docs/import/usage.html) into the state file. The files can be in YAML or JSON format, containing key-value pairs like `aws_instance.bar: i-abcd1234`.
 
 * `action`: *Optional.* When set to `destroy`, the resource will run `terraform destroy` against the given statefile.
@@ -154,31 +160,6 @@ Finally, `env_name` is automatically passed as an input `var`.
       - put: locks
         params:
           remove: locks/
-```
-
-#### Plan and apply example
-
-```yaml
-- name: terraform-plan
-  plan:
-    - put: terraform
-      params:
-        env_name: staging
-        plan_only: true
-        vars:
-          subnet_cidr: 10.0.1.0/24
-
-- name: terraform-apply
-  plan:
-    - get: terraform
-      trigger: false
-      passed: [terraform-plan]
-    - put: terraform
-      params:
-        env_name: staging
-        plan_run: true
-        vars:
-          subnet_cidr: 10.0.1.0/24
 ```
 
 #### Metadata file
