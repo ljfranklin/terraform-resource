@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"terraform-resource/models"
@@ -35,6 +36,7 @@ type Client interface {
 	WorkspaceSelect(string) error
 	WorkspaceDelete(string) error
 	StatePull(string) ([]byte, error)
+	CurrentSerial(string) (string, error)
 }
 
 type client struct {
@@ -427,6 +429,25 @@ func (c client) StatePull(envName string) ([]byte, error) {
 	}
 
 	return rawOutput, nil
+}
+
+func (c client) CurrentSerial(envName string) (string, error) {
+	rawState, err := c.StatePull(envName)
+	if err != nil {
+		return "", err
+	}
+
+	tfState := map[string]interface{}{}
+	if err = json.Unmarshal(rawState, &tfState); err != nil {
+		return "", fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawState)
+	}
+
+	serial, ok := tfState["serial"].(float64)
+	if !ok {
+		return "", fmt.Errorf("Expected number value for 'serial' but got '%#v'", tfState["serial"])
+	}
+
+	return strconv.Itoa(int(serial)), nil
 }
 
 func (c client) resourceExists(tfID string, envName string) (bool, error) {

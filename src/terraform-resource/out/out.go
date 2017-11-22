@@ -101,7 +101,6 @@ func (r Runner) runWithBackend(req models.OutRequest, terraformModel models.Terr
 }
 
 func (r Runner) runWithLegacyStorage(req models.OutRequest, terraformModel models.Terraform) (models.OutResponse, error) {
-
 	logger := logger.Logger{
 		Sink: r.LogWriter,
 	}
@@ -192,7 +191,7 @@ func (r Runner) runWithMigratedFromStorage(req models.OutRequest, terraformModel
 	defer os.RemoveAll(tmpDir)
 
 	storageModel := req.Source.MigratedFromStorage
-	if err := storageModel.Validate(); err != nil {
+	if err = storageModel.Validate(); err != nil {
 		return models.OutResponse{}, fmt.Errorf("Failed to validate storage Model: %s", err)
 	}
 	storageDriver := storage.BuildDriver(storageModel)
@@ -227,7 +226,7 @@ func (r Runner) runWithMigratedFromStorage(req models.OutRequest, terraformModel
 		},
 	}
 
-	var result terraform.MigratedFromStorageResult
+	var result terraform.Result
 	var actionErr error
 
 	// TODO: handle plan
