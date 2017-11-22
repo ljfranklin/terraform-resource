@@ -1,9 +1,6 @@
 package workspaces
 
 import (
-	"encoding/json"
-	"fmt"
-	"strconv"
 	"terraform-resource/models"
 	"terraform-resource/terraform"
 )
@@ -32,23 +29,12 @@ func (w Workspaces) LatestVersionForEnv(envName string) (models.Version, error) 
 		return models.Version{}, nil
 	}
 
-	rawState, err := w.client.StatePull(envName)
+	serial, err := w.client.CurrentSerial(envName)
 	if err != nil {
 		return models.Version{}, err
 	}
 
-	// TODO: read this into a struct
-	tfState := map[string]interface{}{}
-	if err = json.Unmarshal(rawState, &tfState); err != nil {
-		return models.Version{}, fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawState)
-	}
-
-	serial, ok := tfState["serial"].(float64)
-	if !ok {
-		return models.Version{}, fmt.Errorf("Expected number value for 'serial' but got '%#v'", tfState["serial"])
-	}
-
-	return models.Version{EnvName: envName, Serial: strconv.Itoa(int(serial))}, nil
+	return models.Version{EnvName: envName, Serial: serial}, nil
 }
 
 func (w Workspaces) spaceExists(envName string) (bool, error) {

@@ -81,7 +81,6 @@ func (r Runner) runWithBackend(req models.OutRequest, terraformModel models.Terr
 		return models.OutResponse{}, actionErr
 	}
 
-	// TODO: could this be fixed in custom marshal method?
 	version := result.Version
 	if req.Params.PlanOnly {
 		version.PlanOnly = "true" // Concourse demands version fields are strings
@@ -321,7 +320,6 @@ func (r Runner) buildTerraformModel(req models.OutRequest) (models.Terraform, er
 	return terraformModel, nil
 }
 
-// TODO: duplication with in.go
 func (r Runner) buildMetadata(outputs map[string]string, client terraform.Client) ([]models.MetadataField, error) {
 	metadata := []models.MetadataField{}
 	for key, value := range outputs {

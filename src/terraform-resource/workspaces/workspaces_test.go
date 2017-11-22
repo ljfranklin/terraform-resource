@@ -35,7 +35,7 @@ var _ = Describe("Workspaces", func() {
 			BeforeEach(func() {
 				fakeTerraform = &terraformfakes.FakeClient{}
 				fakeTerraform.WorkspaceListReturns([]string{"some-env"}, nil)
-				fakeTerraform.StatePullReturns([]byte(`{"serial": 7}`), nil)
+				fakeTerraform.CurrentSerialReturns("7", nil)
 			})
 
 			It("returns a Version with the given serial number", func() {
@@ -75,11 +75,11 @@ var _ = Describe("Workspaces", func() {
 			})
 		})
 
-		Context("when pulling state returns an error", func() {
+		Context("when fetching serial returns an error", func() {
 			BeforeEach(func() {
 				fakeTerraform = &terraformfakes.FakeClient{}
 				fakeTerraform.WorkspaceListReturns([]string{"some-env"}, nil)
-				fakeTerraform.StatePullReturns(nil, errors.New("some-error"))
+				fakeTerraform.CurrentSerialReturns("", errors.New("some-error"))
 			})
 
 			It("returns the error", func() {
@@ -87,22 +87,6 @@ var _ = Describe("Workspaces", func() {
 
 				_, err := spaces.LatestVersionForEnv("some-env")
 				Expect(err).To(MatchError("some-error"))
-			})
-		})
-
-		Context("when the serial number is not valid", func() {
-			BeforeEach(func() {
-				fakeTerraform = &terraformfakes.FakeClient{}
-				fakeTerraform.WorkspaceListReturns([]string{"some-env"}, nil)
-				fakeTerraform.StatePullReturns([]byte(`{"serial": "nan"}`), nil)
-			})
-
-			It("returns the error", func() {
-				spaces := workspaces.New(fakeTerraform)
-
-				_, err := spaces.LatestVersionForEnv("some-env")
-				Expect(err).ToNot(BeNil())
-				Expect(err.Error()).To(ContainSubstring("nan"))
 			})
 		})
 	})

@@ -1,13 +1,11 @@
 package in
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
-	"strconv"
 
 	"terraform-resource/encoder"
 	"terraform-resource/logger"
@@ -127,7 +125,7 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 		}
 	}
 
-	serial, err := r.getCurrentSerial(client, targetEnvName)
+	serial, err := client.CurrentSerial(targetEnvName)
 	if err != nil {
 		return models.InResponse{}, err
 	}
@@ -142,26 +140,6 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 		Metadata: metadata,
 	}
 	return resp, nil
-}
-
-// TODO: extract this somewhere
-func (r Runner) getCurrentSerial(client terraform.Client, envName string) (string, error) {
-	rawState, err := client.StatePull(envName)
-	if err != nil {
-		return "", err
-	}
-
-	tfState := map[string]interface{}{}
-	if err = json.Unmarshal(rawState, &tfState); err != nil {
-		return "", fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawState)
-	}
-
-	serial, ok := tfState["serial"].(float64)
-	if !ok {
-		return "", fmt.Errorf("Expected number value for 'serial' but got '%#v'", tfState["serial"])
-	}
-
-	return strconv.Itoa(int(serial)), nil
 }
 
 func (r Runner) ensureEnvExistsInBackend(envName string, client terraform.Client) error {
@@ -224,7 +202,6 @@ func (r Runner) writeLegacyStateToFile(localStatefilePath string) error {
 	return ioutil.WriteFile(stateFilePath, stateContents, 0777)
 }
 
-// TODO: duplication with out.go
 func (r Runner) sanitizedOutput(result terraform.Result, client terraform.Client) ([]models.MetadataField, error) {
 	metadata := []models.MetadataField{}
 	for key, value := range result.SanitizedOutput() {
@@ -263,7 +240,6 @@ func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models
 	}
 	storageDriver := storage.BuildDriver(storageModel)
 
-	// TODO: push down knowledge that statefile ends in `.tfstate`
 	stateFilename := fmt.Sprintf("%s.tfstate", req.Version.EnvName)
 
 	if err := r.ensureEnvExistsInLegacyStorage(stateFilename, storageDriver); err != nil {
