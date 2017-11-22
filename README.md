@@ -11,6 +11,8 @@ See [DEVELOPMENT](DEVELOPMENT.md) if you're interested in submitting a PR :+1:
 
 > **Important!:** The `source.storage` field has been replaced by `source.backend_type` and `source.backend_config` to leverage the built-in Terraform backends. If you currently use `source.storage` in your pipeline, follow the instructions in the [Backend Migration](#backend-migration) section to ensure your state files are not lost.
 
+> **Note:** To enable Backend support, you must use the `ljfranklin/terraform-resource:beta-backend` image in your pipeline under `resource_types`.
+
 * `backend_type`: *Required.* The name of the [Terraform backend](https://www.terraform.io/docs/backends/types/index.html) the resource will use to store statefiles, e.g. `s3` or `consul`.
 
   > **Note:** Only a [subset of the backends](https://www.terraform.io/docs/state/workspaces.html) support the multiple workspace feature this resource requires.
@@ -38,6 +40,7 @@ resource_types:
   type: docker-image
   source:
     repository: ljfranklin/terraform-resource
+    tag: beta-backend
 
 resources:
   - name: terraform
@@ -60,7 +63,8 @@ resources:
 
 #### Image Variants
 
-- Latest tagged release of Terraform: `ljfranklin/terraform-resource:latest`.
+- Beta of resource with Backend support: `ljfranklin/terraform-resource:beta-backend`.
+- Latest stable release of resource: `ljfranklin/terraform-resource:latest`.
 - Specific versions of Terraform, e.g. `ljfranklin/terraform-resource:0.7.7`.
 - [RC builds](https://concourse.lylefranklin.com/teams/main/pipelines/terraform-resource-rc) from Terraform pre-releases: `ljfranklin/terraform-resource:rc`.
 - [Nightly builds](https://concourse.lylefranklin.com/teams/main/pipelines/terraform-resource-nightly) from Terraform `master` branch: `ljfranklin/terraform-resource:nightly`.
