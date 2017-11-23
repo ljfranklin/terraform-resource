@@ -78,6 +78,7 @@ func (a *MigratedFromStorageAction) attemptApply() (Result, error) {
 		}
 	}
 
+	// make sure that legacy state file is deleted immediately after new workspace is created
 	if legacyStateFileExists {
 		migratedStateFile := a.StateFile.ConvertToMigrated()
 		if _, err = migratedStateFile.Upload(); err != nil {
