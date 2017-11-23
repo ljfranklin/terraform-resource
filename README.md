@@ -29,7 +29,7 @@ Some gotchas:
 
 * `backend_config`: *Required.* A map of key-value configuration options specific to your choosen backend, e.g. [S3 options](https://www.terraform.io/docs/backends/types/s3.html#configuration-variables).
 
-* `env_name`: *Optional.* Name of the environment to manage, e.g. `staging`. TODO: add explaination about single vs multi-env modes.
+* `env_name`: *Optional.* Name of the environment to manage, e.g. `staging`. See [Single vs Pool](#managing-a-single-environment-vs-a-pool-of-environments) section below.
 
 * `delete_on_failure`: *Optional. Default `false`.* If true, the resource will run `terraform destroy` if `terraform apply` returns an error.
 
@@ -56,6 +56,7 @@ resources:
   - name: terraform
     type: terraform
     source:
+      env_name: staging
       backend_type: s3
       backend_config:
         bucket: mybucket
@@ -69,7 +70,6 @@ resources:
         AWS_ACCESS_KEY_ID: {{environment_access_key}}
         AWS_SECRET_ACCESS_KEY: {{environment_secret_key}}
 ```
-
 
 #### Image Variants
 
@@ -103,7 +103,7 @@ For example: if your `.tf` files are stored in a git repo called `prod-config` u
 
 * `env_name`: *Optional.* The name of the environment to create or modify. Multiple environments can be managed with a single resource.
 
-* `generate_random_name`: *Optional. Default `false`* Generates a random `env_name` (e.g. "coffee-bee"). Useful for creating lock files.
+* `generate_random_name`: *Optional. Default `false`* Generates a random `env_name` (e.g. "coffee-bee"). See [Single vs Pool](#managing-a-single-environment-vs-a-pool-of-environments) section below.
 
 * `env_name_file`: *Optional.* Reads the `env_name` from a specified file path. Useful for destroying environments from a lock file.
 
@@ -127,42 +127,6 @@ Finally, `env_name` is automatically passed as an input `var`.
 * `plugin_dir`: *Optional.* The relative path of the directory containing any third-party terraform plugins you wish to install. See [https://www.terraform.io/docs/configuration/providers.html#third-party-plugins](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) for more information. NOTE: the terraform CLI *will not* fetch plugins automatically if this is flag is provided. Therefore you must ensure that all required plugins are placed in this directory if you use this flag, whether they are third-party or not. The standard Hashicorp plugins can be found at https://releases.hashicorp.com/.
 
 #### Put Example
-
-```yaml
-  - name: create-env-and-lock
-    plan:
-      # apply the terraform template with a random env_name
-      - put: terraform
-        params:
-          generate_random_name: true
-          delete_on_failure: true
-          vars:
-            subnet_cidr: 10.0.1.0/24
-      # create a new pool-resource lock containing the terraform output
-      - put: locks
-        params:
-          add: terraform/
-
-  - name: destroy-env-and-lock
-    plan:
-      # acquire a lock
-      - put: locks
-        params:
-          acquire: true
-      # destroy the IaaS resources
-      - put: terraform
-        params:
-          env_name_file: locks/name
-          action: destroy
-        get_params:
-          action: destroy
-      # destroy the lock
-      - put: locks
-        params:
-          remove: locks/
-```
-
-#### Metadata file
 
 Every `put` action creates `name` and `metadata` files as an output containing the `env_name` and [Terraform Outputs](https://www.terraform.io/intro/getting-started/outputs.html) in JSON format.
 
@@ -191,6 +155,68 @@ The preceding job would show a file similar to the following:
 ```
 name: e2e
 metadata: { "vpc_id": "vpc-123456", "vpc_tag_name": "concourse" }
+```
+
+## Managing a single environment vs a pool of environments
+
+This resource can be used to manage a single environment or a pool of many environments.
+
+#### Single Environment
+
+To use this resource to manage a single environment, set `source.env_name` or `put.params.env_name` to a fixed name like `staging` or `production` as shown in the previous `put` example.
+Each `put` will update the IaaS resources and state file for that environment.
+
+#### Pool of Environments
+
+To manage a pool of many environments, you can use this resource in combination with the [pool-resource](https://github.com/concourse/pool-resource).
+This allows you to create a pool of identical environments that can be claimed and released by CI jobs and humans.
+Setting `put.params.generate_random_name: true` will create a random, unique `env_name` like "coffee-bee" for each environment, and
+the pool-resource will persist the name and metadata for these environments in a private `git` repo.
+
+```yaml
+  - name: create-env-and-lock
+    plan:
+      # apply the terraform template with a random env_name
+      - put: terraform
+        params:
+          generate_random_name: true
+          delete_on_failure: true
+          vars:
+            subnet_cidr: 10.0.1.0/24
+      # create a new pool-resource lock containing the terraform output
+      - put: locks
+        params:
+          add: terraform/
+
+  - name: claim-env-and-test
+    plan:
+      # claim a random env lock
+      - put: locks
+        params:
+          acquire: true
+      # the locks dir will contain `name` and `metadata` files described above
+      - task: run-tests-against-env
+        file: test.yml
+        input_mapping:
+          env: locks/
+
+  - name: destroy-env-and-lock
+    plan:
+      # acquire a lock
+      - put: locks
+        params:
+          acquire: true
+      # destroy the IaaS resources
+      - put: terraform
+        params:
+          env_name_file: locks/name
+          action: destroy
+        get_params:
+          action: destroy
+      # destroy the lock
+      - put: locks
+        params:
+          remove: locks/
 ```
 
 ## Backend Migration
