@@ -118,7 +118,6 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 	Context("when both Backend and Legacy Storage contains state files", func() {
 		BeforeEach(func() {
-			// TODO: can we need current and previous fixtures?
 			backendFixture, err := os.Open(helpers.FileLocation("fixtures/s3-backend/terraform-current.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
 			defer backendFixture.Close()
@@ -228,7 +227,6 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 	Context("when only Backend contains state files", func() {
 		BeforeEach(func() {
-			// TODO: can we need current and previous fixtures?
 			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3-backend/terraform-current.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
 			defer currFixture.Close()
@@ -312,7 +310,6 @@ var _ = Describe("Check with Migrated From Storage", func() {
 
 	Context("when only Legacy Storage contains state files", func() {
 		BeforeEach(func() {
-			// TODO: can we need current and previous fixtures?
 			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3-storage/terraform-current.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
 			defer currFixture.Close()
