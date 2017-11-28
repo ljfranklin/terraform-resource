@@ -123,11 +123,11 @@ func (c Client) Output() (map[string]map[string]interface{}, error) {
 
 	outputCmd := c.terraformCmd(outputArgs)
 
-	rawOutput, err := outputCmd.CombinedOutput()
+	rawOutput, err := outputCmd.Output()
 	if err != nil {
 		// TF CLI currently doesn't provide a nice way to detect an empty set of outputs
 		// https://github.com/hashicorp/terraform/issues/11696
-		if strings.Contains(string(rawOutput), "no outputs defined") {
+		if exitErr, ok := err.(*exec.ExitError); ok && strings.Contains(string(exitErr.Stderr), "no outputs defined") {
 			rawOutput = []byte("{}")
 		} else {
 			return nil, fmt.Errorf("Failed to retrieve output.\nError: %s\nOutput: %s", err, rawOutput)
@@ -146,7 +146,7 @@ func (c Client) Version() (string, error) {
 	outputCmd := c.terraformCmd([]string{
 		"-v",
 	})
-	output, err := outputCmd.CombinedOutput()
+	output, err := outputCmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("Failed to retrieve version.\nError: %s\nOutput: %s", err, output)
 	}
@@ -205,7 +205,7 @@ func (c Client) resourceExists(tfID string) (bool, error) {
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 		tfID,
 	})
-	rawOutput, err := cmd.CombinedOutput()
+	rawOutput, err := cmd.Output()
 	if err != nil {
 		return false, fmt.Errorf("Error: %s, Output: %s", err, rawOutput)
 	}
