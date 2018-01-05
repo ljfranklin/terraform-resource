@@ -17,6 +17,8 @@ Some gotchas:
 - To enable Backend support, you must use the `ljfranklin/terraform-resource:beta-backend` image in your pipeline under `resource_types`.
 - Support for `plan_only` and `plan_run` is currently broken with backends as Terraform does not allow you to store plan files in the backend.
   - Add a thumbs up on [this issue](https://github.com/hashicorp/terraform/issues/16061) if you'd like to see support added.
+- Drops support for feeding Terraform outputs back in as input `vars` to subsequent `puts`.
+  - This "feature" causes suprising errors if inputs and outputs have the same name but different types and the implementation was significantly more complicated with the new `migrated_from_storage` flow.
 - Please open an issue if you hit an error or if the docs are confusing to save some pain for the next person.
 
 ## Source Configuration
@@ -69,6 +71,23 @@ resources:
       env:
         AWS_ACCESS_KEY_ID: {{environment_access_key}}
         AWS_SECRET_ACCESS_KEY: {{environment_secret_key}}
+```
+
+The above example uses AWS S3 to store the Terraform state files.
+Terraform supports many other [state file backends](https://www.terraform.io/docs/backends/types/index.html), for example [Google Cloud Storage (GCS)](https://www.terraform.io/docs/backends/types/gcs.html):
+
+```yaml
+resources:
+  - name: terraform
+    type: terraform
+    source:
+      backend_type: gcs
+      backend_config:
+        bucket: mybucket
+        prefix: mydir
+        region: us-central1
+        credentials: {{gcp_credentials_json}}
+      ...
 ```
 
 #### Image Variants
