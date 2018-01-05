@@ -9,6 +9,8 @@ See [DEVELOPMENT](DEVELOPMENT.md) if you're interested in submitting a PR :+1:
 
 ## Source Configuration
 
+> **Note:** If you need to store Terraform state file in a service other than S3, try the [backend-beta image](https://github.com/ljfranklin/terraform-resource/tree/WIP-tf-backends#backend-beta).
+
 * `storage.driver`: *Optional. Default `s3`.* The driver used to store the Terraform state file. Currently `s3` is the only supported driver.
 
 * `storage.bucket`: *Required.* The S3 bucket used to store the state files.
