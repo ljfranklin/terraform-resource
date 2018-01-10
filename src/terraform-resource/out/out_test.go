@@ -700,7 +700,10 @@ var _ = Describe("Out", func() {
 	It("logs TF_LOG output to STDERR", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Storage: storageModel,
+				Terraform: models.Terraform{
+					BackendType:   backendType,
+					BackendConfig: backendConfig,
+				},
 			},
 			Params: models.OutParams{
 				EnvName: envName,
