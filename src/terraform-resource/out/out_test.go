@@ -697,6 +697,37 @@ var _ = Describe("Out", func() {
 		awsVerifier.ExpectS3ServerSideEncryption(bucket, stateFilePath, "aws:kms", kmsKeyID)
 	})
 
+	It("logs TF_LOG output to STDERR", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+					Env: map[string]string{
+						"TF_LOG": "TRACE",
+					},
+				},
+			},
+		}
+		expectedMetadata := map[string]string{
+			"env_name":    envName,
+			"content_md5": calculateMD5("terraform-is-neat"),
+		}
+
+		assertOutBehavior(req, expectedMetadata)
+	})
+
 	Context("when bucket contains a state file", func() {
 		BeforeEach(func() {
 			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3-storage/terraform-current.tfstate"))
