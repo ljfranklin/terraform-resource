@@ -338,7 +338,7 @@ func (c client) WorkspaceList() ([]string, error) {
 		"workspace",
 		"list",
 	}, nil)
-	rawOutput, err := cmd.CombinedOutput()
+	rawOutput, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("Error: %s, Output: %s", err, rawOutput)
 	}
