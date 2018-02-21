@@ -234,21 +234,14 @@ func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models
 		return resp, nil
 	}
 
-	storageModel := req.Source.Storage
-	if err := storageModel.Validate(); err != nil {
-		return models.InResponse{}, fmt.Errorf("Failed to validate storage Model: %s", err)
-	}
-	storageDriver := storage.BuildDriver(storageModel)
-
-	stateFilename := fmt.Sprintf("%s.tfstate", req.Version.EnvName)
-
-	if err := r.ensureEnvExistsInLegacyStorage(stateFilename, storageDriver); err != nil {
+	stateFile, err := r.stateFileFromLegacyStorage(req, tmpDir)
+	if err != nil {
 		return models.InResponse{}, err
 	}
 
 	terraformModel := models.Terraform{
-		StateFileLocalPath:  path.Join(tmpDir, "terraform.tfstate"),
-		StateFileRemotePath: stateFilename,
+		StateFileLocalPath:  stateFile.LocalPath,
+		StateFileRemotePath: stateFile.RemotePath,
 	}
 
 	if req.Params.OutputModule != "" {
@@ -263,11 +256,6 @@ func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models
 		terraformModel,
 		r.LogWriter,
 	)
-	stateFile := storage.StateFile{
-		LocalPath:     terraformModel.StateFileLocalPath,
-		RemotePath:    terraformModel.StateFileRemotePath,
-		StorageDriver: storageDriver,
-	}
 
 	storageVersion, err := stateFile.Download()
 	if err != nil {
@@ -310,18 +298,38 @@ func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models
 
 }
 
-func (r Runner) ensureEnvExistsInLegacyStorage(stateFilename string, storageDriver storage.Storage) error {
-	storageVersion, err := storageDriver.Version(stateFilename)
-	if err != nil {
-		return fmt.Errorf("Failed to check for existing state file: %s", err)
+func (r Runner) stateFileFromLegacyStorage(req models.InRequest, tmpDir string) (storage.StateFile, error) {
+	storageModel := req.Source.Storage
+	if err := storageModel.Validate(); err != nil {
+		return storage.StateFile{}, fmt.Errorf("Failed to validate storage Model: %s", err)
 	}
-	if storageVersion.IsZero() {
-		return EnvNotFoundError(fmt.Errorf(
+	storageDriver := storage.BuildDriver(storageModel)
+
+	stateFile := storage.StateFile{
+		LocalPath:     path.Join(tmpDir, "terraform.tfstate"),
+		RemotePath:    fmt.Sprintf("%s.tfstate", req.Version.EnvName),
+		StorageDriver: storageDriver,
+	}
+
+	existsAsTainted, err := stateFile.ExistsAsTainted()
+	if err != nil {
+		return storage.StateFile{}, fmt.Errorf("Failed to check for tainted state file: %s", err)
+	}
+	if existsAsTainted {
+		stateFile = stateFile.ConvertToTainted()
+	}
+
+	exists, err := stateFile.Exists()
+	if err != nil {
+		return storage.StateFile{}, fmt.Errorf("Failed to check for existing state file: %s", err)
+	}
+	if !exists {
+		return storage.StateFile{}, EnvNotFoundError(fmt.Errorf(
 			"State file does not exist with key '%s'."+
 				"\nIf you intended to run the `destroy` action, add `put.get_params.action: destroy`."+
 				"\nThis is a temporary requirement until Concourse supports a `delete` step.",
-			stateFilename,
+			stateFile.RemotePath,
 		))
 	}
-	return nil
+	return stateFile, nil
 }
