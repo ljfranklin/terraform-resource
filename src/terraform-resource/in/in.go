@@ -40,12 +40,24 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	}
 	storageDriver := storage.BuildDriver(storageModel)
 
-	stateFilename := fmt.Sprintf("%s.tfstate", req.Version.EnvName)
-	storageVersion, err := storageDriver.Version(stateFilename)
+	stateFile := terraform.StateFile{
+		LocalPath:     path.Join(tmpDir, "terraform.tfstate"),
+		RemotePath:    fmt.Sprintf("%s.tfstate", req.Version.EnvName),
+		StorageDriver: storageDriver,
+	}
+	existsAsTainted, err := stateFile.ExistsAsTainted()
+	if err != nil {
+		return models.InResponse{}, fmt.Errorf("Failed to check for tainted state file: %s", err)
+	}
+	if existsAsTainted {
+		stateFile = stateFile.ConvertToTainted()
+	}
+
+	stateFileExists, err := stateFile.Exists()
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to check for existing state file: %s", err)
 	}
-	if storageVersion.IsZero() {
+	if !stateFileExists {
 		if req.Version.IsPlan() {
 			resp := models.InResponse{
 				Version: req.Version,
@@ -57,13 +69,13 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 			"State file does not exist with key '%s'."+
 				"\nIf you intended to run the `destroy` action, add `put.get_params.action: destroy`."+
 				"\nThis is a temporary requirement until Concourse supports a `delete` step.",
-			stateFilename,
+			stateFile.RemotePath,
 		)
 	}
 
 	terraformModel := models.Terraform{
-		StateFileLocalPath:  path.Join(tmpDir, "terraform.tfstate"),
-		StateFileRemotePath: stateFilename,
+		StateFileLocalPath:  stateFile.LocalPath,
+		StateFileRemotePath: stateFile.RemotePath,
 	}
 
 	if req.Params.OutputModule != "" {
@@ -78,13 +90,8 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		Model:         terraformModel,
 		StorageDriver: storageDriver,
 	}
-	stateFile := terraform.StateFile{
-		LocalPath:     terraformModel.StateFileLocalPath,
-		RemotePath:    terraformModel.StateFileRemotePath,
-		StorageDriver: storageDriver,
-	}
 
-	storageVersion, err = stateFile.Download()
+	storageVersion, err := stateFile.Download()
 	if err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to download state file from storage backend: %s", err)
 	}

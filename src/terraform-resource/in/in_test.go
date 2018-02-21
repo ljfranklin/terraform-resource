@@ -23,6 +23,7 @@ var _ = Describe("In", func() {
 		awsVerifier            *helpers.AWSVerifier
 		inReq                  models.InRequest
 		bucket                 string
+		bucketPath             string
 		prevEnvName            string
 		currEnvName            string
 		modulesEnvName         string
@@ -42,7 +43,7 @@ var _ = Describe("In", func() {
 		bucket = os.Getenv("AWS_BUCKET")
 		Expect(bucket).ToNot(BeEmpty(), "AWS_BUCKET must be set")
 
-		bucketPath := os.Getenv("AWS_BUCKET_SUBFOLDER")
+		bucketPath = os.Getenv("AWS_BUCKET_SUBFOLDER")
 		Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_SUBFOLDER must be set")
 
 		region := os.Getenv("AWS_REGION") // optional
@@ -239,6 +240,66 @@ var _ = Describe("In", func() {
 			nameContents, err := ioutil.ReadFile(expectedNamePath)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(nameContents)).To(Equal(modulesEnvName))
+		})
+	})
+
+	Context("when state file exists as tainted on S3", func() {
+		var (
+			pathToTaintedS3Fixture string
+		)
+
+		BeforeEach(func() {
+			pathToTaintedS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate.tainted", currEnvName))
+			fixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-current.tfstate"))
+			Expect(err).ToNot(HaveOccurred())
+			defer fixture.Close()
+			awsVerifier.UploadObjectToS3(bucket, pathToTaintedS3Fixture, fixture)
+		})
+
+		AfterEach(func() {
+			awsVerifier.DeleteObjectFromS3(bucket, pathToTaintedS3Fixture)
+		})
+
+		It("fetches the state file matching the provided version", func() {
+			inReq.Version = models.Version{
+				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToTaintedS3Fixture),
+				EnvName:      currEnvName,
+			}
+
+			runner := in.Runner{
+				OutputDir: tmpDir,
+			}
+			resp, err := runner.Run(inReq)
+			Expect(err).ToNot(HaveOccurred())
+
+			_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(resp.Version.EnvName).To(Equal(currEnvName))
+
+			metadata := map[string]string{}
+			for _, field := range resp.Metadata {
+				metadata[field.Name] = field.Value
+			}
+			Expect(metadata["env_name"]).To(Equal("current"))
+
+			expectedOutputPath := path.Join(tmpDir, "metadata")
+			Expect(expectedOutputPath).To(BeAnExistingFile())
+			outputFile, err := os.Open(expectedOutputPath)
+			Expect(err).ToNot(HaveOccurred())
+			defer outputFile.Close()
+
+			outputContents := map[string]interface{}{}
+			err = json.NewDecoder(outputFile).Decode(&outputContents)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(outputContents["env_name"]).To(Equal("current"))
+
+			expectedNamePath := path.Join(tmpDir, "name")
+			Expect(expectedNamePath).To(BeAnExistingFile())
+			nameContents, err := ioutil.ReadFile(expectedNamePath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(string(nameContents)).To(Equal(currEnvName))
 		})
 	})
 
