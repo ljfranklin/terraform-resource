@@ -85,6 +85,8 @@ var _ = Describe("Out", func() {
 		pathToS3Fixture = path.Join(workspacePath, fixtureEnvName, "terraform.tfstate")
 
 		namer = namerfakes.FakeNamer{}
+
+		logWriter = bytes.Buffer{}
 	})
 
 	AfterEach(func() {

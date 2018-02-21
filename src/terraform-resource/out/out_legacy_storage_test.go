@@ -79,6 +79,8 @@ var _ = Describe("Out - Legacy Storage", func() {
 		pathToS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", fixtureEnvName))
 
 		namer = namerfakes.FakeNamer{}
+
+		logWriter = bytes.Buffer{}
 	})
 
 	AfterEach(func() {

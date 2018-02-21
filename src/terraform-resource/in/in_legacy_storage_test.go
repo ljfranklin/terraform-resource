@@ -84,6 +84,8 @@ var _ = Describe("In with legacy storage", func() {
 
 		err = os.Chdir(tmpDir)
 		Expect(err).ToNot(HaveOccurred())
+
+		logWriter = bytes.Buffer{}
 	})
 
 	AfterEach(func() {

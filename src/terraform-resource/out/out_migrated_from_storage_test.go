@@ -88,6 +88,8 @@ var _ = Describe("Out - Migrated From Storage", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		namer = namerfakes.FakeNamer{}
+
+		logWriter = bytes.Buffer{}
 	})
 
 	AfterEach(func() {

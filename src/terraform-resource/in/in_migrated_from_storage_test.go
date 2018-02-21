@@ -92,6 +92,8 @@ var _ = Describe("In with migrated from storage", func() {
 
 		err = os.Chdir(tmpDir)
 		Expect(err).ToNot(HaveOccurred())
+
+		logWriter = bytes.Buffer{}
 	})
 
 	AfterEach(func() {
