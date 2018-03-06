@@ -217,10 +217,8 @@ func (c Client) resourceExists(tfID string) (bool, error) {
 func (c Client) terraformCmd(args []string) *exec.Cmd {
 	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
 
-	cmd.Env = []string{
-		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
-		"CHECKPOINT_DISABLE=1",
-	}
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "CHECKPOINT_DISABLE=1")
 	for key, value := range c.Model.Env {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
 	}
