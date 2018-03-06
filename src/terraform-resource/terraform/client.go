@@ -491,10 +491,8 @@ func (c client) terraformCmd(args []string, env []string) *exec.Cmd {
 	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
 
 	cmd.Dir = c.model.Source
-	cmd.Env = []string{
-		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
-		"CHECKPOINT_DISABLE=1",
-	}
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "CHECKPOINT_DISABLE=1")
 	for _, e := range env {
 		cmd.Env = append(cmd.Env, e)
 	}
