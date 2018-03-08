@@ -3,6 +3,8 @@ package terraform
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"terraform-resource/logger"
 	"terraform-resource/models"
@@ -13,6 +15,7 @@ type Action struct {
 	Logger          logger.Logger
 	EnvName         string
 	DeleteOnFailure bool
+	SourceDir       string
 }
 
 type Result struct {
@@ -44,6 +47,18 @@ func (r Result) SanitizedOutput() map[string]string {
 		}
 	}
 	return output
+}
+
+func LinkToThirdPartyPluginDir(sourceDir string) error {
+	possiblePluginDir := filepath.Join(sourceDir, "terraform.d")
+	if _, err := os.Stat(possiblePluginDir); err == nil {
+		err = os.Symlink(possiblePluginDir, "terraform.d")
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (a *Action) Apply() (Result, error) {
@@ -151,6 +166,9 @@ func (a *Action) attemptDestroy() (Result, error) {
 }
 
 func (a *Action) setup() error {
+	if err := LinkToThirdPartyPluginDir(a.SourceDir); err != nil {
+		return err
+	}
 	if err := a.Client.InitWithBackend(); err != nil {
 		return err
 	}

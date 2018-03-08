@@ -13,6 +13,7 @@ type MigratedFromStorageAction struct {
 	EnvName         string
 	DeleteOnFailure bool
 	StateFile       storage.StateFile
+	SourceDir       string
 }
 
 func (a *MigratedFromStorageAction) Apply() (Result, error) {
@@ -191,6 +192,10 @@ func (a *MigratedFromStorageAction) attemptDestroy() (Result, error) {
 }
 
 func (a *MigratedFromStorageAction) setup() error {
+	if err := LinkToThirdPartyPluginDir(a.SourceDir); err != nil {
+		return err
+	}
+
 	if err := a.Client.InitWithBackend(); err != nil {
 		return err
 	}

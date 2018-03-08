@@ -15,6 +15,7 @@ type LegacyStorageAction struct {
 	StateFile       storage.StateFile
 	Logger          logger.Logger
 	DeleteOnFailure bool
+	SourceDir       string
 }
 
 type LegacyStorageResult struct {
@@ -247,6 +248,10 @@ func (a *LegacyStorageAction) setup() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if err := LinkToThirdPartyPluginDir(a.SourceDir); err != nil {
+		return err
 	}
 
 	if err := a.Client.InitWithoutBackend(); err != nil {
