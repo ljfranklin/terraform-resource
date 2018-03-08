@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"terraform-resource/logger"
 	"terraform-resource/models"
@@ -259,9 +261,25 @@ func (a *Action) setup() error {
 		a.Client.Model = models.Terraform{Vars: previousResult.RawOutput()}.Merge(a.Client.Model)
 	}
 
+	err = a.linkToThirdPartyPluginDir()
+	if err != nil {
+		return err
+	}
+
 	err = a.Client.Import()
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+func (a *Action) linkToThirdPartyPluginDir() error {
+	possiblePluginDir := filepath.Join(a.Client.Model.Source, "terraform.d")
+	if _, err := os.Stat(possiblePluginDir); err == nil {
+		err = os.Symlink(possiblePluginDir, "terraform.d")
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

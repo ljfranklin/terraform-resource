@@ -218,6 +218,49 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 			s3ObjectPath,
 		)
 	})
+
+	It("honors plugins stored in Terraform.Source/terraform.d/plugins", func() {
+		outRequest := models.OutRequest{
+			Source: models.Source{
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/custom-plugin/",
+				},
+			},
+		}
+
+		customProviderURL := fmt.Sprintf("https://releases.hashicorp.com/terraform-provider-tls/1.0.1/terraform-provider-tls_1.0.1_%s_%s.zip", runtime.GOOS, runtime.GOARCH)
+		thirdPartyPluginDir := fmt.Sprintf("fixtures/custom-plugin/terraform.d/plugins/%s_%s/", runtime.GOOS, runtime.GOARCH)
+		err := os.MkdirAll(thirdPartyPluginDir, 0700)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = downloadPlugins(thirdPartyPluginDir, customProviderURL)
+		Expect(err).ToNot(HaveOccurred())
+
+		extractedFiles, err := filepath.Glob(filepath.Join(thirdPartyPluginDir, "terraform-provider-tls_*"))
+		Expect(err).ToNot(HaveOccurred())
+
+		err = os.Rename(extractedFiles[0], filepath.Join(thirdPartyPluginDir, "terraform-provider-tls_v999.999.999"))
+		Expect(err).ToNot(HaveOccurred())
+
+		By("running 'out' to verify custom plugin is detected")
+
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: GinkgoWriter,
+		}
+		_, err = runner.Run(outRequest)
+		Expect(err).ToNot(HaveOccurred())
+	})
 })
 
 func downloadPlugins(pluginPath string, url string) error {
