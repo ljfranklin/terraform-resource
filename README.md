@@ -143,7 +143,7 @@ Finally, `env_name` is automatically passed as an input `var`.
 
   > **Note:** You must also set `put.get_params.action` to `destroy` to ensure the task succeeds. This is a temporary workaround until Concourse adds support for `delete` as a first-class operation. See [this issue](https://github.com/concourse/concourse/issues/362) for more details.
 
-* `plugin_dir`: *Optional.* The path (relative to your `terraform_source`) of the directory containing any third-party terraform plugins you wish to install. See [https://www.terraform.io/docs/configuration/providers.html#third-party-plugins](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) for more information. NOTE: the terraform CLI *will not* fetch plugins automatically if this is flag is provided. Therefore you must ensure that all required plugins are placed in this directory if you use this flag, whether they are third-party or not. The standard Hashicorp plugins can be found at https://releases.hashicorp.com/.
+* `plugin_dir`: *Optional.* The path (relative to your `terraform_source`) of the directory containing plugin binaries. This overrides the default plugin directory and Terraform will not automatically fetch built-in plugins if this option is used. To preserve the automatic fetching of plugins, omit `plugin_dir` and place third-party plugins in `${terraform_source}/terraform.d/plugins`. See https://www.terraform.io/docs/configuration/providers.html#third-party-plugins for more information.
 
 #### Put Example
 
