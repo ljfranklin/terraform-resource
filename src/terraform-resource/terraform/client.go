@@ -493,6 +493,9 @@ func (c client) terraformCmd(args []string, env []string) *exec.Cmd {
 	cmd.Dir = c.model.Source
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "CHECKPOINT_DISABLE=1")
+	// TODO: remove the following line once this issue is fixed:
+	// https://github.com/hashicorp/terraform/issues/17655
+	cmd.Env = append(cmd.Env, "TF_WARN_OUTPUT_ERRORS=1")
 	for _, e := range env {
 		cmd.Env = append(cmd.Env, e)
 	}
