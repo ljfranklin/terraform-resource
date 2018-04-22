@@ -210,4 +210,28 @@ var _ = Describe("Terraform Models", func() {
 			}))
 		})
 	})
+
+	Describe("PrivateKey", func() {
+		It("returns the key from original", func() {
+			baseModel := models.Terraform{
+				PrivateKey: "fake-key",
+			}
+			mergeModel := models.Terraform{}
+
+			finalModel := baseModel.Merge(mergeModel)
+			Expect(finalModel.PrivateKey).To(Equal("fake-key"))
+		})
+
+		It("returns the key from merged", func() {
+			baseModel := models.Terraform{
+				PrivateKey: "fake-key",
+			}
+			mergeModel := models.Terraform{
+				PrivateKey: "fake-merged-key",
+			}
+
+			finalModel := baseModel.Merge(mergeModel)
+			Expect(finalModel.PrivateKey).To(Equal("fake-merged-key"))
+		})
+	})
 })

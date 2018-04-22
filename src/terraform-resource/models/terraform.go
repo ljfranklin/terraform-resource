@@ -19,11 +19,12 @@ type Terraform struct {
 	OutputModule        string                 `json:"output_module,omitempty"`     // optional
 	ImportFiles         []string               `json:"import_files,omitempty"`      // optional
 	PluginDir           string                 `json:"plugin_dir,omitempty"`        // optional
-	PlanFileLocalPath   string                 `json:"-"`                           // not specified pipeline
-	PlanFileRemotePath  string                 `json:"-"`                           // not specified pipeline
-	StateFileLocalPath  string                 `json:"-"`                           // not specified pipeline
-	StateFileRemotePath string                 `json:"-"`                           // not specified pipeline
-	Imports             map[string]string      `json:"-"`                           // not specified pipeline
+	PrivateKey          string                 `json:"private_key,omitempty"`
+	PlanFileLocalPath   string                 `json:"-"` // not specified pipeline
+	PlanFileRemotePath  string                 `json:"-"` // not specified pipeline
+	StateFileLocalPath  string                 `json:"-"` // not specified pipeline
+	StateFileRemotePath string                 `json:"-"` // not specified pipeline
+	Imports             map[string]string      `json:"-"` // not specified pipeline
 }
 
 func (m Terraform) Validate() error {
@@ -82,6 +83,10 @@ func (m Terraform) Merge(other Terraform) Terraform {
 
 	if other.StateFileRemotePath != "" {
 		m.StateFileRemotePath = other.StateFileRemotePath
+	}
+
+	if other.PrivateKey != "" {
+		m.PrivateKey = other.PrivateKey
 	}
 
 	if other.PlanOnly {

@@ -12,6 +12,7 @@ import (
 	"terraform-resource/logger"
 	"terraform-resource/models"
 	"terraform-resource/namer"
+	"terraform-resource/ssh"
 	"terraform-resource/storage"
 	"terraform-resource/terraform"
 )
@@ -79,6 +80,22 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 
 	if err = terraformModel.Validate(); err != nil {
 		return models.OutResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
+	}
+
+	if terraformModel.PrivateKey != "" {
+		agent, err := ssh.SpawnAgent()
+		if err != nil {
+			return models.OutResponse{}, err
+		}
+		defer agent.Shutdown()
+
+		if err = agent.AddKey([]byte(terraformModel.PrivateKey)); err != nil {
+			return models.OutResponse{}, err
+		}
+
+		if err = os.Setenv("SSH_AUTH_SOCK", agent.SSHAuthSock()); err != nil {
+			return models.OutResponse{}, err
+		}
 	}
 
 	client := terraform.Client{
