@@ -8,4 +8,9 @@ RUN apk update && \
 RUN go get github.com/onsi/ginkgo/ginkgo
 ENV PATH=$PATH:/go/bin
 
+RUN mkdir -p $HOME/.ssh
+RUN echo "StrictHostKeyChecking no" >> $HOME/.ssh/config
+RUN echo "LogLevel quiet" >> $HOME/.ssh/config
+RUN chmod 0600 $HOME/.ssh/config
+
 COPY terraform/* /usr/local/bin/
