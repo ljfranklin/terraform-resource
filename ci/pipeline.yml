@@ -74,6 +74,7 @@ jobs:
           S3_COMPATIBLE_ACCESS_KEY: {{s3_compatible_access_key}}
           S3_COMPATIBLE_SECRET_KEY: {{s3_compatible_secret_key}}
           S3_KMS_KEY_ID:            {{s3_kms_key_id}}
+          GITHUB_PRIVATE_KEY:       {{git_private_key}}
 
   - name: push-test-image
     serial_groups: [track1, track2]
