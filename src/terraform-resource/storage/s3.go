@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	awss3 "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -26,8 +28,15 @@ const (
 )
 
 func NewS3(m Model) Storage {
-
-	creds := credentials.NewStaticCredentials(m.AccessKeyID, m.SecretAccessKey, "")
+	var creds *credentials.Credentials
+	if m.UseEC2Role {
+		creds = credentials.NewCredentials(&ec2rolecreds.EC2RoleProvider{
+			Client: ec2metadata.New(awsSession.New()),
+		})
+		creds.Get()
+	} else {
+		creds = credentials.NewStaticCredentials(m.AccessKeyID, m.SecretAccessKey, "")
+	}
 
 	regionName := m.RegionName
 	if len(regionName) == 0 {

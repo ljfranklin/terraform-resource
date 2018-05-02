@@ -18,6 +18,7 @@ type Model struct {
 	BucketPath           string `json:"bucket_path"`
 	AccessKeyID          string `json:"access_key_id"`
 	SecretAccessKey      string `json:"secret_access_key"`
+	UseEC2Role           bool   `json:"use_ec2_role"`
 	RegionName           string `json:"region_name,omitempty"`            // optional
 	Endpoint             string `json:"endpoint,omitempty"`               // optional
 	UseSigningV2         bool   `json:"use_signing_v2,omitempty"`         // optional
@@ -65,11 +66,13 @@ func (m Model) Validate() error {
 		if m.BucketPath == "" {
 			missingFields = append(missingFields, fmt.Sprintf("%s.bucket_path", fieldPrefix))
 		}
-		if m.AccessKeyID == "" {
-			missingFields = append(missingFields, fmt.Sprintf("%s.access_key_id", fieldPrefix))
-		}
-		if m.SecretAccessKey == "" {
-			missingFields = append(missingFields, fmt.Sprintf("%s.secret_access_key", fieldPrefix))
+		if !m.UseEC2Role {
+			if m.AccessKeyID == "" {
+				missingFields = append(missingFields, fmt.Sprintf("%s.access_key_id", fieldPrefix))
+			}
+			if m.SecretAccessKey == "" {
+				missingFields = append(missingFields, fmt.Sprintf("%s.secret_access_key", fieldPrefix))
+			}
 		}
 	}
 

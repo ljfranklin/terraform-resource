@@ -21,6 +21,8 @@ See [DEVELOPMENT](DEVELOPMENT.md) if you're interested in submitting a PR :+1:
 
 * `storage.secret_access_key`: *Required.* The AWS secret key used to access the bucket.
 
+* `storage.use_ec2_role`: *Optional.* Set to `true` to use IAM instance profiles instead of static credentials for S3 storage.
+
 * `storage.region_name`: *Optional.* The AWS region where the bucket is located.
 
 * `storage.server_side_encryption`: *Optional.* An encryption algorithm to use when storing objects in S3, e.g. "AES256".
