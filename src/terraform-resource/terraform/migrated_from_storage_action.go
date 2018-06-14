@@ -8,12 +8,11 @@ import (
 )
 
 type MigratedFromStorageAction struct {
-	Client          Client
-	Logger          logger.Logger
-	EnvName         string
-	DeleteOnFailure bool
-	StateFile       storage.StateFile
-	SourceDir       string
+	Client    Client
+	Model     models.Terraform
+	Logger    logger.Logger
+	EnvName   string
+	StateFile storage.StateFile
 }
 
 func (a *MigratedFromStorageAction) Apply() (Result, error) {
@@ -28,7 +27,7 @@ func (a *MigratedFromStorageAction) Apply() (Result, error) {
 		err = fmt.Errorf("Apply Error: %s", err)
 	}
 
-	if err != nil && a.DeleteOnFailure {
+	if err != nil && a.Model.DeleteOnFailure {
 		a.Logger.Warn("Cleaning Up Partially Created Resources...")
 
 		_, destroyErr := a.attemptDestroy()
@@ -88,6 +87,10 @@ func (a *MigratedFromStorageAction) attemptApply() (Result, error) {
 		if _, err = a.StateFile.Delete(); err != nil {
 			return Result{}, err
 		}
+	}
+
+	if err = copyOverrideFilesIntoSource(a.Model.OverrideFiles, a.Model.Source); err != nil {
+		return Result{}, err
 	}
 
 	if err = a.Client.Import(a.EnvName); err != nil {
@@ -192,7 +195,7 @@ func (a *MigratedFromStorageAction) attemptDestroy() (Result, error) {
 }
 
 func (a *MigratedFromStorageAction) setup() error {
-	if err := LinkToThirdPartyPluginDir(a.SourceDir); err != nil {
+	if err := LinkToThirdPartyPluginDir(a.Model.Source); err != nil {
 		return err
 	}
 

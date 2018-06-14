@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"terraform-resource/logger"
@@ -11,11 +12,11 @@ import (
 )
 
 type Action struct {
-	Client          Client
-	Logger          logger.Logger
-	EnvName         string
-	DeleteOnFailure bool
-	SourceDir       string
+	Client    Client
+	Model     models.Terraform
+	Logger    logger.Logger
+	EnvName   string
+	SourceDir string
 }
 
 type Result struct {
@@ -73,7 +74,7 @@ func (a *Action) Apply() (Result, error) {
 		err = fmt.Errorf("Apply Error: %s", err)
 	}
 
-	if err != nil && a.DeleteOnFailure {
+	if err != nil && a.Model.DeleteOnFailure {
 		a.Logger.Warn("Cleaning Up Partially Created Resources...")
 
 		_, destroyErr := a.attemptDestroy()
@@ -169,6 +170,11 @@ func (a *Action) setup() error {
 	if err := LinkToThirdPartyPluginDir(a.SourceDir); err != nil {
 		return err
 	}
+
+	if err := copyOverrideFilesIntoSource(a.Model.OverrideFiles, a.Model.Source); err != nil {
+		return err
+	}
+
 	if err := a.Client.InitWithBackend(); err != nil {
 		return err
 	}
@@ -178,6 +184,7 @@ func (a *Action) setup() error {
 
 func (a *Action) createWorkspaceIfNotExists() error {
 	workspaces, err := a.Client.WorkspaceList()
+
 	if err != nil {
 		return err
 	}
@@ -193,4 +200,26 @@ func (a *Action) createWorkspaceIfNotExists() error {
 		return a.Client.WorkspaceSelect(a.EnvName)
 	}
 	return a.Client.WorkspaceNew(a.EnvName)
+}
+
+func copyOverrideFilesIntoSource(overrideFiles []string, sourceDir string) error {
+	for _, overridePath := range overrideFiles {
+		if fileInfo, err := os.Stat(overridePath); os.IsNotExist(err) {
+			return fmt.Errorf("override file '%s' does not exist", overridePath)
+		} else if err != nil {
+			return err
+		} else if fileInfo.IsDir() {
+			return fmt.Errorf("override '%s' is as directory, must pass files instead", overridePath)
+		}
+		absOverridePath, err := filepath.Abs(overridePath)
+		if err != nil {
+			return err
+		}
+		err = os.Symlink(absOverridePath, path.Join(sourceDir, path.Base(absOverridePath)))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

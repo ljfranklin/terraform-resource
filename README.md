@@ -143,6 +143,8 @@ Finally, `env_name` is automatically passed as an input `var`.
 
 * `import_files`: *Optional.* A list of files containing existing resources to [import](https://www.terraform.io/docs/import/usage.html) into the state file. The files can be in YAML or JSON format, containing key-value pairs like `aws_instance.bar: i-abcd1234`.
 
+* `override_files`: *Optional.* A list of files to copy into the `terraform_source` directory. Override files must follow conventions outlined [here](https://www.terraform.io/docs/configuration/override.html) such as file names ending in `_override.tf`.
+
 * `action`: *Optional.* When set to `destroy`, the resource will run `terraform destroy` against the given statefile.
 
   > **Note:** You must also set `put.get_params.action` to `destroy` to ensure the task succeeds. This is a temporary workaround until Concourse adds support for `delete` as a first-class operation. See [this issue](https://github.com/concourse/concourse/issues/362) for more details.

@@ -77,10 +77,9 @@ func (r Runner) runWithBackend(req models.OutRequest, terraformModel models.Terr
 	)
 
 	action := terraform.Action{
-		Client:          client,
-		EnvName:         envName,
-		DeleteOnFailure: terraformModel.DeleteOnFailure,
-		SourceDir:       terraformModel.Source,
+		Client:  client,
+		EnvName: envName,
+		Model:   terraformModel,
 		Logger: logger.Logger{
 			Sink: r.LogWriter,
 		},
@@ -161,12 +160,11 @@ func (r Runner) runWithLegacyStorage(req models.OutRequest, terraformModel model
 		StorageDriver: storageDriver,
 	}
 	action := terraform.LegacyStorageAction{
-		Client:          client,
-		StateFile:       stateFile,
-		PlanFile:        planFile,
-		DeleteOnFailure: terraformModel.DeleteOnFailure,
-		SourceDir:       terraformModel.Source,
-		Logger:          logger,
+		Client:    client,
+		StateFile: stateFile,
+		PlanFile:  planFile,
+		Model:     terraformModel,
+		Logger:    logger,
 	}
 
 	var result terraform.LegacyStorageResult
@@ -235,11 +233,10 @@ func (r Runner) runWithMigratedFromStorage(req models.OutRequest, terraformModel
 		StorageDriver: storageDriver,
 	}
 	action := terraform.MigratedFromStorageAction{
-		StateFile:       stateFile,
-		Client:          client,
-		EnvName:         envName,
-		DeleteOnFailure: terraformModel.DeleteOnFailure,
-		SourceDir:       terraformModel.Source,
+		StateFile: stateFile,
+		Client:    client,
+		EnvName:   envName,
+		Model:     terraformModel,
 		Logger: logger.Logger{
 			Sink: r.LogWriter,
 		},

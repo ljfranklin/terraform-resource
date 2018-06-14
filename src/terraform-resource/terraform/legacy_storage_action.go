@@ -6,16 +6,16 @@ import (
 	"fmt"
 	"strings"
 	"terraform-resource/logger"
+	"terraform-resource/models"
 	"terraform-resource/storage"
 )
 
 type LegacyStorageAction struct {
-	Client          Client
-	PlanFile        storage.PlanFile
-	StateFile       storage.StateFile
-	Logger          logger.Logger
-	DeleteOnFailure bool
-	SourceDir       string
+	Client    Client
+	Model     models.Terraform
+	PlanFile  storage.PlanFile
+	StateFile storage.StateFile
+	Logger    logger.Logger
 }
 
 type LegacyStorageResult struct {
@@ -62,7 +62,7 @@ func (a *LegacyStorageAction) Apply() (LegacyStorageResult, error) {
 	}
 
 	alreadyDeleted := false
-	if err != nil && a.DeleteOnFailure {
+	if err != nil && a.Model.DeleteOnFailure {
 		a.Logger.Warn("Cleaning Up Partially Created Resources...")
 
 		_, destroyErr := a.attemptDestroy()
@@ -250,7 +250,11 @@ func (a *LegacyStorageAction) setup() error {
 		}
 	}
 
-	if err := LinkToThirdPartyPluginDir(a.SourceDir); err != nil {
+	if err := LinkToThirdPartyPluginDir(a.Model.Source); err != nil {
+		return err
+	}
+
+	if err := copyOverrideFilesIntoSource(a.Model.OverrideFiles, a.Model.Source); err != nil {
 		return err
 	}
 
