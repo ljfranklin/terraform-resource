@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"terraform-resource/logger"
@@ -266,6 +267,11 @@ func (a *Action) setup() error {
 		return err
 	}
 
+	err = a.copyOverrideFilesIntoSource()
+	if err != nil {
+		return err
+	}
+
 	err = a.Client.Import()
 	if err != nil {
 		return err
@@ -303,6 +309,28 @@ func (a *Action) uploadTaintedStatefile() error {
 	}
 
 	a.Logger.Success(fmt.Sprintf("IMPORTANT - Uploaded State File for manual cleanup to '%s'", a.StateFile.RemotePath))
+
+	return nil
+}
+
+func (a *Action) copyOverrideFilesIntoSource() error {
+	for _, overridePath := range a.Client.Model.OverrideFiles {
+		if fileInfo, err := os.Stat(overridePath); os.IsNotExist(err) {
+			return fmt.Errorf("override file '%s' does not exist", overridePath)
+		} else if err != nil {
+			return err
+		} else if fileInfo.IsDir() {
+			return fmt.Errorf("override '%s' is as directory, must pass files instead", overridePath)
+		}
+		absOverridePath, err := filepath.Abs(overridePath)
+		if err != nil {
+			return err
+		}
+		err = os.Symlink(absOverridePath, path.Join(a.Client.Model.Source, path.Base(absOverridePath)))
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

@@ -94,6 +94,7 @@ var _ = Describe("Terraform Models", func() {
 				StateFileRemotePath: "fake-remote-path",
 				DeleteOnFailure:     true,
 				ImportFiles:         []string{"fake-imports-path"},
+				OverrideFiles:       []string{"fake-override-path"},
 				Imports:             map[string]string{"fake-key": "fake-value"},
 				PluginDir:           "fake-plugin-path",
 			}
@@ -104,6 +105,7 @@ var _ = Describe("Terraform Models", func() {
 			Expect(finalModel.StateFileRemotePath).To(Equal("fake-remote-path"))
 			Expect(finalModel.DeleteOnFailure).To(BeTrue())
 			Expect(finalModel.ImportFiles).To(Equal([]string{"fake-imports-path"}))
+			Expect(finalModel.OverrideFiles).To(Equal([]string{"fake-override-path"}))
 			Expect(finalModel.Imports).To(Equal(map[string]string{"fake-key": "fake-value"}))
 			Expect(finalModel.PluginDir).To(Equal("fake-plugin-path"))
 		})
