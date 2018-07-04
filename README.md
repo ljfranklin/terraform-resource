@@ -17,9 +17,13 @@ See [DEVELOPMENT](DEVELOPMENT.md) if you're interested in submitting a PR :+1:
 
 * `storage.bucket_path`: *Required.* The S3 path used to store state files, e.g. `terraform-ci/`.
 
-* `storage.access_key_id`: *Required.* The AWS access key used to access the bucket.
+* `storage.access_key_id`: *Optional.* The AWS access key used to access the bucket.
 
-* `storage.secret_access_key`: *Required.* The AWS secret key used to access the bucket.
+* `storage.secret_access_key`: *Optional.* The AWS secret key used to access the bucket.
+
+  > **Note:** `access_key_id` and `secret_access_key` are required if `use_ec2_role` is set to false.
+
+* `storage.use_ec2_role`: *Optional. Default `false`.* If true use IAM instance profiles instead of static credentials for S3 storage.
 
 * `storage.region_name`: *Optional.* The AWS region where the bucket is located.
 
