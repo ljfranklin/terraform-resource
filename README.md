@@ -37,7 +37,6 @@ Opt into v4 signing by setting `storage.use_signing_v4: true`.
 * `vars`: *Optional.* A collection of Terraform input variables.
 These are typically used to specify credentials or override default module values.
 See [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html) for more details.
-Since Concourse currently only supports [interpolating strings](https://github.com/concourse/concourse/issues/545) into the pipeline config, you may need to use Terraform helpers like [split](https://www.terraform.io/docs/configuration/interpolation.html#split_delim_string_) to handle lists and maps as inputs.
 
 * `env`: *Optional.* Similar to `vars`, this collection of key-value pairs can be used to pass environment variables to Terraform, e.g. "AWS_ACCESS_KEY_ID".
 
