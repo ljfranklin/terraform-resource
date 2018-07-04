@@ -174,6 +174,36 @@ var _ = Describe("Out", func() {
 		assertOutBehavior(req, expectedMetadata)
 	})
 
+	It("allows maps in vars", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storageModel,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws-map/",
+					Vars: map[string]interface{}{
+						"access_key": accessKey,
+						"secret_key": secretKey,
+						"bucket":     bucket,
+						"region":     region,
+						"object": map[string]interface{}{
+							"key":     s3ObjectPath,
+							"content": "terraform-is-neat",
+						},
+					},
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+			},
+		}
+		expectedMetadata := map[string]string{
+			"env_name":    envName,
+			"content_md5": calculateMD5("terraform-is-neat"),
+		}
+
+		assertOutBehavior(req, expectedMetadata)
+	})
+
 	It("creates IaaS resources from `source.terraform` and `put.params.terraform`", func() {
 		req := models.OutRequest{
 			Source: models.Source{
@@ -293,6 +323,45 @@ var _ = Describe("Out", func() {
 			}
 
 			assertOutBehavior(req, expectedMetadata)
+		})
+
+		Context("when var_file contains a map", func() {
+			BeforeEach(func() {
+				secondVarFile = createYAMLTmpFile("tf-vars-2", map[interface{}]interface{}{
+					"object": map[interface{}]interface{}{
+						"key":     s3ObjectPath,
+						"content": "terraform-files-are-neat",
+					},
+				})
+			})
+
+			It("allows maps in var_files", func() {
+				req := models.OutRequest{
+					Source: models.Source{
+						Storage: storageModel,
+						Terraform: models.Terraform{
+							Source: "fixtures/aws-map/",
+							Vars: map[string]interface{}{
+								"access_key": accessKey,
+								"secret_key": secretKey,
+								"region":     region,
+							},
+						},
+					},
+					Params: models.OutParams{
+						EnvName: envName,
+						Terraform: models.Terraform{
+							VarFiles: []string{firstVarFile, secondVarFile},
+						},
+					},
+				}
+				expectedMetadata := map[string]string{
+					"env_name":    envName,
+					"content_md5": calculateMD5("terraform-files-are-neat"),
+				}
+
+				assertOutBehavior(req, expectedMetadata)
+			})
 		})
 	})
 
@@ -443,7 +512,6 @@ var _ = Describe("Out", func() {
 		_, err := runner.Run(req)
 		Expect(err).To(HaveOccurred())
 		Expect(logWriter.String()).To(ContainSubstring("bucket"))
-		Expect(logWriter.String()).To(ContainSubstring("null"))
 	})
 
 	It("replaces spaces in env_name with hyphens", func() {

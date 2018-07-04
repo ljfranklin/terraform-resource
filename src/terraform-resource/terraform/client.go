@@ -4,13 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
-	"reflect"
 	"strings"
 
 	"terraform-resource/models"
 	"terraform-resource/storage"
+
+	yamlConverter "github.com/ghodss/yaml"
+	yaml "gopkg.in/yaml.v2"
 )
 
 type Client struct {
@@ -39,7 +42,13 @@ func (c Client) Apply() error {
 		"-auto-approve",
 	}
 	if c.Model.PlanRun == false {
-		applyArgs = append(applyArgs, c.varFlags()...)
+		varFile, err := c.writeVarFile()
+		if err != nil {
+			return err
+		}
+		defer os.RemoveAll(varFile)
+
+		applyArgs = append(applyArgs, fmt.Sprintf("-var-file=%s", varFile))
 		applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath))
 	} else {
 		applyArgs = append(applyArgs, fmt.Sprintf("-state-out=%s", c.Model.StateFileLocalPath))
@@ -70,7 +79,14 @@ func (c Client) Destroy() error {
 		"-force",      // do not prompt for confirmation
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
-	destroyArgs = append(destroyArgs, c.varFlags()...)
+
+	varFile, err := c.writeVarFile()
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(varFile)
+
+	destroyArgs = append(destroyArgs, fmt.Sprintf("-var-file=%s", varFile))
 	destroyArgs = append(destroyArgs, c.Model.Source)
 
 	destroyCmd := c.terraformCmd(destroyArgs)
@@ -96,7 +112,14 @@ func (c Client) Plan() error {
 		fmt.Sprintf("-out=%s", c.Model.PlanFileLocalPath),
 		fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 	}
-	planArgs = append(planArgs, c.varFlags()...)
+
+	varFile, err := c.writeVarFile()
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(varFile)
+
+	planArgs = append(planArgs, fmt.Sprintf("-var-file=%s", varFile))
 	planArgs = append(planArgs, c.Model.Source)
 
 	planCmd := c.terraformCmd(planArgs)
@@ -180,7 +203,14 @@ func (c Client) Import() error {
 			fmt.Sprintf("-state=%s", c.Model.StateFileLocalPath),
 			fmt.Sprintf("-config=%s", c.Model.Source),
 		}
-		importArgs = append(importArgs, c.varFlags()...)
+
+		varFile, err := c.writeVarFile()
+		if err != nil {
+			return err
+		}
+		defer os.RemoveAll(varFile)
+
+		importArgs = append(importArgs, fmt.Sprintf("-var-file=%s", varFile))
 		importArgs = append(importArgs, tfID)
 		importArgs = append(importArgs, iaasID)
 
@@ -252,35 +282,28 @@ func (c Client) runInit() error {
 	return nil
 }
 
-func (c Client) varFlags() []string {
-	args := []string{}
-	for key, val := range c.Model.Vars {
-		args = append(args, "-var", fmt.Sprintf("'%s=%s'", key, formatVar(val)))
-	}
-	return args
-}
-
-func formatVar(value interface{}) string {
-	valType := reflect.TypeOf(value)
-	if valType == nil {
-		return "null"
+func (c Client) writeVarFile() (string, error) {
+	yamlContents, err := yaml.Marshal(c.Model.Vars)
+	if err != nil {
+		return "", err
 	}
 
-	switch valType.Kind() {
-	case reflect.Slice:
-		valSlice, _ := value.([]interface{})
-		sliceVars := []string{}
-		for _, v := range valSlice {
-			sliceVars = append(sliceVars, formatVar(v))
-		}
-		return fmt.Sprintf("[%s]", strings.Join(sliceVars, ","))
-	case reflect.Map:
-		valMap, _ := value.(map[string]interface{})
-		mapVars := []string{}
-		for k, v := range valMap {
-			mapVars = append(mapVars, fmt.Sprintf("%s=%s", k, formatVar(v)))
-		}
-		return fmt.Sprintf("{%s}", strings.Join(mapVars, ","))
+	// avoids marshalling errors around map[interface{}]interface{}
+	jsonFileContents, err := yamlConverter.YAMLToJSON(yamlContents)
+	if err != nil {
+		return "", err
 	}
-	return fmt.Sprintf("%#v", value)
+
+	varsFile, err := ioutil.TempFile("", "vars-file")
+	if err != nil {
+		return "", err
+	}
+	if _, err := varsFile.Write(jsonFileContents); err != nil {
+		return "", err
+	}
+	if err := varsFile.Close(); err != nil {
+		return "", err
+	}
+
+	return varsFile.Name(), nil
 }
