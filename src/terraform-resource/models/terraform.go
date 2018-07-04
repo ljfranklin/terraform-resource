@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/hashicorp/hcl"
 	"gopkg.in/yaml.v2"
 )
 
@@ -158,9 +159,22 @@ func (m *Terraform) parseVarsFromFiles(filepath string) (map[string]interface{},
 	}
 
 	fileVars := map[string]interface{}{}
-	readErr = yaml.Unmarshal(fileContents, &fileVars)
+
+	if strings.HasSuffix(filepath, ".tfvars") {
+		readErr = hcl.Unmarshal(fileContents, &fileVars)
+	} else {
+		readErr = yaml.Unmarshal(fileContents, &fileVars)
+	}
+
 	if readErr != nil {
 		return nil, fmt.Errorf("Failed to parse TerraformVarFile at '%s': %s", filepath, readErr)
+	}
+
+	if strings.HasSuffix(filepath, ".tfvars") {
+		err := flattenMultiMaps(fileVars)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for key, value := range fileVars {
@@ -194,5 +208,26 @@ func (m *Terraform) ParseImportsFromFile() error {
 		}
 	}
 
+	return nil
+}
+
+// Copied from https://github.com/hashicorp/terraform/blob/6de63cfa7324503c8bb66031c5d97f4cc940db43/helper/variables/parse.go#L101-L118
+//
+// Variables don't support any type that can be configured via multiple
+// declarations of the same HCL map, so any instances of
+// []map[string]interface{} are either a single map that can be flattened, or
+// are invalid config.
+func flattenMultiMaps(m map[string]interface{}) error {
+	for k, v := range m {
+		switch v := v.(type) {
+		case []map[string]interface{}:
+			switch {
+			case len(v) > 1:
+				return fmt.Errorf("multiple map declarations not supported for variables")
+			case len(v) == 1:
+				m[k] = v[0]
+			}
+		}
+	}
 	return nil
 }

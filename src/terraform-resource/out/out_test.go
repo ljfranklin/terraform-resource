@@ -363,6 +363,51 @@ var _ = Describe("Out", func() {
 				assertOutBehavior(req, expectedMetadata)
 			})
 		})
+
+		Context("when var_file ends with tfvars", func() {
+			BeforeEach(func() {
+				secondVarFile = fmt.Sprintf("%s.tfvars", helpers.RandomString("tf-vars-2"))
+				varFile, err := os.Create(path.Join(workingDir, secondVarFile))
+				Expect(err).ToNot(HaveOccurred())
+				defer varFile.Close()
+
+				tfvarsContent := fmt.Sprintf(`
+object = {
+	key = "%s"
+	content = "terraform-files-are-neat"
+}`, s3ObjectPath)
+				_, err = varFile.Write([]byte(tfvarsContent))
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("parses the file in HCL format", func() {
+				req := models.OutRequest{
+					Source: models.Source{
+						Storage: storageModel,
+						Terraform: models.Terraform{
+							Source: "fixtures/aws-map/",
+							Vars: map[string]interface{}{
+								"access_key": accessKey,
+								"secret_key": secretKey,
+								"region":     region,
+							},
+						},
+					},
+					Params: models.OutParams{
+						EnvName: envName,
+						Terraform: models.Terraform{
+							VarFiles: []string{firstVarFile, secondVarFile},
+						},
+					},
+				}
+				expectedMetadata := map[string]string{
+					"env_name":    envName,
+					"content_md5": calculateMD5("terraform-files-are-neat"),
+				}
+
+				assertOutBehavior(req, expectedMetadata)
+			})
+		})
 	})
 
 	It("sets env variables from `source.terraform` and `put.params.terraform`", func() {

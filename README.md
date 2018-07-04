@@ -121,7 +121,7 @@ For example: if your `.tf` files are stored in a git repo called `prod-config` u
 
 * `vars`: *Optional.* A collection of Terraform input variables. See description under `source.vars`.
 
-* `var_files`: *Optional.* A list of files containing Terraform input variables. These files can be in YAML or JSON format.
+* `var_files`: *Optional.* A list of files containing Terraform input variables. These files can be in YAML, JSON, or HCL (filename must end in .tfvars) format.
 
   > Terraform variables will be merged from the following locations in increasing order of precedence: `source.vars`, `put.params.vars`, and `put.params.var_files`. If a state file already exists, the outputs will be fed back in as input `vars` to subsequent `puts` with the lowest precedence.
 Finally, `env_name` is automatically passed as an input `var`.
