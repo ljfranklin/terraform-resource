@@ -20,7 +20,9 @@ mkdir -p "${terraform_dir}"
 cp -R "${terraform_input_dir}/." "${terraform_dir}"
 
 pushd "${terraform_dir}" > /dev/null
-  GOPATH="${tmp_gopath}" PATH="${tmp_gopath}/bin:$PATH" XC_OS="linux" XC_ARCH="amd64" make bin
+  export GOPATH="${tmp_gopath}" PATH="${tmp_gopath}/bin:$PATH"
+  go get -u ./...
+  XC_OS="linux" XC_ARCH="amd64" make bin
   cp ./pkg/linux_amd64/terraform* "${output_dir}/terraform/"
 popd > /dev/null
 
