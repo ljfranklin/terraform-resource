@@ -1,4 +1,4 @@
-FROM golang:1.9-alpine
+FROM golang:alpine
 
 RUN apk update && \
    apk --no-cache add ca-certificates git bash wget gnupg unzip make \

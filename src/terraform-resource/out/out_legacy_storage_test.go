@@ -444,7 +444,6 @@ var _ = Describe("Out - Legacy Storage", func() {
 		_, err := runner.Run(req)
 		Expect(err).To(HaveOccurred())
 		Expect(logWriter.String()).To(ContainSubstring("bucket"))
-		Expect(logWriter.String()).To(ContainSubstring("null"))
 	})
 
 	It("replaces spaces in env_name with hyphens", func() {

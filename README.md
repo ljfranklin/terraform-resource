@@ -38,7 +38,6 @@ Some gotchas:
 * `vars`: *Optional.* A collection of Terraform input variables.
 These are typically used to specify credentials or override default module values.
 See [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html) for more details.
-Since Concourse currently only supports [interpolating strings](https://github.com/concourse/concourse/issues/545) into the pipeline config, you may need to use Terraform helpers like [split](https://www.terraform.io/docs/configuration/interpolation.html#split_delim_string_) to handle lists and maps as inputs.
 
 * `env`: *Optional.* Similar to `vars`, this collection of key-value pairs can be used to pass environment variables to Terraform, e.g. "AWS_ACCESS_KEY_ID".
 
@@ -132,7 +131,7 @@ For example: if your `.tf` files are stored in a git repo called `prod-config` u
 
 * `vars`: *Optional.* A collection of Terraform input variables. See description under `source.vars`.
 
-* `var_files`: *Optional.* A list of files containing Terraform input variables. These files can be in YAML or JSON format.
+* `var_files`: *Optional.* A list of files containing Terraform input variables. These files can be in YAML, JSON, or HCL (filename must end in .tfvars) format.
 
   > Terraform variables will be merged from the following locations in increasing order of precedence: `source.vars`, `put.params.vars`, and `put.params.var_files`. If a state file already exists, the outputs will be fed back in as input `vars` to subsequent `puts` with the lowest precedence.
 Finally, `env_name` is automatically passed as an input `var`.

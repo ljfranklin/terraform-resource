@@ -160,6 +160,31 @@ var _ = Describe("Terraform Models", func() {
 				"override-key": "merge-override",
 			}))
 		})
+
+		It("reads vars from tfvars file in HCL format", func() {
+			varFile := path.Join(tmpDir, "vars.tfvars")
+
+			fileContents := []byte(`
+some_map = {
+	some_key = "some_value"
+}`)
+
+			err := ioutil.WriteFile(varFile, fileContents, 0600)
+			Expect(err).ToNot(HaveOccurred())
+
+			model := models.Terraform{
+				VarFiles: []string{varFile},
+			}
+
+			err = model.ParseVarsFromFiles()
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(model.Vars).To(Equal(map[string]interface{}{
+				"some_map": map[string]interface{}{
+					"some_key": "some_value",
+				},
+			}))
+		})
 	})
 
 	Describe("Env", func() {
