@@ -201,8 +201,6 @@ Finally, `env_name` is automatically passed as an input `var`.
       params:
         env_name: staging
         plan_run: true
-        vars:
-          subnet_cidr: 10.0.1.0/24
 ```
 
 #### Metadata file
