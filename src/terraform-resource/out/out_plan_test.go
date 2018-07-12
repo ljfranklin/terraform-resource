@@ -95,6 +95,7 @@ var _ = Describe("Out Plan", func() {
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
+					Source:  "fixtures/aws/",
 					PlanRun: true,
 				},
 			},
@@ -239,6 +240,7 @@ var _ = Describe("Out Plan", func() {
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
+					Source:  "fixtures/aws/",
 					PlanRun: true,
 				},
 			},

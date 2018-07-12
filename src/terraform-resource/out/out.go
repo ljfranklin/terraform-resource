@@ -57,7 +57,7 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		return models.OutResponse{}, fmt.Errorf("Failed to parse `terraform.imports_file`: %s", err)
 	}
 
-	if len(terraformModel.Source) == 0 && terraformModel.PlanRun == false {
+	if len(terraformModel.Source) == 0 {
 		return models.OutResponse{}, errors.New("Missing required field `terraform.source`")
 	}
 
