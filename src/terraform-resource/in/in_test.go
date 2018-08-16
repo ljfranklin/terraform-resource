@@ -315,7 +315,7 @@ var _ = Describe("In", func() {
 				}
 			})
 
-			It("returns the deleted version, but does not create the metadata file", func() {
+			It("returns the deleted version, creates a name file, but does not create the metadata file", func() {
 
 				runner := in.Runner{
 					OutputDir: tmpDir,
@@ -325,6 +325,12 @@ var _ = Describe("In", func() {
 
 				_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
 				Expect(err).ToNot(HaveOccurred())
+
+				expectedNamePath := path.Join(tmpDir, "name")
+				Expect(expectedNamePath).To(BeAnExistingFile())
+				nameContents, err := ioutil.ReadFile(expectedNamePath)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(string(nameContents)).To(Equal(currEnvName))
 
 				expectedOutputPath := path.Join(tmpDir, "metadata")
 				Expect(expectedOutputPath).ToNot(BeAnExistingFile())
