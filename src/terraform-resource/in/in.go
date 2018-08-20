@@ -26,6 +26,15 @@ func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 		return models.InResponse{}, fmt.Errorf("Invalid Version request: %s", err)
 	}
 
+	envName := req.Version.EnvName
+	nameFilepath := path.Join(r.OutputDir, "name")
+	nameFile, err := os.Create(nameFilepath)
+	if err != nil {
+		return models.InResponse{}, fmt.Errorf("Failed to create name file at path '%s': %s", nameFilepath, err)
+	}
+	defer nameFile.Close()
+	nameFile.WriteString(envName)
+
 	if req.Params.Action == models.DestroyAction {
 		resp := models.InResponse{
 			Version: req.Version,
