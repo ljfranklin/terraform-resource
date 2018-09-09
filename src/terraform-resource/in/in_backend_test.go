@@ -135,6 +135,7 @@ var _ = Describe("In with Backend", func() {
 			serial, err := strconv.Atoi(resp.Version.Serial)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(serial).To(BeNumerically(">=", 0))
+			Expect(resp.Version.Lineage).To(Equal("f62eee11-6a4e-4d39-b5c7-15d3dad8e5f7"))
 
 			metadata := map[string]string{}
 			for _, field := range resp.Metadata {

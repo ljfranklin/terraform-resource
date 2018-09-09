@@ -25,6 +25,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 		pathToCurrS3Fixture string
 		awsVerifier         *helpers.AWSVerifier
 		workingDir          string
+		expectedLineage     = "f62eee11-6a4e-4d39-b5c7-15d3dad8e5f7"
 	)
 
 	BeforeEach(func() {
@@ -133,6 +134,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 					models.Version{
 						Serial:  "1",
 						EnvName: currEnvName,
+						Lineage: expectedLineage,
 					},
 				}
 				Expect(resp).To(Equal(expectOutput))
@@ -142,6 +144,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 				checkInput.Version = models.Version{
 					Serial:  "1",
 					EnvName: currEnvName,
+					Lineage: expectedLineage,
 				}
 
 				runner := check.Runner{}
@@ -152,6 +155,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 					models.Version{
 						Serial:  "1",
 						EnvName: currEnvName,
+						Lineage: expectedLineage,
 					},
 				}
 				Expect(resp).To(Equal(expectOutput))
@@ -161,6 +165,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 				checkInput.Version = models.Version{
 					Serial:  "0",
 					EnvName: currEnvName,
+					Lineage: expectedLineage,
 				}
 
 				runner := check.Runner{}
@@ -171,6 +176,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 					models.Version{
 						Serial:  "1",
 						EnvName: currEnvName,
+						Lineage: expectedLineage,
 					},
 				}
 				Expect(resp).To(Equal(expectOutput))
@@ -180,6 +186,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 				checkInput.Version = models.Version{
 					Serial:  "2",
 					EnvName: currEnvName,
+					Lineage: expectedLineage,
 				}
 
 				runner := check.Runner{}
@@ -190,6 +197,63 @@ var _ = Describe("Check with Terraform Backend", func() {
 				Expect(resp).To(Equal(expectOutput))
 			})
 
+			It("sorts the serial numerically", func() {
+				checkInput.Version = models.Version{
+					Serial:  "10",
+					EnvName: currEnvName,
+					Lineage: expectedLineage,
+				}
+
+				runner := check.Runner{}
+				resp, err := runner.Run(checkInput)
+				Expect(err).ToNot(HaveOccurred())
+
+				expectOutput := []models.Version{}
+				Expect(resp).To(Equal(expectOutput))
+			})
+
+			It("returns the latest version when the given lineage has changed", func() {
+				checkInput.Version = models.Version{
+					Serial:  "2",
+					EnvName: currEnvName,
+					Lineage: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+				}
+
+				runner := check.Runner{}
+				resp, err := runner.Run(checkInput)
+				Expect(err).ToNot(HaveOccurred())
+
+				expectOutput := []models.Version{
+					models.Version{
+						Serial:  "1",
+						EnvName: currEnvName,
+						Lineage: expectedLineage,
+					},
+				}
+				Expect(resp).To(Equal(expectOutput))
+			})
+
+			It("returns the latest version when the lineage is omitted", func() {
+				checkInput.Version = models.Version{
+					Serial:  "2",
+					EnvName: currEnvName,
+					Lineage: "",
+				}
+
+				runner := check.Runner{}
+				resp, err := runner.Run(checkInput)
+				Expect(err).ToNot(HaveOccurred())
+
+				expectOutput := []models.Version{
+					models.Version{
+						Serial:  "1",
+						EnvName: currEnvName,
+						Lineage: expectedLineage,
+					},
+				}
+				Expect(resp).To(Equal(expectOutput))
+			})
+
 			It("can run twice in a row", func() {
 				runner := check.Runner{}
 
@@ -197,6 +261,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 					models.Version{
 						Serial:  "1",
 						EnvName: currEnvName,
+						Lineage: expectedLineage,
 					},
 				}
 
@@ -228,6 +293,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 				checkInput.Version = models.Version{
 					Serial:  "1",
 					EnvName: currEnvName,
+					Lineage: expectedLineage,
 				}
 
 				runner := check.Runner{}
@@ -238,6 +304,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 					models.Version{
 						Serial:  "1",
 						EnvName: currEnvName,
+						Lineage: expectedLineage,
 					},
 				}
 				Expect(resp).To(Equal(expectOutput))

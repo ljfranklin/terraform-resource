@@ -3,6 +3,7 @@ package check
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"terraform-resource/workspaces"
@@ -84,8 +85,23 @@ func (r Runner) runWithBackend(req models.InRequest) ([]models.Version, error) {
 	}
 
 	resp := []models.Version{}
-	if latestVersion.IsZero() == false && latestVersion.Serial >= req.Version.Serial {
-		resp = append(resp, latestVersion)
+	stateExists := (latestVersion != terraform.StateVersion{})
+	if stateExists {
+		serialFromVersion := 0
+		if req.Version.Serial != "" {
+			serialFromVersion, err = strconv.Atoi(req.Version.Serial)
+			if err != nil {
+				return nil, fmt.Errorf("Expected serial to be of type int: %s", err)
+			}
+		}
+
+		if latestVersion.Serial >= serialFromVersion || latestVersion.Lineage != req.Version.Lineage {
+			resp = append(resp, models.Version{
+				EnvName: targetEnvName,
+				Serial:  strconv.Itoa(latestVersion.Serial),
+				Lineage: latestVersion.Lineage,
+			})
+		}
 	}
 
 	return resp, nil

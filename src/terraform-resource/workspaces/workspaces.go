@@ -1,7 +1,6 @@
 package workspaces
 
 import (
-	"terraform-resource/models"
 	"terraform-resource/terraform"
 )
 
@@ -15,26 +14,21 @@ func New(client terraform.Client) *Workspaces {
 	}
 }
 
-func (w Workspaces) LatestVersionForEnv(envName string) (models.Version, error) {
+func (w Workspaces) LatestVersionForEnv(envName string) (terraform.StateVersion, error) {
 	err := w.client.InitWithBackend()
 	if err != nil {
-		return models.Version{}, err
+		return terraform.StateVersion{}, err
 	}
 
 	exists, err := w.spaceExists(envName)
 	if err != nil {
-		return models.Version{}, err
+		return terraform.StateVersion{}, err
 	}
 	if !exists {
-		return models.Version{}, nil
+		return terraform.StateVersion{}, nil
 	}
 
-	serial, err := w.client.CurrentSerial(envName)
-	if err != nil {
-		return models.Version{}, err
-	}
-
-	return models.Version{EnvName: envName, Serial: serial}, nil
+	return w.client.CurrentStateVersion(envName)
 }
 
 func (w Workspaces) spaceExists(envName string) (bool, error) {

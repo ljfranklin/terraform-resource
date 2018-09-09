@@ -2,7 +2,7 @@ package workspaces_test
 
 import (
 	"errors"
-	"terraform-resource/models"
+	"terraform-resource/terraform"
 	"terraform-resource/terraform/terraformfakes"
 	"terraform-resource/workspaces"
 
@@ -27,7 +27,7 @@ var _ = Describe("Workspaces", func() {
 
 				version, err := spaces.LatestVersionForEnv("missing-env")
 				Expect(err).To(BeNil())
-				Expect(version).To(Equal(models.Version{}))
+				Expect(version).To(Equal(terraform.StateVersion{}))
 			})
 		})
 
@@ -35,7 +35,10 @@ var _ = Describe("Workspaces", func() {
 			BeforeEach(func() {
 				fakeTerraform = &terraformfakes.FakeClient{}
 				fakeTerraform.WorkspaceListReturns([]string{"some-env"}, nil)
-				fakeTerraform.CurrentSerialReturns("7", nil)
+				fakeTerraform.CurrentStateVersionReturns(terraform.StateVersion{
+					Serial:  7,
+					Lineage: "aaaaa",
+				}, nil)
 			})
 
 			It("returns a Version with the given serial number", func() {
@@ -43,7 +46,10 @@ var _ = Describe("Workspaces", func() {
 
 				version, err := spaces.LatestVersionForEnv("some-env")
 				Expect(err).To(BeNil())
-				Expect(version).To(Equal(models.Version{EnvName: "some-env", Serial: "7"}))
+				Expect(version).To(Equal(terraform.StateVersion{
+					Serial:  7,
+					Lineage: "aaaaa",
+				}))
 			})
 		})
 
@@ -79,7 +85,7 @@ var _ = Describe("Workspaces", func() {
 			BeforeEach(func() {
 				fakeTerraform = &terraformfakes.FakeClient{}
 				fakeTerraform.WorkspaceListReturns([]string{"some-env"}, nil)
-				fakeTerraform.CurrentSerialReturns("", errors.New("some-error"))
+				fakeTerraform.CurrentStateVersionReturns(terraform.StateVersion{}, errors.New("some-error"))
 			})
 
 			It("returns the error", func() {

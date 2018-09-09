@@ -28,6 +28,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 		pathToStorageStatefile string
 		awsVerifier            *helpers.AWSVerifier
 		workingDir             string
+		expectedLineage        = "f62eee11-6a4e-4d39-b5c7-15d3dad8e5f7"
 	)
 
 	BeforeEach(func() {
@@ -144,6 +145,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 					models.Version{
 						Serial:  "1",
 						EnvName: backendEnvName,
+						Lineage: expectedLineage,
 					},
 				}
 				Expect(resp).To(Equal(expectOutput))
@@ -163,6 +165,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 					models.Version{
 						Serial:  "1",
 						EnvName: backendEnvName,
+						Lineage: expectedLineage,
 					},
 				}
 				Expect(resp).To(Equal(expectOutput))
@@ -197,6 +200,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 					models.Version{
 						Serial:  "1",
 						EnvName: backendEnvName,
+						Lineage: expectedLineage,
 					},
 				}
 				Expect(resp).To(Equal(expectOutput))
@@ -248,6 +252,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 					models.Version{
 						Serial:  "1",
 						EnvName: backendEnvName,
+						Lineage: expectedLineage,
 					},
 				}
 				Expect(resp).To(Equal(expectOutput))
@@ -267,6 +272,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 					models.Version{
 						Serial:  "1",
 						EnvName: backendEnvName,
+						Lineage: expectedLineage,
 					},
 				}
 				Expect(resp).To(Equal(expectOutput))
@@ -301,6 +307,7 @@ var _ = Describe("Check with Migrated From Storage", func() {
 					models.Version{
 						Serial:  "1",
 						EnvName: backendEnvName,
+						Lineage: expectedLineage,
 					},
 				}
 				Expect(resp).To(Equal(expectOutput))

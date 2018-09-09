@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -982,6 +983,10 @@ object = {
 		Expect(logWriter.String()).To(ContainSubstring("Apply complete!"))
 
 		Expect(resp.Version.EnvName).To(Equal(envName))
+		Expect(resp.Version.Lineage).ToNot(BeEmpty())
+		serial, err := strconv.Atoi(resp.Version.Serial)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(serial).To(BeNumerically(">", 0))
 
 		Expect(resp.Metadata).ToNot(BeEmpty())
 		fields := map[string]string{}

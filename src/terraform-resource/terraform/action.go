@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"terraform-resource/logger"
 	"terraform-resource/models"
@@ -107,7 +108,7 @@ func (a *Action) attemptApply() (Result, error) {
 		return Result{}, err
 	}
 
-	serial, err := a.Client.CurrentSerial(a.EnvName)
+	stateVersion, err := a.Client.CurrentStateVersion(a.EnvName)
 	if err != nil {
 		return Result{}, err
 	}
@@ -119,7 +120,8 @@ func (a *Action) attemptApply() (Result, error) {
 		Output: clientOutput,
 		Version: models.Version{
 			EnvName: a.EnvName,
-			Serial:  serial,
+			Serial:  strconv.Itoa(stateVersion.Serial),
+			Lineage: stateVersion.Lineage,
 		},
 	}, nil
 }

@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"strconv"
 	"strings"
 
 	"terraform-resource/models"
@@ -38,12 +37,17 @@ type Client interface {
 	WorkspaceSelect(string) error
 	WorkspaceDelete(string) error
 	StatePull(string) ([]byte, error)
-	CurrentSerial(string) (string, error)
+	CurrentStateVersion(string) (StateVersion, error)
 }
 
 type client struct {
 	model     models.Terraform
 	logWriter io.Writer
+}
+
+type StateVersion struct {
+	Serial  int
+	Lineage string
 }
 
 func NewClient(model models.Terraform, logWriter io.Writer) Client {
@@ -468,23 +472,30 @@ func (c client) StatePull(envName string) ([]byte, error) {
 	return rawOutput, nil
 }
 
-func (c client) CurrentSerial(envName string) (string, error) {
+func (c client) CurrentStateVersion(envName string) (StateVersion, error) {
 	rawState, err := c.StatePull(envName)
 	if err != nil {
-		return "", err
+		return StateVersion{}, err
 	}
 
 	tfState := map[string]interface{}{}
 	if err = json.Unmarshal(rawState, &tfState); err != nil {
-		return "", fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawState)
+		return StateVersion{}, fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawState)
 	}
 
 	serial, ok := tfState["serial"].(float64)
 	if !ok {
-		return "", fmt.Errorf("Expected number value for 'serial' but got '%#v'", tfState["serial"])
+		return StateVersion{}, fmt.Errorf("Expected number value for 'serial' but got '%#v'", tfState["serial"])
+	}
+	lineage, ok := tfState["lineage"].(string)
+	if !ok {
+		return StateVersion{}, fmt.Errorf("Expected string value for 'lineage' but got '%#v'", tfState["lineage"])
 	}
 
-	return strconv.Itoa(int(serial)), nil
+	return StateVersion{
+		Serial:  int(serial),
+		Lineage: lineage,
+	}, nil
 }
 
 func (c client) resourceExists(tfID string, envName string) (bool, error) {

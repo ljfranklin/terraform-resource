@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strconv"
 
 	"terraform-resource/encoder"
 	"terraform-resource/logger"
@@ -131,7 +132,7 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 		}
 	}
 
-	serial, err := client.CurrentSerial(targetEnvName)
+	stateVersion, err := client.CurrentStateVersion(targetEnvName)
 	if err != nil {
 		return models.InResponse{}, err
 	}
@@ -142,7 +143,11 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 	}
 
 	resp := models.InResponse{
-		Version:  models.Version{EnvName: targetEnvName, Serial: serial},
+		Version: models.Version{
+			EnvName: targetEnvName,
+			Serial:  strconv.Itoa(stateVersion.Serial),
+			Lineage: stateVersion.Lineage,
+		},
 		Metadata: metadata,
 	}
 	return resp, nil

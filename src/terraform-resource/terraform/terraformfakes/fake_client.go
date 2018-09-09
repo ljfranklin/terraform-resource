@@ -176,17 +176,17 @@ type FakeClient struct {
 		result1 []byte
 		result2 error
 	}
-	CurrentSerialStub        func(string) (string, error)
-	currentSerialMutex       sync.RWMutex
-	currentSerialArgsForCall []struct {
+	CurrentStateVersionStub        func(string) (terraform.StateVersion, error)
+	currentStateVersionMutex       sync.RWMutex
+	currentStateVersionArgsForCall []struct {
 		arg1 string
 	}
-	currentSerialReturns struct {
-		result1 string
+	currentStateVersionReturns struct {
+		result1 terraform.StateVersion
 		result2 error
 	}
-	currentSerialReturnsOnCall map[int]struct {
-		result1 string
+	currentStateVersionReturnsOnCall map[int]struct {
+		result1 terraform.StateVersion
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -905,53 +905,53 @@ func (fake *FakeClient) StatePullReturnsOnCall(i int, result1 []byte, result2 er
 	}{result1, result2}
 }
 
-func (fake *FakeClient) CurrentSerial(arg1 string) (string, error) {
-	fake.currentSerialMutex.Lock()
-	ret, specificReturn := fake.currentSerialReturnsOnCall[len(fake.currentSerialArgsForCall)]
-	fake.currentSerialArgsForCall = append(fake.currentSerialArgsForCall, struct {
+func (fake *FakeClient) CurrentStateVersion(arg1 string) (terraform.StateVersion, error) {
+	fake.currentStateVersionMutex.Lock()
+	ret, specificReturn := fake.currentStateVersionReturnsOnCall[len(fake.currentStateVersionArgsForCall)]
+	fake.currentStateVersionArgsForCall = append(fake.currentStateVersionArgsForCall, struct {
 		arg1 string
 	}{arg1})
-	fake.recordInvocation("CurrentSerial", []interface{}{arg1})
-	fake.currentSerialMutex.Unlock()
-	if fake.CurrentSerialStub != nil {
-		return fake.CurrentSerialStub(arg1)
+	fake.recordInvocation("CurrentStateVersion", []interface{}{arg1})
+	fake.currentStateVersionMutex.Unlock()
+	if fake.CurrentStateVersionStub != nil {
+		return fake.CurrentStateVersionStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.currentSerialReturns.result1, fake.currentSerialReturns.result2
+	return fake.currentStateVersionReturns.result1, fake.currentStateVersionReturns.result2
 }
 
-func (fake *FakeClient) CurrentSerialCallCount() int {
-	fake.currentSerialMutex.RLock()
-	defer fake.currentSerialMutex.RUnlock()
-	return len(fake.currentSerialArgsForCall)
+func (fake *FakeClient) CurrentStateVersionCallCount() int {
+	fake.currentStateVersionMutex.RLock()
+	defer fake.currentStateVersionMutex.RUnlock()
+	return len(fake.currentStateVersionArgsForCall)
 }
 
-func (fake *FakeClient) CurrentSerialArgsForCall(i int) string {
-	fake.currentSerialMutex.RLock()
-	defer fake.currentSerialMutex.RUnlock()
-	return fake.currentSerialArgsForCall[i].arg1
+func (fake *FakeClient) CurrentStateVersionArgsForCall(i int) string {
+	fake.currentStateVersionMutex.RLock()
+	defer fake.currentStateVersionMutex.RUnlock()
+	return fake.currentStateVersionArgsForCall[i].arg1
 }
 
-func (fake *FakeClient) CurrentSerialReturns(result1 string, result2 error) {
-	fake.CurrentSerialStub = nil
-	fake.currentSerialReturns = struct {
-		result1 string
+func (fake *FakeClient) CurrentStateVersionReturns(result1 terraform.StateVersion, result2 error) {
+	fake.CurrentStateVersionStub = nil
+	fake.currentStateVersionReturns = struct {
+		result1 terraform.StateVersion
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeClient) CurrentSerialReturnsOnCall(i int, result1 string, result2 error) {
-	fake.CurrentSerialStub = nil
-	if fake.currentSerialReturnsOnCall == nil {
-		fake.currentSerialReturnsOnCall = make(map[int]struct {
-			result1 string
+func (fake *FakeClient) CurrentStateVersionReturnsOnCall(i int, result1 terraform.StateVersion, result2 error) {
+	fake.CurrentStateVersionStub = nil
+	if fake.currentStateVersionReturnsOnCall == nil {
+		fake.currentStateVersionReturnsOnCall = make(map[int]struct {
+			result1 terraform.StateVersion
 			result2 error
 		})
 	}
-	fake.currentSerialReturnsOnCall[i] = struct {
-		result1 string
+	fake.currentStateVersionReturnsOnCall[i] = struct {
+		result1 terraform.StateVersion
 		result2 error
 	}{result1, result2}
 }
@@ -991,8 +991,8 @@ func (fake *FakeClient) Invocations() map[string][][]interface{} {
 	defer fake.workspaceDeleteMutex.RUnlock()
 	fake.statePullMutex.RLock()
 	defer fake.statePullMutex.RUnlock()
-	fake.currentSerialMutex.RLock()
-	defer fake.currentSerialMutex.RUnlock()
+	fake.currentStateVersionMutex.RLock()
+	defer fake.currentStateVersionMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

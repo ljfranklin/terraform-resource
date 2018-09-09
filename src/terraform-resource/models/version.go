@@ -17,6 +17,7 @@ const (
 type Version struct {
 	Serial       string `json:"serial"`
 	EnvName      string `json:"env_name"`
+	Lineage      string `json:"lineage,omitempty"`       // omitted on older version
 	LastModified string `json:"last_modified,omitempty"` // optional
 	PlanOnly     string `json:"plan_only,omitempty"`     //optional
 }
