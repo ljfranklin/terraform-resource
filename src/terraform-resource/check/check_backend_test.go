@@ -75,6 +75,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 		checkInput = models.InRequest{
 			Source: models.Source{
 				Terraform: models.Terraform{
+					Source:      "unused",
 					BackendType: "s3",
 					BackendConfig: map[string]interface{}{
 						"bucket":               bucket,

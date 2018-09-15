@@ -62,6 +62,7 @@ func (r Runner) runWithBackend(req models.InRequest) ([]models.Version, error) {
 	}
 
 	terraformModel := req.Source.Terraform
+	terraformModel.Source = "" // ensures that files are created in current dir
 	if err := terraformModel.Validate(); err != nil {
 		return nil, fmt.Errorf("Failed to validate terraform Model: %s", err)
 	}
