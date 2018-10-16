@@ -19,16 +19,15 @@ import (
 var _ = Describe("Out GCS", func() {
 
 	var (
-		backendType    string
-		backendConfig  map[string]interface{}
-		envName        string
-		stateFilePath  string
-		s3ObjectPath   string
-		workingDir     string
-		fixtureEnvName string
-		namer          namerfakes.FakeNamer
-		logWriter      bytes.Buffer
-		workspacePath  string
+		backendType   string
+		backendConfig map[string]interface{}
+		envName       string
+		stateFilePath string
+		s3ObjectPath  string
+		workingDir    string
+		namer         namerfakes.FakeNamer
+		logWriter     bytes.Buffer
+		workspacePath string
 	)
 
 	BeforeEach(func() {
@@ -64,8 +63,6 @@ var _ = Describe("Out GCS", func() {
 		fixturesDir := path.Join(helpers.ProjectRoot(), "fixtures")
 		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
 		Expect(err).ToNot(HaveOccurred())
-
-		fixtureEnvName = helpers.RandomString("s3-test-fixture")
 
 		namer = namerfakes.FakeNamer{}
 
