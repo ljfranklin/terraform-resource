@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"terraform-resource/models"
@@ -61,28 +62,47 @@ func (c client) InitWithBackend() error {
 	if err := c.writeBackendOverride(); err != nil {
 		return err
 	}
+	backendConfigPath, err := c.writeBackendConfig()
+	if err != nil {
+		return err
+	}
 
 	initArgs := []string{
 		"init",
 		"-input=false",
 		"-get=true",
 		"-backend=true",
-	}
-	for key, value := range c.model.BackendConfig {
-		initArgs = append(initArgs, fmt.Sprintf("-backend-config='%s=%v'", key, value))
+		fmt.Sprintf("-backend-config=%s", backendConfigPath),
 	}
 	if c.model.PluginDir != "" {
 		initArgs = append(initArgs, fmt.Sprintf("-plugin-dir=%s", c.model.PluginDir))
 	}
 
 	initCmd := c.terraformCmd(initArgs, nil)
-	var err error
 	var output []byte
 	if output, err = initCmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", err, output)
 	}
 
 	return nil
+}
+
+func (c client) writeBackendConfig() (string, error) {
+	configContents, err := json.Marshal(c.model.BackendConfig)
+	if err != nil {
+		return "", err
+	}
+
+	backendPath, err := filepath.Abs(path.Join(c.model.Source, "resource_backend_config.json"))
+	if err != nil {
+		return "", err
+	}
+
+	err = ioutil.WriteFile(backendPath, configContents, 0755)
+	if err != nil {
+		return "", err
+	}
+	return backendPath, nil
 }
 
 func (c client) writeBackendOverride() error {

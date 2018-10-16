@@ -792,24 +792,24 @@ var _ = Describe("Out - Legacy Storage", func() {
 
 		BeforeEach(func() {
 			storageModel = storage.Model{
-				Endpoint:        s3CompatibleEndpoint,
-				Bucket:          s3CompatibleBucket,
+				Endpoint:        gcsEndpoint,
+				Bucket:          gcsBucket,
 				BucketPath:      bucketPath,
-				AccessKeyID:     s3CompatibleAccessKey,
-				SecretAccessKey: s3CompatibleSecretKey,
+				AccessKeyID:     gcsAccessKey,
+				SecretAccessKey: gcsSecretKey,
 				RegionName:      region,
 			}
 
 			s3Verifier = helpers.NewAWSVerifier(
-				s3CompatibleAccessKey,
-				s3CompatibleSecretKey,
+				gcsAccessKey,
+				gcsSecretKey,
 				region,
-				s3CompatibleEndpoint,
+				gcsEndpoint,
 			)
 		})
 
 		AfterEach(func() {
-			s3Verifier.DeleteObjectFromS3(s3CompatibleBucket, stateFilePath)
+			s3Verifier.DeleteObjectFromS3(gcsBucket, stateFilePath)
 		})
 
 		It("stores the state file successfully", func() {
@@ -839,7 +839,7 @@ var _ = Describe("Out - Legacy Storage", func() {
 
 			assertOutBehavior(req, expectedMetadata)
 
-			s3Verifier.ExpectS3FileToExist(s3CompatibleBucket, stateFilePath)
+			s3Verifier.ExpectS3FileToExist(gcsBucket, stateFilePath)
 		})
 	})
 

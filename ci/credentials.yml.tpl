@@ -7,11 +7,12 @@ storage_bucket:
 storage_bucket_path:
 s3_kms_key_id:
 
-# S3-Compatible storage creds e.g. GCS, Ceph
-s3_compatible_bucket:
-s3_compatible_endpoint:
-s3_compatible_access_key:
-s3_compatible_secret_key:
+# Google Cloud Storage creds
+gcs_bucket:
+gcs_access_key:
+gcs_secret_key:
+gcs_credentials_json:
+gcs_endpoint: storage.googleapis.com
 
 # creds to push docker image
 docker_email:
