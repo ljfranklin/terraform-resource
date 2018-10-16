@@ -326,6 +326,7 @@ jobs:
           GCS_ENDPOINT:             {{gcs_endpoint}}
           GCS_ACCESS_KEY:           {{gcs_access_key}}
           GCS_SECRET_KEY:           {{gcs_secret_key}}
+          GCS_CREDENTIALS_JSON:     {{gcs_credentials_json}}
           S3_KMS_KEY_ID:            {{s3_kms_key_id}}
           GITHUB_PRIVATE_KEY:       {{git_private_key}}
 
