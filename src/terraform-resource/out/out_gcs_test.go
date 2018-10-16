@@ -19,17 +19,16 @@ import (
 var _ = Describe("Out GCS", func() {
 
 	var (
-		backendType     string
-		backendConfig   map[string]interface{}
-		envName         string
-		stateFilePath   string
-		s3ObjectPath    string
-		workingDir      string
-		fixtureEnvName  string
-		pathToS3Fixture string
-		namer           namerfakes.FakeNamer
-		logWriter       bytes.Buffer
-		workspacePath   string
+		backendType    string
+		backendConfig  map[string]interface{}
+		envName        string
+		stateFilePath  string
+		s3ObjectPath   string
+		workingDir     string
+		fixtureEnvName string
+		namer          namerfakes.FakeNamer
+		logWriter      bytes.Buffer
+		workspacePath  string
 	)
 
 	BeforeEach(func() {
@@ -67,7 +66,6 @@ var _ = Describe("Out GCS", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		fixtureEnvName = helpers.RandomString("s3-test-fixture")
-		pathToS3Fixture = path.Join(workspacePath, fixtureEnvName, "terraform.tfstate")
 
 		namer = namerfakes.FakeNamer{}
 
