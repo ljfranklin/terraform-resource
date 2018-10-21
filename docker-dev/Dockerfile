@@ -2,7 +2,7 @@ FROM golang:alpine
 
 RUN apk update && \
    apk --no-cache add ca-certificates git bash wget gnupg unzip make \
-                      libc6-compat openssh-client
+                      libc6-compat openssh-client build-base
 
 # install go deps
 RUN go get github.com/onsi/ginkgo/ginkgo
