@@ -20,14 +20,12 @@ import (
 var _ = Describe("Out - Private Key", func() {
 
 	var (
-		storageModel    storage.Model
-		envName         string
-		stateFilePath   string
-		s3ObjectPath    string
-		workingDir      string
-		fixtureEnvName  string
-		pathToS3Fixture string
-		privateKey      string
+		storageModel  storage.Model
+		envName       string
+		stateFilePath string
+		s3ObjectPath  string
+		workingDir    string
+		privateKey    string
 	)
 
 	BeforeEach(func() {
@@ -69,9 +67,6 @@ var _ = Describe("Out - Private Key", func() {
 		fixturesDir := path.Join(helpers.ProjectRoot(), "fixtures")
 		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
 		Expect(err).ToNot(HaveOccurred())
-
-		fixtureEnvName = helpers.RandomString("s3-test-fixture")
-		pathToS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", fixtureEnvName))
 	})
 
 	AfterEach(func() {
