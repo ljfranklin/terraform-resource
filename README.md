@@ -31,7 +31,7 @@ Some gotchas:
 
 * `backend_config`: *Required.* A map of key-value configuration options specific to your choosen backend, e.g. [S3 options](https://www.terraform.io/docs/backends/types/s3.html#configuration-variables).
 
-* `env_name`: *Optional.* Name of the environment to manage, e.g. `staging`. See [Single vs Pool](#managing-a-single-environment-vs-a-pool-of-environments) section below.
+* `env_name`: *Optional.* Name of the environment to manage, e.g. `staging`. A [Terraform workspace](https://www.terraform.io/docs/state/workspaces.html) will be created with this name. See [Single vs Pool](#managing-a-single-environment-vs-a-pool-of-environments) section below for more options.
 
 * `delete_on_failure`: *Optional. Default `false`.* If true, the resource will run `terraform destroy` if `terraform apply` returns an error.
 
@@ -121,7 +121,7 @@ A `get` step outputs the same `metadata` file format shown below for `put`.
 * `terraform_source`: *Required.* The relative path of the directory containing your Terraform configuration files.
 For example: if your `.tf` files are stored in a git repo called `prod-config` under a directory `terraform-configs`, you could do a `get: prod-config` in your pipeline with `terraform_source: prod-config/terraform-configs/` as the source.
 
-* `env_name`: *Optional.* The name of the environment to create or modify. Multiple environments can be managed with a single resource.
+* `env_name`: *Optional.* The name of the environment to create or modify. A [Terraform workspace](https://www.terraform.io/docs/state/workspaces.html) will be created with this name. Multiple environments can be managed with a single resource.
 
 * `generate_random_name`: *Optional. Default `false`* Generates a random `env_name` (e.g. "coffee-bee"). See [Single vs Pool](#managing-a-single-environment-vs-a-pool-of-environments) section below.
 
