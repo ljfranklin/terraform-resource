@@ -21,23 +21,47 @@ jobs:
     plan:
       - get: terraform-github-release
         trigger: true
-      - get: resource-src
-      - task: bump-terraform-cli
-        file: resource-src/ci/tasks/bump-terraform-cli.yml
-      - task: git-commit
-        file: resource-src/ci/tasks/git-commit.yml
-        input_mapping: {input-src: updated-resource-src}
-        output_mapping: {output-src: committed-resource-src}
-        params:
-          GIT_ADD_ARGS: ./config/terraform-version
-          GIT_COMMIT_MSG: ":airplane: Auto-commit: Bumping Terraform CLI version"
-          GIT_COMMIT_USERNAME: friendly-ci
-          GIT_COMMIT_EMAIL: {{git_commit_email}}
-          GIT_SUCCEED_ON_NO_CHANGES: true
-      - put: resource-src
-        params:
-          repository: committed-resource-src/
-          rebase: true
+      - aggregate:
+        - do:
+          - get: resource-src
+          - task: bump-terraform-cli
+            file: resource-src/ci/tasks/bump-terraform-cli.yml
+          - task: git-commit
+            file: resource-src/ci/tasks/git-commit.yml
+            input_mapping: {input-src: updated-resource-src}
+            output_mapping: {output-src: committed-resource-src}
+            params:
+              GIT_ADD_ARGS: ./config/terraform-version
+              GIT_COMMIT_MSG: ":airplane: Auto-commit: Bumping Terraform CLI version"
+              GIT_COMMIT_USERNAME: friendly-ci
+              GIT_COMMIT_EMAIL: {{git_commit_email}}
+              GIT_SUCCEED_ON_NO_CHANGES: true
+          - put: resource-src
+            params:
+              repository: committed-resource-src/
+              rebase: true
+        - do:
+          - get: resource-backend-src
+          - task: backend-bump-terraform-cli
+            input_mapping:
+              resource-src: resource-backend-src
+            output_mapping:
+              updated-resource-src: updated-backend-resource-src
+            file: resource-backend-src/ci/tasks/bump-terraform-cli.yml
+          - task: backend-git-commit
+            file: resource-backend-src/ci/tasks/git-commit.yml
+            input_mapping: {input-src: updated-backend-resource-src}
+            output_mapping: {output-src: committed-backend-resource-src}
+            params:
+              GIT_ADD_ARGS: ./config/terraform-version
+              GIT_COMMIT_MSG: ":airplane: Auto-commit: Bumping Terraform CLI version"
+              GIT_COMMIT_USERNAME: friendly-ci
+              GIT_COMMIT_EMAIL: {{git_commit_email}}
+              GIT_SUCCEED_ON_NO_CHANGES: true
+          - put: resource-backend-src
+            params:
+              repository: committed-backend-resource-src/
+              rebase: true
 
   - name: push-dev-image
     serial_groups: [track1, track2]
