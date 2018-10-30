@@ -127,6 +127,8 @@ For example: if your `.tf` files are stored in a git repo called `prod-config` u
 
 * `env_name_file`: *Optional.* Reads the `env_name` from a specified file path. Useful for destroying environments from a lock file.
 
+  > You must specify one of the following options: `source.env_name`, `put.params.env_name`, `put.params.generate_random_name`, or `env_name_file`
+
 * `delete_on_failure`: *Optional. Default `false`.* See description under `source.delete_on_failure`.
 
 * `vars`: *Optional.* A collection of Terraform input variables. See description under `source.vars`.
