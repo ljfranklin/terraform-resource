@@ -5,3 +5,4 @@ pkg/
 credentials.yml
 /out/
 *.swp
+.idea

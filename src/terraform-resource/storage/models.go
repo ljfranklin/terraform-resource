@@ -65,12 +65,6 @@ func (m Model) Validate() error {
 		if m.BucketPath == "" {
 			missingFields = append(missingFields, fmt.Sprintf("%s.bucket_path", fieldPrefix))
 		}
-		if m.AccessKeyID == "" {
-			missingFields = append(missingFields, fmt.Sprintf("%s.access_key_id", fieldPrefix))
-		}
-		if m.SecretAccessKey == "" {
-			missingFields = append(missingFields, fmt.Sprintf("%s.secret_access_key", fieldPrefix))
-		}
 	}
 
 	if len(missingFields) > 0 {

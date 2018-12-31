@@ -27,8 +27,6 @@ const (
 
 func NewS3(m Model) Storage {
 
-	creds := credentials.NewStaticCredentials(m.AccessKeyID, m.SecretAccessKey, "")
-
 	regionName := m.RegionName
 	if len(regionName) == 0 {
 		regionName = defaultRegion
@@ -36,17 +34,22 @@ func NewS3(m Model) Storage {
 
 	awsConfig := &aws.Config{
 		Region:           aws.String(regionName),
-		Credentials:      creds,
 		S3ForcePathStyle: aws.Bool(true),
 		MaxRetries:       aws.Int(maxRetries),
 		Logger:           nil,
 	}
+
+	if m.AccessKeyID != "" && m.SecretAccessKey != "" {
+		awsConfig.Credentials = credentials.NewStaticCredentials(m.AccessKeyID, m.SecretAccessKey, "")
+	}
+
 	if len(m.Endpoint) > 0 {
 		awsConfig.Endpoint = aws.String(m.Endpoint)
 	}
 
-	session := awsSession.New(awsConfig)
+	session := awsSession.Must(awsSession.NewSession())
 	client := awss3.New(session, awsConfig)
+
 	if m.ShouldUseSigningV2() {
 		Setv2Handlers(client)
 	}

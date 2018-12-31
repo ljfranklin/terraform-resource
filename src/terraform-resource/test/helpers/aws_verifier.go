@@ -24,18 +24,24 @@ func NewAWSVerifier(accessKey string, secretKey string, region string, endpoint 
 	if len(region) == 0 {
 		region = " " // aws sdk complains if region is empty
 	}
+
 	awsConfig := &aws.Config{
 		Region:           aws.String(region),
-		Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, ""),
 		S3ForcePathStyle: aws.Bool(true),
 		MaxRetries:       aws.Int(10),
 	}
+
+	if accessKey != "" && secretKey != "" {
+		awsConfig.Credentials = credentials.NewStaticCredentials(accessKey, secretKey, "")
+	}
+
 	if len(endpoint) > 0 {
 		awsConfig.Endpoint = aws.String(endpoint)
 	}
 
-	ec2 := awsec2.New(awsSession.New(awsConfig))
-	s3 := awss3.New(awsSession.New(awsConfig))
+	session := awsSession.Must(awsSession.NewSession())
+	ec2 := awsec2.New(session, awsConfig)
+	s3 := awss3.New(session, awsConfig)
 	if len(endpoint) > 0 {
 		// many s3-compatible endpoints only support v2 signing
 		storage.Setv2Handlers(s3)
