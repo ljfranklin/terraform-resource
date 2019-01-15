@@ -2,11 +2,11 @@ package models
 
 import (
 	"fmt"
-	"io/ioutil"
-	"strings"
-
 	"github.com/hashicorp/hcl"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"os"
+	"strings"
 )
 
 type Terraform struct {
@@ -49,6 +49,7 @@ func (m Terraform) Merge(other Terraform) Terraform {
 	for key, value := range m.Vars {
 		mergedVars[key] = value
 	}
+
 	for key, value := range other.Vars {
 		mergedVars[key] = value
 	}
@@ -129,7 +130,21 @@ func (m Terraform) Merge(other Terraform) Terraform {
 func (m *Terraform) ParseVarsFromFiles() error {
 	terraformVars := map[string]interface{}{}
 	for key, value := range m.Vars {
-		terraformVars[key] = value
+
+		path, ok := value.(string)
+		if ok {
+			if _, err := os.Stat(path); os.IsNotExist(err) {
+				terraformVars[key] = value
+			} else {
+				fileContents, readErr := ioutil.ReadFile(path)
+				if readErr != nil {
+					return fmt.Errorf("Failed to read Terraform ImportsFile at '%s': %s", path, readErr)
+				}
+				terraformVars[key] = string(fileContents)
+			}
+		} else {
+			terraformVars[key] = value
+		}
 	}
 
 	if m.VarFiles != nil {
