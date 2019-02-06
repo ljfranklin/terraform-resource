@@ -345,7 +345,7 @@ func (a *Action) copyOverrideFilesIntoSourceDir() error {
 
 		overrideSrcPath, ok := overrideMap["src"]
 		if !ok{
-			return fmt.Errorf("override item '%d' does not include src map", i)
+			return fmt.Errorf("override map '%d' does not include src key", i)
 		} else {
 			if fileInfo, err := os.Stat(overrideSrcPath); os.IsNotExist(err) {
 				return fmt.Errorf("override source file '%s' does not exist", overrideSrcPath)
@@ -358,7 +358,7 @@ func (a *Action) copyOverrideFilesIntoSourceDir() error {
 
 		overrideDstPath, ok := overrideMap["dst"]
 		if !ok {
-			return fmt.Errorf("override item '%d' does not include dst map", i)
+			return fmt.Errorf("override map '%d' does not include dst key", i)
 		} else {
 			if fileInfo, err := os.Stat(overrideDstPath); os.IsNotExist(err) {
 				return fmt.Errorf("override destination directory '%s' does not exist", overrideDstPath)

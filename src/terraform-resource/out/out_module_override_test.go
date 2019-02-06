@@ -135,7 +135,7 @@ var _ = Describe("Out Module Override", func() {
 		_, err := runner.Run(req)
 		Expect(err).To(HaveOccurred())
 
-		Expect(err.Error()).To(ContainSubstring("fixtures/override"))
+		Expect(err.Error()).To(ContainSubstring("override source 'fixtures/override/' is as directory, must pass files instead"))
 	})
 
 	It("errors when given a file for destination", func() {
@@ -213,7 +213,7 @@ var _ = Describe("Out Module Override", func() {
 		_, err := runner.Run(req)
 		Expect(err).To(HaveOccurred())
 
-		Expect(err.Error()).To(ContainSubstring("does-not-exist"))
+		Expect(err.Error()).To(ContainSubstring("override source file 'does-not-exist' does not exist"))
 	})
 
 	It("errors when given an invalid path for destination", func() {
@@ -252,6 +252,84 @@ var _ = Describe("Out Module Override", func() {
 		_, err := runner.Run(req)
 		Expect(err).To(HaveOccurred())
 
-		Expect(err.Error()).To(ContainSubstring("does-not-exist"))
+		Expect(err.Error()).To(ContainSubstring("override destination directory 'does-not-exist' does not exist"))
+	})
+
+	It("errors when src key is missing", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					ModuleOverrideFiles: []map[string]string{ map[string]string{"dst" : "fixtures/aws",}, },
+					Source: "fixtures/module/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: GinkgoWriter,
+		}
+
+		_, err := runner.Run(req)
+		Expect(err).To(HaveOccurred())
+
+		Expect(err.Error()).To(ContainSubstring("does not include src key"))
+	})
+
+	It("errors when dst key is missing", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					ModuleOverrideFiles: []map[string]string{ map[string]string{"src": "fixtures/override/example_override.tf",}, },
+					Source: "fixtures/module/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: GinkgoWriter,
+		}
+
+		_, err := runner.Run(req)
+		Expect(err).To(HaveOccurred())
+
+		Expect(err.Error()).To(ContainSubstring("does not include dst key"))
 	})
 })
