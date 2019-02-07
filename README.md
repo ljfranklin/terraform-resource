@@ -138,6 +138,9 @@ Finally, `env_name` is automatically passed as an input `var`.
 
 * `override_files`: *Optional.* A list of files to copy into the `terraform_source` directory. Override files must follow conventions outlined [here](https://www.terraform.io/docs/configuration/override.html) such as file names ending in `_override.tf`.
 
+* `module_override_files`: *Optional.* A list of maps to copy override files to specific destination directories. Override files must follow conventions outlined [here](https://www.terraform.io/docs/configuration/override.html) such as file names ending in `_override.tf`.
+The source file is specified with `src` and the destination directory with `dst`. 
+
 * `action`: *Optional.* Used to indicate a destructive `put`. The only recognized value is `destroy`, create / update are the implicit defaults.
 
   > **Note:** You must also set `put.get_params.action` to `destroy` to ensure the task succeeds. This is a temporary workaround until Concourse adds support for `delete` as a first-class operation. See [this issue](https://github.com/concourse/concourse/issues/362) for more details.
