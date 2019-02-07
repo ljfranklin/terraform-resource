@@ -83,6 +83,7 @@ var _ = Describe("Terraform Models", func() {
 				DeleteOnFailure:     true,
 				ImportFiles:         []string{"fake-imports-path"},
 				OverrideFiles:       []string{"fake-override-path"},
+				ModuleOverrideFiles: []map[string]string{ map[string]string{"src": "fake-override-src-path", "dst" : "fake-override-dst-path",}, },
 				Imports:             map[string]string{"fake-key": "fake-value"},
 				PluginDir:           "fake-plugin-path",
 				BackendType:         "fake-type",
@@ -96,6 +97,7 @@ var _ = Describe("Terraform Models", func() {
 			Expect(finalModel.DeleteOnFailure).To(BeTrue())
 			Expect(finalModel.ImportFiles).To(Equal([]string{"fake-imports-path"}))
 			Expect(finalModel.OverrideFiles).To(Equal([]string{"fake-override-path"}))
+			Expect(finalModel.ModuleOverrideFiles).To(Equal([]map[string]string{ map[string]string{"src": "fake-override-src-path", "dst" : "fake-override-dst-path"}}))
 			Expect(finalModel.Imports).To(Equal(map[string]string{"fake-key": "fake-value"}))
 			Expect(finalModel.PluginDir).To(Equal("fake-plugin-path"))
 			Expect(finalModel.BackendType).To(Equal("fake-type"))

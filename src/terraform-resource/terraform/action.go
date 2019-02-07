@@ -177,6 +177,10 @@ func (a *Action) setup() error {
 		return err
 	}
 
+	if err := copyOverrideFilesIntoSourceDir(a.Model.ModuleOverrideFiles); err != nil {
+		return err
+	}
+
 	if err := a.Client.InitWithBackend(); err != nil {
 		return err
 	}
@@ -218,6 +222,53 @@ func copyOverrideFilesIntoSource(overrideFiles []string, sourceDir string) error
 			return err
 		}
 		err = os.Symlink(absOverridePath, path.Join(sourceDir, path.Base(absOverridePath)))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func copyOverrideFilesIntoSourceDir(ModuleOverrideFiles []map[string]string) error {
+	for i, overrideMap := range ModuleOverrideFiles {
+
+		overrideSrcPath, ok := overrideMap["src"]
+		if !ok{
+			return fmt.Errorf("override map '%d' does not include src key", i)
+		} else {
+			if fileInfo, err := os.Stat(overrideSrcPath); os.IsNotExist(err) {
+				return fmt.Errorf("override source file '%s' does not exist", overrideSrcPath)
+			} else if err != nil {
+				return err
+			} else if fileInfo.IsDir() {
+				return fmt.Errorf("override source '%s' is as directory, must pass files instead", overrideSrcPath)
+			}
+		}
+
+		overrideDstPath, ok := overrideMap["dst"]
+		if !ok {
+			return fmt.Errorf("override map '%d' does not include dst key", i)
+		} else {
+			if fileInfo, err := os.Stat(overrideDstPath); os.IsNotExist(err) {
+				return fmt.Errorf("override destination directory '%s' does not exist", overrideDstPath)
+			} else if err != nil {
+				return err
+			} else if !fileInfo.IsDir() {
+				return fmt.Errorf("override destination '%s' is a file, must pass directory instead", overrideDstPath)
+			}
+		}
+		
+		absOverrideSrcPath, err := filepath.Abs(overrideSrcPath)
+		if err != nil {
+			return err
+		}
+		absOverrideDstPath, err := filepath.Abs(overrideDstPath)
+		if err != nil {
+			return err
+		}
+
+		err = os.Symlink(absOverrideSrcPath, path.Join(absOverrideDstPath, path.Base(absOverrideSrcPath)))
 		if err != nil {
 			return err
 		}
