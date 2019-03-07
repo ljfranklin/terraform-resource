@@ -315,7 +315,7 @@ jobs:
   ###################
 
   - name: push-backend-dev-image
-    serial_groups: [track3, track4, track5]
+    serial_groups: [track3, track4, track5, track6]
     on_failure: *failure-alert
     plan:
       - get: resource-src
@@ -328,7 +328,7 @@ jobs:
           build: build-artifacts/
 
   - name: test-backend-unit
-    serial_groups: [track3, track4, track5]
+    serial_groups: [track3, track4, track5, track6]
     on_failure: *failure-alert
     plan:
       - aggregate:
@@ -355,7 +355,7 @@ jobs:
           GITHUB_PRIVATE_KEY:       {{git_private_key}}
 
   - name: push-backend-test-image
-    serial_groups: [track3, track4, track5]
+    serial_groups: [track3, track4, track5, track6]
     on_failure: *failure-alert
     plan:
       - aggregate:
@@ -523,13 +523,64 @@ jobs:
         get_params:
           action: destroy
 
-  - name: push-backend-beta-image
-    serial_groups: [track3, track4, track5]
+  - name: plan-backend-env
+    serial_groups: [track6]
     on_failure: *failure-alert
     plan:
       - get: resource-src
         resource: resource-backend-src
-        passed: [destroy-backend-env, destroy-gcs-backend-env, destroy-migrated-env]
+        trigger: true
+        passed: [push-backend-test-image]
+      - put: terraform
+        resource: terraform-s3-backend
+        params:
+          env_name: terraform-backend-plan
+          plan_only: true
+          vars:
+            object_key: ci-pipeline/track6
+            object_content: "terraform is neat!"
+
+  - name: create-backend-plan-env
+    serial_groups: [track6]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        resource: resource-backend-src
+        trigger: true
+        passed: [plan-backend-env]
+      - put: terraform
+        resource: terraform-s3-backend
+        params:
+          env_name: terraform-backend-plan
+          plan_run: true
+      - *show-outputs
+
+  - name: destroy-backend-plan-env
+    serial_groups: [track6]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        resource: resource-backend-src
+        trigger: true
+        passed: [create-backend-plan-env]
+      - put: terraform
+        resource: terraform-s3-backend
+        params:
+          env_name: terraform-backend-plan
+          action: destroy
+          vars:
+            object_key: ci-pipeline/track6
+            object_content: "terraform is still neat!"
+        get_params:
+          action: destroy
+
+  - name: push-backend-beta-image
+    serial_groups: [track3, track4, track5, track6]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        resource: resource-backend-src
+        passed: [destroy-backend-env, destroy-gcs-backend-env, destroy-migrated-env, destroy-backend-plan-env]
         trigger: true
       - put: terraform-backend-beta-image
         params:

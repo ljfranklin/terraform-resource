@@ -96,6 +96,12 @@ func (a *Action) attemptApply() (Result, error) {
 	a.Logger.InfoSection("Terraform Apply")
 	defer a.Logger.EndSection()
 
+	if a.Model.PlanRun {
+		if err := a.Client.GetPlanFromBackend(a.planNameForEnv()); err != nil {
+			return Result{}, err
+		}
+	}
+
 	if err := a.createWorkspaceIfNotExists(); err != nil {
 		return Result{}, err
 	}
@@ -116,6 +122,11 @@ func (a *Action) attemptApply() (Result, error) {
 	if err != nil {
 		return Result{}, err
 	}
+
+	if err := a.deletePlanWorkspaceIfExists(); err != nil {
+		return Result{}, err
+	}
+
 	return Result{
 		Output: clientOutput,
 		Version: models.Version{
@@ -157,6 +168,53 @@ func (a *Action) attemptDestroy() (Result, error) {
 	}
 
 	if err := a.Client.WorkspaceDelete(a.EnvName); err != nil {
+		return Result{}, err
+	}
+
+	if err := a.deletePlanWorkspaceIfExists(); err != nil {
+		return Result{}, err
+	}
+
+	return Result{
+		Output: map[string]map[string]interface{}{},
+		Version: models.Version{
+			EnvName: a.EnvName,
+		},
+	}, nil
+}
+
+func (a *Action) Plan() (Result, error) {
+	err := a.setup()
+	if err != nil {
+		return Result{}, err
+	}
+
+	result, err := a.attemptPlan()
+	if err != nil {
+		a.Logger.Error("Failed To Run Terraform Plan!")
+		err = fmt.Errorf("Plan Error: %s", err)
+	}
+
+	if err == nil {
+		a.Logger.Success("Successfully Ran Terraform Plan!")
+	}
+
+	return result, err
+}
+
+func (a *Action) attemptPlan() (Result, error) {
+	a.Logger.InfoSection("Terraform Plan")
+	defer a.Logger.EndSection()
+
+	if err := a.createWorkspaceIfNotExists(); err != nil {
+		return Result{}, err
+	}
+
+	if err := a.Client.Plan(); err != nil {
+		return Result{}, err
+	}
+
+	if err := a.Client.SavePlanToBackend(a.planNameForEnv()); err != nil {
 		return Result{}, err
 	}
 
@@ -208,6 +266,26 @@ func (a *Action) createWorkspaceIfNotExists() error {
 	return a.Client.WorkspaceNew(a.EnvName)
 }
 
+func (a *Action) deletePlanWorkspaceIfExists() error {
+	workspaces, err := a.Client.WorkspaceList()
+
+	if err != nil {
+		return err
+	}
+
+	workspaceExists := false
+	for _, space := range workspaces {
+		if space == a.planNameForEnv() {
+			workspaceExists = true
+		}
+	}
+
+	if workspaceExists {
+		return a.Client.WorkspaceDeleteWithForce(a.planNameForEnv())
+	}
+	return nil
+}
+
 func copyOverrideFilesIntoSource(overrideFiles []string, sourceDir string) error {
 	for _, overridePath := range overrideFiles {
 		if fileInfo, err := os.Stat(overridePath); os.IsNotExist(err) {
@@ -234,7 +312,7 @@ func copyOverrideFilesIntoSourceDir(ModuleOverrideFiles []map[string]string) err
 	for i, overrideMap := range ModuleOverrideFiles {
 
 		overrideSrcPath, ok := overrideMap["src"]
-		if !ok{
+		if !ok {
 			return fmt.Errorf("override map '%d' does not include src key", i)
 		} else {
 			if fileInfo, err := os.Stat(overrideSrcPath); os.IsNotExist(err) {
@@ -258,7 +336,7 @@ func copyOverrideFilesIntoSourceDir(ModuleOverrideFiles []map[string]string) err
 				return fmt.Errorf("override destination '%s' is a file, must pass directory instead", overrideDstPath)
 			}
 		}
-		
+
 		absOverrideSrcPath, err := filepath.Abs(overrideSrcPath)
 		if err != nil {
 			return err
@@ -275,4 +353,8 @@ func copyOverrideFilesIntoSourceDir(ModuleOverrideFiles []map[string]string) err
 	}
 
 	return nil
+}
+
+func (a *Action) planNameForEnv() string {
+	return fmt.Sprintf("%s-plan", a.EnvName)
 }
