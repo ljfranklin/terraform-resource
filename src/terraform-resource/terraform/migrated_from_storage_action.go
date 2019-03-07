@@ -74,6 +74,12 @@ func (a *MigratedFromStorageAction) attemptApply() (Result, error) {
 			return Result{}, err
 		}
 	} else {
+		if a.Model.PlanRun {
+			if err := a.Client.GetPlanFromBackend(a.planNameForEnv()); err != nil {
+				return Result{}, err
+			}
+		}
+
 		if err = a.createWorkspaceIfNotExists(); err != nil {
 			return Result{}, err
 		}
@@ -108,6 +114,10 @@ func (a *MigratedFromStorageAction) attemptApply() (Result, error) {
 	}
 	clientOutput, err := a.Client.Output(a.EnvName)
 	if err != nil {
+		return Result{}, err
+	}
+
+	if err := a.deletePlanWorkspaceIfExists(); err != nil {
 		return Result{}, err
 	}
 
@@ -188,6 +198,53 @@ func (a *MigratedFromStorageAction) attemptDestroy() (Result, error) {
 		return Result{}, err
 	}
 
+	if err := a.deletePlanWorkspaceIfExists(); err != nil {
+		return Result{}, err
+	}
+
+	return Result{
+		Output: map[string]map[string]interface{}{},
+		Version: models.Version{
+			EnvName: a.EnvName,
+		},
+	}, nil
+}
+
+func (a *MigratedFromStorageAction) Plan() (Result, error) {
+	err := a.setup()
+	if err != nil {
+		return Result{}, err
+	}
+
+	result, err := a.attemptPlan()
+	if err != nil {
+		a.Logger.Error("Failed To Run Terraform Plan!")
+		err = fmt.Errorf("Plan Error: %s", err)
+	}
+
+	if err == nil {
+		a.Logger.Success("Successfully Ran Terraform Plan!")
+	}
+
+	return result, err
+}
+
+func (a *MigratedFromStorageAction) attemptPlan() (Result, error) {
+	a.Logger.InfoSection("Terraform Plan")
+	defer a.Logger.EndSection()
+
+	if err := a.createWorkspaceIfNotExists(); err != nil {
+		return Result{}, err
+	}
+
+	if err := a.Client.Plan(); err != nil {
+		return Result{}, err
+	}
+
+	if err := a.Client.SavePlanToBackend(a.planNameForEnv()); err != nil {
+		return Result{}, err
+	}
+
 	return Result{
 		Output: map[string]map[string]interface{}{},
 		Version: models.Version{
@@ -229,4 +286,28 @@ func (a *MigratedFromStorageAction) createWorkspaceIfNotExists() error {
 		return a.Client.WorkspaceSelect(a.EnvName)
 	}
 	return a.Client.WorkspaceNew(a.EnvName)
+}
+
+func (a *MigratedFromStorageAction) deletePlanWorkspaceIfExists() error {
+	workspaces, err := a.Client.WorkspaceList()
+
+	if err != nil {
+		return err
+	}
+
+	workspaceExists := false
+	for _, space := range workspaces {
+		if space == a.planNameForEnv() {
+			workspaceExists = true
+		}
+	}
+
+	if workspaceExists {
+		return a.Client.WorkspaceDeleteWithForce(a.planNameForEnv())
+	}
+	return nil
+}
+
+func (a *MigratedFromStorageAction) planNameForEnv() string {
+	return fmt.Sprintf("%s-plan", a.EnvName)
 }

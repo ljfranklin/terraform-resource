@@ -123,7 +123,7 @@ func (a *Action) attemptApply() (Result, error) {
 		return Result{}, err
 	}
 
-	if err := a.Client.WorkspaceDeleteWithForce(a.planNameForEnv()); err != nil {
+	if err := a.deletePlanWorkspaceIfExists(); err != nil {
 		return Result{}, err
 	}
 
@@ -168,6 +168,10 @@ func (a *Action) attemptDestroy() (Result, error) {
 	}
 
 	if err := a.Client.WorkspaceDelete(a.EnvName); err != nil {
+		return Result{}, err
+	}
+
+	if err := a.deletePlanWorkspaceIfExists(); err != nil {
 		return Result{}, err
 	}
 
@@ -260,6 +264,26 @@ func (a *Action) createWorkspaceIfNotExists() error {
 		return a.Client.WorkspaceSelect(a.EnvName)
 	}
 	return a.Client.WorkspaceNew(a.EnvName)
+}
+
+func (a *Action) deletePlanWorkspaceIfExists() error {
+	workspaces, err := a.Client.WorkspaceList()
+
+	if err != nil {
+		return err
+	}
+
+	workspaceExists := false
+	for _, space := range workspaces {
+		if space == a.planNameForEnv() {
+			workspaceExists = true
+		}
+	}
+
+	if workspaceExists {
+		return a.Client.WorkspaceDeleteWithForce(a.planNameForEnv())
+	}
+	return nil
 }
 
 func copyOverrideFilesIntoSource(overrideFiles []string, sourceDir string) error {
