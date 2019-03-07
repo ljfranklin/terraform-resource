@@ -3,6 +3,7 @@ package terraform
 import (
 	"bufio"
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -37,8 +38,11 @@ type Client interface {
 	WorkspaceNewFromExistingStateFile(string, string) error
 	WorkspaceSelect(string) error
 	WorkspaceDelete(string) error
+	WorkspaceDeleteWithForce(string) error
 	StatePull(string) ([]byte, error)
 	CurrentStateVersion(string) (StateVersion, error)
+	SavePlanToBackend(string) error
+	GetPlanFromBackend(string) error
 }
 
 type client struct {
@@ -52,17 +56,17 @@ type StateVersion struct {
 }
 
 func NewClient(model models.Terraform, logWriter io.Writer) Client {
-	return client{
+	return &client{
 		model:     model,
 		logWriter: logWriter,
 	}
 }
 
-func (c client) InitWithBackend() error {
-	if err := c.writeBackendOverride(); err != nil {
+func (c *client) InitWithBackend() error {
+	if err := c.writeBackendOverride(c.model.Source); err != nil {
 		return err
 	}
-	backendConfigPath, err := c.writeBackendConfig()
+	backendConfigPath, err := c.writeBackendConfig(c.model.Source)
 	if err != nil {
 		return err
 	}
@@ -87,13 +91,13 @@ func (c client) InitWithBackend() error {
 	return nil
 }
 
-func (c client) writeBackendConfig() (string, error) {
+func (c *client) writeBackendConfig(outputDir string) (string, error) {
 	configContents, err := json.Marshal(c.model.BackendConfig)
 	if err != nil {
 		return "", err
 	}
 
-	backendPath, err := filepath.Abs(path.Join(c.model.Source, "resource_backend_config.json"))
+	backendPath, err := filepath.Abs(path.Join(outputDir, "resource_backend_config.json"))
 	if err != nil {
 		return "", err
 	}
@@ -105,13 +109,42 @@ func (c client) writeBackendConfig() (string, error) {
 	return backendPath, nil
 }
 
-func (c client) writeBackendOverride() error {
-	backendPath := path.Join(c.model.Source, "resource_backend_override.tf")
+func (c *client) writePlanProviderConfig(outputDir string, planContents []byte) error {
+	encodedPlan := base64.StdEncoding.EncodeToString(planContents)
+	escapedPlan, err := json.Marshal(encodedPlan)
+	if err != nil {
+		return err
+	}
+
+	configContents := []byte(fmt.Sprintf(`
+resource "stateful_string" "plan_output" {
+  desired = %s
+}
+output "plan_content" {
+  sensitive = true
+  value = "${stateful_string.plan_output.desired}"
+}
+`, escapedPlan))
+
+	configPath, err := filepath.Abs(path.Join(outputDir, "resource_plan_config.tf"))
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(configPath, configContents, 0755)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *client) writeBackendOverride(outputDir string) error {
+	backendPath := path.Join(outputDir, "resource_backend_override.tf")
 	backendContent := fmt.Sprintf(`terraform { backend "%s" {} }`, c.model.BackendType)
 	return ioutil.WriteFile(backendPath, []byte(backendContent), 0755)
 }
 
-func (c client) InitWithoutBackend() error {
+func (c *client) InitWithoutBackend() error {
 	if err := c.clearTerraformState(); err != nil {
 		return err
 	}
@@ -135,7 +168,7 @@ func (c client) InitWithoutBackend() error {
 }
 
 // necessary to switch from backend to non-backend in `migrated_from_storage` code paths
-func (c client) clearTerraformState() error {
+func (c *client) clearTerraformState() error {
 	configPath := path.Join(c.model.Source, ".terraform")
 	if err := os.RemoveAll(configPath); err != nil {
 		return err
@@ -145,7 +178,7 @@ func (c client) clearTerraformState() error {
 	return os.RemoveAll(backendConfig)
 }
 
-func (c client) Apply() error {
+func (c *client) Apply() error {
 	applyArgs := []string{
 		"apply",
 		"-backup='-'",  // no need to backup state file
@@ -165,6 +198,7 @@ func (c client) Apply() error {
 			applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.model.StateFileLocalPath))
 		}
 	} else {
+		// only used in non-backend flow
 		applyArgs = append(applyArgs, fmt.Sprintf("-state-out=%s", c.model.StateFileLocalPath))
 	}
 
@@ -183,7 +217,7 @@ func (c client) Apply() error {
 	return nil
 }
 
-func (c client) Destroy() error {
+func (c *client) Destroy() error {
 	destroyArgs := []string{
 		"destroy",
 		"-backup='-'", // no need to backup state file
@@ -210,7 +244,7 @@ func (c client) Destroy() error {
 	return nil
 }
 
-func (c client) Plan() error {
+func (c *client) Plan() error {
 	planArgs := []string{
 		"plan",
 		"-input=false", // do not prompt for inputs
@@ -237,7 +271,7 @@ func (c client) Plan() error {
 	return nil
 }
 
-func (c client) Output(envName string) (map[string]map[string]interface{}, error) {
+func (c *client) Output(envName string) (map[string]map[string]interface{}, error) {
 	outputArgs := []string{
 		"output",
 		"-json",
@@ -269,7 +303,7 @@ func (c client) Output(envName string) (map[string]map[string]interface{}, error
 	return tfOutput, nil
 }
 
-func (c client) OutputWithLegacyStorage() (map[string]map[string]interface{}, error) {
+func (c *client) OutputWithLegacyStorage() (map[string]map[string]interface{}, error) {
 	outputArgs := []string{
 		"output",
 		"-json",
@@ -301,7 +335,7 @@ func (c client) OutputWithLegacyStorage() (map[string]map[string]interface{}, er
 	return tfOutput, nil
 }
 
-func (c client) Version() (string, error) {
+func (c *client) Version() (string, error) {
 	outputCmd := c.terraformCmd([]string{
 		"-v",
 	}, nil)
@@ -313,7 +347,7 @@ func (c client) Version() (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
-func (c client) Import(envName string) error {
+func (c *client) Import(envName string) error {
 	if len(c.model.Imports) == 0 {
 		return nil
 	}
@@ -353,7 +387,7 @@ func (c client) Import(envName string) error {
 	return nil
 }
 
-func (c client) ImportWithLegacyStorage() error {
+func (c *client) ImportWithLegacyStorage() error {
 	if len(c.model.Imports) == 0 {
 		return nil
 	}
@@ -394,7 +428,7 @@ func (c client) ImportWithLegacyStorage() error {
 	return nil
 }
 
-func (c client) WorkspaceList() ([]string, error) {
+func (c *client) WorkspaceList() ([]string, error) {
 	cmd := c.terraformCmd([]string{
 		"workspace",
 		"list",
@@ -417,7 +451,7 @@ func (c client) WorkspaceList() ([]string, error) {
 	return envs, nil
 }
 
-func (c client) WorkspaceSelect(envName string) error {
+func (c *client) WorkspaceSelect(envName string) error {
 	cmd := c.terraformCmd([]string{
 		"workspace",
 		"select",
@@ -431,7 +465,7 @@ func (c client) WorkspaceSelect(envName string) error {
 	return nil
 }
 
-func (c client) WorkspaceNew(envName string) error {
+func (c *client) WorkspaceNew(envName string) error {
 	cmd := c.terraformCmd([]string{
 		"workspace",
 		"new",
@@ -445,7 +479,7 @@ func (c client) WorkspaceNew(envName string) error {
 	return nil
 }
 
-func (c client) WorkspaceNewFromExistingStateFile(envName string, localStateFilePath string) error {
+func (c *client) WorkspaceNewFromExistingStateFile(envName string, localStateFilePath string) error {
 	cmd := c.terraformCmd([]string{
 		"workspace",
 		"new",
@@ -460,7 +494,7 @@ func (c client) WorkspaceNewFromExistingStateFile(envName string, localStateFile
 	return nil
 }
 
-func (c client) WorkspaceDelete(envName string) error {
+func (c *client) WorkspaceDelete(envName string) error {
 	cmd := c.terraformCmd([]string{
 		"workspace",
 		"delete",
@@ -476,7 +510,24 @@ func (c client) WorkspaceDelete(envName string) error {
 	return nil
 }
 
-func (c client) StatePull(envName string) ([]byte, error) {
+func (c *client) WorkspaceDeleteWithForce(envName string) error {
+	cmd := c.terraformCmd([]string{
+		"workspace",
+		"delete",
+		"-force",
+		envName,
+	}, []string{
+		"TF_WORKSPACE=default",
+	})
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("Error: %s, Output: %s", err, output)
+	}
+
+	return nil
+}
+
+func (c *client) StatePull(envName string) ([]byte, error) {
 	cmd := c.terraformCmd([]string{
 		"state",
 		"pull",
@@ -492,7 +543,7 @@ func (c client) StatePull(envName string) ([]byte, error) {
 	return rawOutput, nil
 }
 
-func (c client) CurrentStateVersion(envName string) (StateVersion, error) {
+func (c *client) CurrentStateVersion(envName string) (StateVersion, error) {
 	rawState, err := c.StatePull(envName)
 	if err != nil {
 		return StateVersion{}, err
@@ -518,7 +569,87 @@ func (c client) CurrentStateVersion(envName string) (StateVersion, error) {
 	}, nil
 }
 
-func (c client) resourceExists(tfID string, envName string) (bool, error) {
+func (c *client) SavePlanToBackend(planEnvName string) error {
+	planContents, err := ioutil.ReadFile(c.model.PlanFileLocalPath)
+	if err != nil {
+		return err
+	}
+
+	tmpDir, err := ioutil.TempDir("", "tf-resource-plan")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// TODO: this stateful set and reset isn't great
+	origDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	origSource := c.model.Source
+	origLogger := c.logWriter
+
+	err = os.Chdir(tmpDir)
+	if err != nil {
+		return err
+	}
+	c.model.Source = tmpDir
+	c.logWriter = ioutil.Discard // prevent provider from logging creds
+
+	defer func() {
+		os.Chdir(origDir)
+		c.model.Source = origSource
+		c.logWriter = origLogger
+	}()
+
+	err = c.writePlanProviderConfig(tmpDir, planContents)
+	if err != nil {
+		return err
+	}
+
+	err = c.InitWithBackend()
+	if err != nil {
+		return err
+	}
+
+	// TODO: create or select
+	err = c.WorkspaceNew(planEnvName)
+	if err != nil {
+		return err
+	}
+
+	err = c.Apply()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *client) GetPlanFromBackend(planEnvName string) error {
+	if err := c.WorkspaceSelect(planEnvName); err != nil {
+		return err
+	}
+
+	outputs, err := c.Output(planEnvName)
+	if err != nil {
+		return err
+	}
+	encodedPlan := outputs["plan_content"]["value"].(string)
+
+	decodedPlan, err := base64.StdEncoding.DecodeString(encodedPlan)
+	if err != nil {
+		return err
+	}
+
+	if err = ioutil.WriteFile(c.model.PlanFileLocalPath, []byte(decodedPlan), 0755); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *client) resourceExists(tfID string, envName string) (bool, error) {
 	cmd := c.terraformCmd([]string{
 		"state",
 		"list",
@@ -535,7 +666,7 @@ func (c client) resourceExists(tfID string, envName string) (bool, error) {
 	return (len(strings.TrimSpace(string(rawOutput))) > 0), nil
 }
 
-func (c client) resourceExistsLegacyStorage(tfID string) (bool, error) {
+func (c *client) resourceExistsLegacyStorage(tfID string) (bool, error) {
 	if _, err := os.Stat(c.model.StateFileLocalPath); os.IsNotExist(err) {
 		return false, nil
 	}
@@ -555,7 +686,7 @@ func (c client) resourceExistsLegacyStorage(tfID string) (bool, error) {
 	return (len(strings.TrimSpace(string(rawOutput))) > 0), nil
 }
 
-func (c client) terraformCmd(args []string, env []string) *exec.Cmd {
+func (c *client) terraformCmd(args []string, env []string) *exec.Cmd {
 	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("terraform %s", strings.Join(args, " ")))
 
 	cmd.Dir = c.model.Source
@@ -575,7 +706,7 @@ func (c client) terraformCmd(args []string, env []string) *exec.Cmd {
 	return cmd
 }
 
-func (c client) writeVarFile() (string, error) {
+func (c *client) writeVarFile() (string, error) {
 	yamlContents, err := yaml.Marshal(c.model.Vars)
 	if err != nil {
 		return "", err

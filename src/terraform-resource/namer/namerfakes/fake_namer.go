@@ -2,15 +2,16 @@
 package namerfakes
 
 import (
-	"sync"
-	"terraform-resource/namer"
+	sync "sync"
+	namer "terraform-resource/namer"
 )
 
 type FakeNamer struct {
 	RandomNameStub        func() string
 	randomNameMutex       sync.RWMutex
-	randomNameArgsForCall []struct{}
-	randomNameReturns     struct {
+	randomNameArgsForCall []struct {
+	}
+	randomNameReturns struct {
 		result1 string
 	}
 	randomNameReturnsOnCall map[int]struct {
@@ -23,7 +24,8 @@ type FakeNamer struct {
 func (fake *FakeNamer) RandomName() string {
 	fake.randomNameMutex.Lock()
 	ret, specificReturn := fake.randomNameReturnsOnCall[len(fake.randomNameArgsForCall)]
-	fake.randomNameArgsForCall = append(fake.randomNameArgsForCall, struct{}{})
+	fake.randomNameArgsForCall = append(fake.randomNameArgsForCall, struct {
+	}{})
 	fake.recordInvocation("RandomName", []interface{}{})
 	fake.randomNameMutex.Unlock()
 	if fake.RandomNameStub != nil {
@@ -32,7 +34,8 @@ func (fake *FakeNamer) RandomName() string {
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.randomNameReturns.result1
+	fakeReturns := fake.randomNameReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeNamer) RandomNameCallCount() int {
@@ -41,7 +44,15 @@ func (fake *FakeNamer) RandomNameCallCount() int {
 	return len(fake.randomNameArgsForCall)
 }
 
+func (fake *FakeNamer) RandomNameCalls(stub func() string) {
+	fake.randomNameMutex.Lock()
+	defer fake.randomNameMutex.Unlock()
+	fake.RandomNameStub = stub
+}
+
 func (fake *FakeNamer) RandomNameReturns(result1 string) {
+	fake.randomNameMutex.Lock()
+	defer fake.randomNameMutex.Unlock()
 	fake.RandomNameStub = nil
 	fake.randomNameReturns = struct {
 		result1 string
@@ -49,6 +60,8 @@ func (fake *FakeNamer) RandomNameReturns(result1 string) {
 }
 
 func (fake *FakeNamer) RandomNameReturnsOnCall(i int, result1 string) {
+	fake.randomNameMutex.Lock()
+	defer fake.randomNameMutex.Unlock()
 	fake.RandomNameStub = nil
 	if fake.randomNameReturnsOnCall == nil {
 		fake.randomNameReturnsOnCall = make(map[int]struct {

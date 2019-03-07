@@ -70,6 +70,7 @@ func (r Runner) runWithBackend(req models.OutRequest, terraformModel models.Terr
 	}
 
 	terraformModel.Vars["env_name"] = envName
+	terraformModel.PlanFileLocalPath = path.Join(tmpDir, "plan")
 
 	client := terraform.NewClient(
 		terraformModel,
@@ -88,8 +89,9 @@ func (r Runner) runWithBackend(req models.OutRequest, terraformModel models.Terr
 	var result terraform.Result
 	var actionErr error
 
-	// TODO: handle plan
-	if req.Params.Action == models.DestroyAction {
+	if req.Params.PlanOnly {
+		result, actionErr = action.Plan()
+	} else if req.Params.Action == models.DestroyAction {
 		result, actionErr = action.Destroy()
 	} else {
 		result, actionErr = action.Apply()
