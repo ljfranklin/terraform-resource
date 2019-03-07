@@ -327,6 +327,104 @@ var _ = Describe("Out Plan", func() {
 		Expect(finalLastModified).To(Equal(initialLastModified))
 	})
 
+	It("allows re-generating a plan", func() {
+		initialPlanRequest := models.OutRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					BackendType:   backendType,
+					BackendConfig: backendConfig,
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source:   "fixtures/aws/",
+					PlanOnly: true,
+					Env: map[string]string{
+						"HOME": workingDir, // in prod plugin is installed system-wide
+					},
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		planRequest := models.OutRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					BackendType:   backendType,
+					BackendConfig: backendConfig,
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source:   "fixtures/aws/",
+					PlanOnly: true,
+					Env: map[string]string{
+						"HOME": workingDir, // in prod plugin is installed system-wide
+					},
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		By("ensuring plan files does not already exist")
+
+		awsVerifier.ExpectS3FileToNotExist(
+			bucket,
+			planFilePath,
+		)
+
+		By("running 'out' to create the plan file")
+
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: GinkgoWriter,
+		}
+		_, err := runner.Run(initialPlanRequest)
+		Expect(err).ToNot(HaveOccurred())
+
+		By("ensuring that plan exists")
+
+		awsVerifier.ExpectS3FileToExist(
+			bucket,
+			planFilePath,
+		)
+
+		initialLastModified := awsVerifier.GetLastModifiedFromS3(bucket, planFilePath)
+
+		time.Sleep(1 * time.Second) // ensure LastModified has time to change
+
+		By("recreating the plan")
+
+		_, err = runner.Run(planRequest)
+		Expect(err).ToNot(HaveOccurred())
+
+		By("ensuring that plan file still exists")
+
+		awsVerifier.ExpectS3FileToExist(
+			bucket,
+			planFilePath,
+		)
+
+		finalLastModified := awsVerifier.GetLastModifiedFromS3(bucket, planFilePath)
+		Expect(finalLastModified).ToNot(Equal(initialLastModified))
+	})
+
 	It("plan should be deleted on destroy", func() {
 		planOutRequest := models.OutRequest{
 			Source: models.Source{

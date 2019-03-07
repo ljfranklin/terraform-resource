@@ -80,7 +80,7 @@ func (a *MigratedFromStorageAction) attemptApply() (Result, error) {
 			}
 		}
 
-		if err = a.createWorkspaceIfNotExists(); err != nil {
+		if err = a.Client.WorkspaceNewIfNotExists(a.EnvName); err != nil {
 			return Result{}, err
 		}
 	}
@@ -233,7 +233,7 @@ func (a *MigratedFromStorageAction) attemptPlan() (Result, error) {
 	a.Logger.InfoSection("Terraform Plan")
 	defer a.Logger.EndSection()
 
-	if err := a.createWorkspaceIfNotExists(); err != nil {
+	if err := a.Client.WorkspaceNewIfNotExists(a.EnvName); err != nil {
 		return Result{}, err
 	}
 
@@ -267,25 +267,6 @@ func (a *MigratedFromStorageAction) setup() error {
 
 func (a *MigratedFromStorageAction) importExistingStateFileIntoNewWorkspace() error {
 	return a.Client.WorkspaceNewFromExistingStateFile(a.EnvName, a.StateFile.LocalPath)
-}
-
-func (a *MigratedFromStorageAction) createWorkspaceIfNotExists() error {
-	workspaces, err := a.Client.WorkspaceList()
-	if err != nil {
-		return err
-	}
-
-	workspaceExists := false
-	for _, space := range workspaces {
-		if space == a.EnvName {
-			workspaceExists = true
-		}
-	}
-
-	if workspaceExists {
-		return a.Client.WorkspaceSelect(a.EnvName)
-	}
-	return a.Client.WorkspaceNew(a.EnvName)
 }
 
 func (a *MigratedFromStorageAction) deletePlanWorkspaceIfExists() error {

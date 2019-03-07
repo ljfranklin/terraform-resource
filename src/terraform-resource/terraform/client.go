@@ -34,8 +34,8 @@ type Client interface {
 	Import(string) error
 	ImportWithLegacyStorage() error
 	WorkspaceList() ([]string, error)
-	WorkspaceNew(string) error
 	WorkspaceNewFromExistingStateFile(string, string) error
+	WorkspaceNewIfNotExists(string) error
 	WorkspaceSelect(string) error
 	WorkspaceDelete(string) error
 	WorkspaceDeleteWithForce(string) error
@@ -465,7 +465,24 @@ func (c *client) WorkspaceSelect(envName string) error {
 	return nil
 }
 
-func (c *client) WorkspaceNew(envName string) error {
+func (c *client) WorkspaceNewIfNotExists(envName string) error {
+	workspaces, err := c.WorkspaceList()
+
+	if err != nil {
+		return err
+	}
+
+	workspaceExists := false
+	for _, space := range workspaces {
+		if space == envName {
+			workspaceExists = true
+		}
+	}
+
+	if workspaceExists {
+		return c.WorkspaceSelect(envName)
+	}
+
 	cmd := c.terraformCmd([]string{
 		"workspace",
 		"new",
@@ -612,8 +629,7 @@ func (c *client) SavePlanToBackend(planEnvName string) error {
 		return err
 	}
 
-	// TODO: create or select
-	err = c.WorkspaceNew(planEnvName)
+	err = c.WorkspaceNewIfNotExists(planEnvName)
 	if err != nil {
 		return err
 	}
