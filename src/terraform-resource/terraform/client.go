@@ -435,7 +435,7 @@ func (c *client) WorkspaceList() ([]string, error) {
 	}, nil)
 	rawOutput, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Error: %s, Output: %s", err, rawOutput)
+		return nil, fmt.Errorf("Error running `workspace list`: %s, Output: %s", err, rawOutput)
 	}
 
 	envs := []string{}
@@ -459,7 +459,7 @@ func (c *client) WorkspaceSelect(envName string) error {
 	}, nil)
 
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("Error: %s, Output: %s", err, output)
+		return fmt.Errorf("Error running `workspace select`: %s, Output: %s", err, output)
 	}
 
 	return nil
@@ -490,7 +490,7 @@ func (c *client) WorkspaceNewIfNotExists(envName string) error {
 	}, nil)
 
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("Error: %s, Output: %s", err, output)
+		return fmt.Errorf("Error running `workspace new`: %s, Output: %s", err, output)
 	}
 
 	return nil
@@ -505,7 +505,7 @@ func (c *client) WorkspaceNewFromExistingStateFile(envName string, localStateFil
 	}, nil)
 
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("Error: %s, Output: %s", err, output)
+		return fmt.Errorf("Error running `workspace new -state`: %s, Output: %s", err, output)
 	}
 
 	return nil
@@ -521,7 +521,7 @@ func (c *client) WorkspaceDelete(envName string) error {
 	})
 
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("Error: %s, Output: %s", err, output)
+		return fmt.Errorf("Error running `workspace delete`: %s, Output: %s", err, output)
 	}
 
 	return nil
@@ -538,7 +538,7 @@ func (c *client) WorkspaceDeleteWithForce(envName string) error {
 	})
 
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("Error: %s, Output: %s", err, output)
+		return fmt.Errorf("Error running `workspace delete -force`: %s, Output: %s", err, output)
 	}
 
 	return nil
@@ -554,7 +554,7 @@ func (c *client) StatePull(envName string) ([]byte, error) {
 
 	rawOutput, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Error: %s, Output: %s", err, rawOutput)
+		return nil, fmt.Errorf("Error running `state pull`: %s, Output: %s", err, rawOutput)
 	}
 
 	return rawOutput, nil
@@ -675,7 +675,7 @@ func (c *client) resourceExists(tfID string, envName string) (bool, error) {
 	})
 	rawOutput, err := cmd.Output()
 	if err != nil {
-		return false, fmt.Errorf("Error: %s, Output: %s", err, rawOutput)
+		return false, fmt.Errorf("Error running `state list`: %s, Output: %s", err, rawOutput)
 	}
 
 	// command returns the ID of the resource if it exists
@@ -695,7 +695,7 @@ func (c *client) resourceExistsLegacyStorage(tfID string) (bool, error) {
 	}, nil)
 	rawOutput, err := cmd.Output()
 	if err != nil {
-		return false, fmt.Errorf("Error: %s, Output: %s", err, rawOutput)
+		return false, fmt.Errorf("Error running `state list -state`: %s, Output: %s", err, rawOutput)
 	}
 
 	// command returns the ID of the resource if it exists
