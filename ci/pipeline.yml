@@ -50,8 +50,11 @@ jobs:
             file: resource-backend-src/ci/tasks/bump-terraform-cli.yml
           - task: backend-git-commit
             file: resource-backend-src/ci/tasks/git-commit.yml
-            input_mapping: {input-src: updated-backend-resource-src}
-            output_mapping: {output-src: committed-backend-resource-src}
+            input_mapping:
+              input-src: updated-backend-resource-src
+              resource-src: resource-backend-src
+            output_mapping:
+              output-src: committed-backend-resource-src
             params:
               GIT_ADD_ARGS: ./config/terraform-version
               GIT_COMMIT_MSG: ":airplane: Auto-commit: Bumping Terraform CLI version"
