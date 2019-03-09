@@ -9,7 +9,7 @@ const (
 	// e.g. "2006-01-02T15:04:05Z"
 	TimeFormat = time.RFC3339
 
-	DeprecationWarning = "The `storage` parameter is deprecated. Please migrate to using built-in Terraform backends as described here: https://github.com/ljfranklin/terraform-resource/tree/WIP-tf-backends#backend-migration."
+	DeprecationWarning = "The `storage` parameter is deprecated. Please migrate to using built-in Terraform backends as described here: https://github.com/ljfranklin/terraform-resource#backend-migration."
 )
 
 type Storage interface {
