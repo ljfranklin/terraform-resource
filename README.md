@@ -7,20 +7,6 @@ See [DEVELOPMENT](DEVELOPMENT.md) if you're interested in submitting a PR :+1:
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/ljfranklin/terraform-resource.svg)
 
-## Backend Beta
-
-This Beta release of the terraform-resource adds support for build-in [Terraform backends](https://www.terraform.io/docs/backends/types/index.html).
-This gives more options for storing your Terraform statefiles such as Google Cloud Storage and Azure Storage in addition to S3.
-
-Some gotchas:
-
-- To enable Backend support, you must use the `ljfranklin/terraform-resource:beta-backend` image in your pipeline under `resource_types`.
-- Support for `plan_only` and `plan_run` is currently broken with backends as Terraform does not allow you to store plan files in the backend.
-  - Add a thumbs up on [this issue](https://github.com/hashicorp/terraform/issues/16061) if you'd like to see support added.
-- Drops support for feeding Terraform outputs back in as input `vars` to subsequent `puts`.
-  - This "feature" causes suprising errors if inputs and outputs have the same name but different types and the implementation was significantly more complicated with the new `migrated_from_storage` flow.
-- Please open an issue if you hit an error or if the docs are confusing to save some pain for the next person.
-
 ## Source Configuration
 
 > **Important!:** The `source.storage` field has been replaced by `source.backend_type` and `source.backend_config` to leverage the built-in Terraform backends. If you currently use `source.storage` in your pipeline, follow the instructions in the [Backend Migration](#backend-migration) section to ensure your state files are not lost.
@@ -45,15 +31,13 @@ See [Terraform Input Variables](https://www.terraform.io/intro/getting-started/v
 
 #### Source Example
 
-> **Note:** Declaring custom resources under `resource_types` requires Concourse 1.0 or newer.
-
 ```yaml
 resource_types:
 - name: terraform
   type: docker-image
   source:
     repository: ljfranklin/terraform-resource
-    tag: beta-backend
+    tag: latest
 
 resources:
   - name: terraform
@@ -93,7 +77,6 @@ resources:
 
 #### Image Variants
 
-- Beta of resource with Backend support: `ljfranklin/terraform-resource:beta-backend`.
 - Latest stable release of resource: `ljfranklin/terraform-resource:latest`.
 - Specific versions of Terraform, e.g. `ljfranklin/terraform-resource:0.7.7`.
 - [RC builds](https://concourse.lylefranklin.com/teams/main/pipelines/terraform-resource-rc) from Terraform pre-releases: `ljfranklin/terraform-resource:rc`.
@@ -142,6 +125,10 @@ Finally, `env_name` is automatically passed as an input `var`.
 
 * `private_key`: *Optional.* An SSH key used to fetch modules, e.g. [private GitHub repos](https://www.terraform.io/docs/modules/sources.html#private-github-repos).
 
+* `plan_only`: *Optional. Default `false`* This boolean will allow Terraform to create a plan file and store it the configured backend. Useful for manually reviewing a plan prior to applying. See [Plan and Apply Example](#plan-and-apply-example). **Warning:** Plan files contain unencrypted credentials like AWS Secret Keys, only store these files in a private bucket.
+
+* `plan_run`: *Optional. Default `false`* This boolean will allow Terraform to execute the plan file stored on the configured backend, then delete it.
+
 * `import_files`: *Optional.* A list of files containing existing resources to [import](https://www.terraform.io/docs/import/usage.html) into the state file. The files can be in YAML or JSON format, containing key-value pairs like `aws_instance.bar: i-abcd1234`.
 
 * `override_files`: *Optional.* A list of files to copy into the `terraform_source` directory. Override files must follow conventions outlined [here](https://www.terraform.io/docs/configuration/override.html) such as file names ending in `_override.tf`.
@@ -183,6 +170,29 @@ The preceding job would show a file similar to the following:
 ```
 name: e2e
 metadata: { "vpc_id": "vpc-123456", "vpc_tag_name": "concourse" }
+```
+
+#### Plan and apply example
+
+```yaml
+- name: terraform-plan
+  plan:
+    - put: terraform
+      params:
+        env_name: staging
+        plan_only: true
+        vars:
+          subnet_cidr: 10.0.1.0/24
+
+- name: terraform-apply
+  plan:
+    - get: terraform
+      trigger: false
+      passed: [terraform-plan]
+    - put: terraform
+      params:
+        env_name: staging
+        plan_run: true
 ```
 
 ## Managing a single environment vs a pool of environments
