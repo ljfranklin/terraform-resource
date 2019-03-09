@@ -19,55 +19,29 @@ jobs:
     on_success: *success-alert
     on_failure: *failure-alert
     plan:
-      - get: terraform-github-release
-        trigger: true
       - aggregate:
-        - do:
-          - get: resource-src
-          - task: bump-terraform-cli
-            file: resource-src/ci/tasks/bump-terraform-cli.yml
-          - task: git-commit
-            file: resource-src/ci/tasks/git-commit.yml
-            input_mapping: {input-src: updated-resource-src}
-            output_mapping: {output-src: committed-resource-src}
-            params:
-              GIT_ADD_ARGS: ./config/terraform-version
-              GIT_COMMIT_MSG: ":airplane: Auto-commit: Bumping Terraform CLI version"
-              GIT_COMMIT_USERNAME: friendly-ci
-              GIT_COMMIT_EMAIL: {{git_commit_email}}
-              GIT_SUCCEED_ON_NO_CHANGES: true
-          - put: resource-src
-            params:
-              repository: committed-resource-src/
-              rebase: true
-        - do:
-          - get: resource-backend-src
-          - task: backend-bump-terraform-cli
-            input_mapping:
-              resource-src: resource-backend-src
-            output_mapping:
-              updated-resource-src: updated-backend-resource-src
-            file: resource-backend-src/ci/tasks/bump-terraform-cli.yml
-          - task: backend-git-commit
-            file: resource-backend-src/ci/tasks/git-commit.yml
-            input_mapping:
-              input-src: updated-backend-resource-src
-              resource-src: resource-backend-src
-            output_mapping:
-              output-src: committed-backend-resource-src
-            params:
-              GIT_ADD_ARGS: ./config/terraform-version
-              GIT_COMMIT_MSG: ":airplane: Auto-commit: Bumping Terraform CLI version"
-              GIT_COMMIT_USERNAME: friendly-ci
-              GIT_COMMIT_EMAIL: {{git_commit_email}}
-              GIT_SUCCEED_ON_NO_CHANGES: true
-          - put: resource-backend-src
-            params:
-              repository: committed-backend-resource-src/
-              rebase: true
+        - get: terraform-github-release
+          trigger: true
+        - get: resource-src
+      - task: bump-terraform-cli
+        file: resource-src/ci/tasks/bump-terraform-cli.yml
+      - task: git-commit
+        file: resource-src/ci/tasks/git-commit.yml
+        input_mapping: {input-src: updated-resource-src}
+        output_mapping: {output-src: committed-resource-src}
+        params:
+          GIT_ADD_ARGS: ./config/terraform-version
+          GIT_COMMIT_MSG: ":airplane: Auto-commit: Bumping Terraform CLI version"
+          GIT_COMMIT_USERNAME: friendly-ci
+          GIT_COMMIT_EMAIL: {{git_commit_email}}
+          GIT_SUCCEED_ON_NO_CHANGES: true
+      - put: resource-src
+        params:
+          repository: committed-resource-src/
+          rebase: true
 
   - name: push-dev-image
-    serial_groups: [track1, track2]
+    serial_groups: [track1, track2, track3, track4, track5]
     on_failure: *failure-alert
     plan:
       - get: resource-src
@@ -79,7 +53,7 @@ jobs:
           build: build-artifacts/
 
   - name: test-unit
-    serial_groups: [track1, track2]
+    serial_groups: [track1, track2, track3, track4, track5]
     on_failure: *failure-alert
     plan:
       - aggregate:
@@ -104,7 +78,7 @@ jobs:
           GITHUB_PRIVATE_KEY:       {{git_private_key}}
 
   - name: push-test-image
-    serial_groups: [track1, track2]
+    serial_groups: [track1, track2, track3, track4, track5]
     on_failure: *failure-alert
     plan:
       - aggregate:
@@ -129,7 +103,7 @@ jobs:
             args:
               - 120 # concourse updates resource images every minute
 
-  - name: plan-infrastructure
+  - name: create-env-with-s3-backend
     serial_groups: [track1]
     on_failure: *failure-alert
     plan:
@@ -137,24 +111,12 @@ jobs:
         trigger: true
         passed: [push-test-image]
       - put: terraform
+        resource: terraform-s3-backend
         params:
-          env_name: terraform-ci
-          plan_only: true
+          env_name: s3-backend-env
           vars:
             object_key: ci-pipeline/track1
             object_content: "terraform is neat!"
-
-  - name: create-infrastructure
-    serial_groups: [track1]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        trigger: true
-        passed: [plan-infrastructure]
-      - put: terraform
-        params:
-          env_name: terraform-ci
-          plan_run: true
       - &show-outputs
         task: show-outputs
         config:
@@ -174,62 +136,41 @@ jobs:
                   echo "name: $(cat terraform/name)"
                   echo "metadata: $(cat terraform/metadata)"
 
-  - name: update-infrastructure-via-params
+  - name: update-env-with-s3-backend
     serial_groups: [track1]
     on_failure: *failure-alert
     plan:
       - get: resource-src
         trigger: true
-        passed: [create-infrastructure]
+        passed: [create-env-with-s3-backend]
       - put: terraform
+        resource: terraform-s3-backend
         params:
-          env_name: terraform-ci
+          env_name: s3-backend-env
           vars:
-            # update the file contents
+            object_key: ci-pipeline/track1
             object_content: "terraform is still neat!"
       - *show-outputs
 
-  - name: update-infrastructure-via-file
+  - name: destroy-env-with-s3-backend
     serial_groups: [track1]
     on_failure: *failure-alert
     plan:
       - get: resource-src
         trigger: true
-        passed: [update-infrastructure-via-params]
-      - task: make-var-file
-        config:
-          platform: linux
-          image_resource: *test-image
-          outputs:
-             - name: vars
-          run:
-            path: /bin/sh
-            args:
-              - -c
-              - |
-                  echo 'object_content: "terraform files are neat too!"' >> vars/input.yml
+        passed: [update-env-with-s3-backend]
       - put: terraform
+        resource: terraform-s3-backend
         params:
-          env_name: terraform-ci
-          var_files:
-          - vars/input.yml
-      - *show-outputs
-
-  - name: destroy-infrastructure
-    serial_groups: [track1]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        trigger: true
-        passed: [update-infrastructure-via-file]
-      - put: terraform
-        params:
-          env_name: terraform-ci
+          env_name: s3-backend-env
           action: destroy
+          vars:
+            object_key: ci-pipeline/track1
+            object_content: "terraform is still neat!"
         get_params:
           action: destroy
 
-  - name: create-env-and-lock
+  - name: create-env-with-gcs-backend
     serial_groups: [track2]
     on_failure: *failure-alert
     plan:
@@ -237,20 +178,53 @@ jobs:
         trigger: true
         passed: [push-test-image]
       - put: terraform
+        resource: terraform-gcs-backend
         params:
-          # generate a random env_name for the lock file
-          generate_random_name: true
-          delete_on_failure: true
+          env_name: gcs-backend-env
           vars:
             object_key: ci-pipeline/track2
             object_content: "terraform is neat!"
-      # create a new lock containing the terraform output
+      - *show-outputs
+
+  - name: destroy-env-with-gcs-backend
+    serial_groups: [track2]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        trigger: true
+        passed: [create-env-with-gcs-backend]
+      - put: terraform
+        resource: terraform-gcs-backend
+        params:
+          env_name: gcs-backend-env
+          action: destroy
+          vars:
+            object_key: ci-pipeline/track2
+            object_content: "terraform is neat!"
+        get_params:
+          action: destroy
+
+  - name: create-env-and-lock
+    serial_groups: [track3]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        trigger: true
+        passed: [push-test-image]
+      - put: terraform
+        resource: terraform-s3-backend
+        params:
+          generate_random_name: true
+          delete_on_failure: true
+          vars:
+            object_key: ci-pipeline/track3
+            object_content: "terraform is neat!"
       - put: locks
         params:
           add: terraform/
 
   - name: lock-env
-    serial_groups: [track2]
+    serial_groups: [track3]
     on_failure: *failure-alert
     plan:
       - get: resource-src
@@ -274,7 +248,7 @@ jobs:
                   echo "metadata: $(cat locks/metadata)"
 
   - name: destroy-env-and-lock
-    serial_groups: [track2]
+    serial_groups: [track3]
     on_failure: *failure-alert
     plan:
       - get: resource-src
@@ -282,23 +256,120 @@ jobs:
         passed: [lock-env]
       - get: locks
         passed: [lock-env]
-      # destroy the IaaS resources
       - put: terraform
+        resource: terraform-s3-backend
         params:
           env_name_file: locks/name
           action: destroy
         get_params:
           action: destroy
-      # destroy the lock
       - put: locks
         params:
           remove: locks/
+
+  - name: create-env-with-legacy-storage
+    serial_groups: [track4]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        trigger: true
+        passed: [push-test-image]
+      - put: terraform
+        resource: terraform-legacy-storage
+        params:
+          env_name: migrated-env
+          vars:
+            object_key: ci-pipeline/track4
+            object_content: "terraform is neat!"
+      - *show-outputs
+
+  - name: migrate-env
+    serial_groups: [track4]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        trigger: true
+        passed: [create-env-with-legacy-storage]
+      - put: terraform
+        resource: terraform-migrated-backend
+        params:
+          env_name: migrated-env
+          vars:
+            object_key: ci-pipeline/track4
+            object_content: "terraform is still neat!"
+      - *show-outputs
+
+  - name: destroy-migrated-env
+    serial_groups: [track4]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        trigger: true
+        passed: [migrate-env]
+      - put: terraform
+        resource: terraform-migrated-backend
+        params:
+          env_name: migrated-env
+          action: destroy
+          vars:
+            object_key: ci-pipeline/track4
+            object_content: "terraform is still neat!"
+        get_params:
+          action: destroy
+
+  - name: create-plan
+    serial_groups: [track5]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        trigger: true
+        passed: [push-test-image]
+      - put: terraform
+        resource: terraform-s3-backend
+        params:
+          env_name: plan-env
+          plan_only: true
+          vars:
+            object_key: ci-pipeline/track5
+            object_content: "terraform is neat!"
+
+  - name: apply-plan
+    serial_groups: [track5]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        trigger: true
+        passed: [create-plan]
+      - put: terraform
+        resource: terraform-s3-backend
+        params:
+          env_name: plan-env
+          plan_run: true
+      - *show-outputs
+
+  - name: destroy-plan-env
+    serial_groups: [track5]
+    on_failure: *failure-alert
+    plan:
+      - get: resource-src
+        trigger: true
+        passed: [apply-plan]
+      - put: terraform
+        resource: terraform-s3-backend
+        params:
+          env_name: plan-env
+          action: destroy
+          vars:
+            object_key: ci-pipeline/track5
+            object_content: "terraform is still neat!"
+        get_params:
+          action: destroy
 
   - name: push-prod-image
     on_failure: *failure-alert
     plan:
       - get: resource-src
-        passed: [destroy-env-and-lock, destroy-infrastructure]
+        passed: [destroy-env-with-s3-backend, destroy-env-with-gcs-backend, destroy-env-and-lock, destroy-migrated-env, destroy-plan-env]
         trigger: true
       - aggregate:
         - put: terraform-pinned-image
@@ -313,284 +384,6 @@ jobs:
             pull_tag: test
             cache: true
 
-  ###################
-  ## BACKEND TESTS ##
-  ###################
-
-  - name: push-backend-dev-image
-    serial_groups: [track3, track4, track5, track6]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        resource: resource-backend-src
-        trigger: true
-      - task: build-artifacts
-        file: resource-src/ci/tasks/build-dev-artifacts.yml
-      - put: terraform-backend-dev-image
-        params:
-          build: build-artifacts/
-
-  - name: test-backend-unit
-    serial_groups: [track3, track4, track5, track6]
-    on_failure: *failure-alert
-    plan:
-      - aggregate:
-        - get: resource-src
-          resource: resource-backend-src
-          trigger: true
-          passed: [push-backend-dev-image]
-        - get: terraform-backend-dev-image
-          passed: [push-backend-dev-image]
-      - task: test-backend-unit
-        image: terraform-backend-dev-image
-        file: resource-src/ci/tasks/test-unit.yml
-        params:
-          AWS_ACCESS_KEY:           {{ec2_access_key}}
-          AWS_SECRET_KEY:           {{ec2_secret_key}}
-          AWS_BUCKET:               {{storage_bucket}}
-          AWS_BUCKET_SUBFOLDER:     terraform-test-unit
-          GCS_BUCKET:               {{gcs_bucket}}
-          GCS_ENDPOINT:             {{gcs_endpoint}}
-          GCS_ACCESS_KEY:           {{gcs_access_key}}
-          GCS_SECRET_KEY:           {{gcs_secret_key}}
-          GCS_CREDENTIALS_JSON:     {{gcs_credentials_json}}
-          S3_KMS_KEY_ID:            {{s3_kms_key_id}}
-          GITHUB_PRIVATE_KEY:       {{git_private_key}}
-
-  - name: push-backend-test-image
-    serial_groups: [track3, track4, track5, track6]
-    on_failure: *failure-alert
-    plan:
-      - aggregate:
-        - get: resource-src
-          resource: resource-backend-src
-          trigger: true
-          passed: [test-backend-unit]
-        - get: terraform-backend-dev-image
-          passed: [test-backend-unit]
-      - task: build-artifacts
-        image: terraform-backend-dev-image
-        file: resource-src/ci/tasks/build-prod-artifacts.yml
-      - put: terraform-backend-test-image
-        params:
-          build: build-artifacts/
-          cache: true
-      - task: wait-for-resource-type-to-update
-        image: terraform-backend-dev-image
-        config:
-          platform: linux
-          run:
-            path: sleep
-            args:
-              - 120 # concourse updates resource images every minute
-
-  - name: create-env-with-backend
-    serial_groups: [track3]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        resource: resource-backend-src
-        trigger: true
-        passed: [push-backend-test-image]
-      - put: terraform
-        resource: terraform-s3-backend
-        params:
-          env_name: terraform-backend-ci
-          vars:
-            object_key: ci-pipeline/track3
-            object_content: "terraform is neat!"
-      - *show-outputs
-
-  - name: update-backend-via-params
-    serial_groups: [track3]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        resource: resource-backend-src
-        trigger: true
-        passed: [create-env-with-backend]
-      - put: terraform
-        resource: terraform-s3-backend
-        params:
-          env_name: terraform-backend-ci
-          vars:
-            object_key: ci-pipeline/track3
-            object_content: "terraform is still neat!"
-      - *show-outputs
-
-  - name: destroy-backend-env
-    serial_groups: [track3]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        resource: resource-backend-src
-        trigger: true
-        passed: [update-backend-via-params]
-      - put: terraform
-        resource: terraform-s3-backend
-        params:
-          env_name: terraform-backend-ci
-          action: destroy
-          vars:
-            object_key: ci-pipeline/track3
-            object_content: "terraform is still neat!"
-        get_params:
-          action: destroy
-
-  - name: create-env-with-gcs-backend
-    serial_groups: [track4]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        resource: resource-backend-src
-        trigger: true
-        passed: [push-backend-test-image]
-      - put: terraform
-        resource: terraform-gcs-backend
-        params:
-          env_name: terraform-backend-ci
-          vars:
-            object_key: ci-pipeline/track3
-            object_content: "terraform is neat!"
-      - *show-outputs
-
-  - name: destroy-gcs-backend-env
-    serial_groups: [track4]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        resource: resource-backend-src
-        trigger: true
-        passed: [create-env-with-gcs-backend]
-      - put: terraform
-        resource: terraform-gcs-backend
-        params:
-          env_name: terraform-backend-ci
-          action: destroy
-          vars:
-            object_key: ci-pipeline/track3
-            object_content: "terraform is neat!"
-        get_params:
-          action: destroy
-
-  - name: create-env-with-legacy-storage
-    serial_groups: [track5]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        resource: resource-backend-src
-        trigger: true
-        passed: [push-backend-test-image]
-      - put: terraform
-        resource: terraform-legacy-storage
-        params:
-          env_name: terraform-migrated-ci
-          vars:
-            object_key: ci-pipeline/track4
-            object_content: "terraform is neat!"
-      - *show-outputs
-
-  - name: migrate-env
-    serial_groups: [track5]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        resource: resource-backend-src
-        trigger: true
-        passed: [create-env-with-legacy-storage]
-      - put: terraform
-        resource: terraform-migrated-backend
-        params:
-          env_name: terraform-migrated-ci
-          vars:
-            object_key: ci-pipeline/track4
-            object_content: "terraform is still neat!"
-      - *show-outputs
-
-  - name: destroy-migrated-env
-    serial_groups: [track5]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        resource: resource-backend-src
-        trigger: true
-        passed: [migrate-env]
-      - put: terraform
-        resource: terraform-migrated-backend
-        params:
-          env_name: terraform-migrated-ci
-          action: destroy
-          vars:
-            object_key: ci-pipeline/track4
-            object_content: "terraform is still neat!"
-        get_params:
-          action: destroy
-
-  - name: plan-backend-env
-    serial_groups: [track6]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        resource: resource-backend-src
-        trigger: true
-        passed: [push-backend-test-image]
-      - put: terraform
-        resource: terraform-s3-backend
-        params:
-          env_name: terraform-backend-plan
-          plan_only: true
-          vars:
-            object_key: ci-pipeline/track6
-            object_content: "terraform is neat!"
-
-  - name: create-backend-plan-env
-    serial_groups: [track6]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        resource: resource-backend-src
-        trigger: true
-        passed: [plan-backend-env]
-      - put: terraform
-        resource: terraform-s3-backend
-        params:
-          env_name: terraform-backend-plan
-          plan_run: true
-      - *show-outputs
-
-  - name: destroy-backend-plan-env
-    serial_groups: [track6]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        resource: resource-backend-src
-        trigger: true
-        passed: [create-backend-plan-env]
-      - put: terraform
-        resource: terraform-s3-backend
-        params:
-          env_name: terraform-backend-plan
-          action: destroy
-          vars:
-            object_key: ci-pipeline/track6
-            object_content: "terraform is still neat!"
-        get_params:
-          action: destroy
-
-  - name: push-backend-beta-image
-    serial_groups: [track3, track4, track5, track6]
-    on_failure: *failure-alert
-    plan:
-      - get: resource-src
-        resource: resource-backend-src
-        passed: [destroy-backend-env, destroy-gcs-backend-env, destroy-migrated-env, destroy-backend-plan-env]
-        trigger: true
-      - put: terraform-backend-beta-image
-        params:
-          pull_repository: ljfranklin/terraform-resource
-          pull_tag: backend-test
-          cache: true
-
 resource_types:
 - name: terraform
   type: docker-image
@@ -598,11 +391,6 @@ resource_types:
     # use tag `latest` for stable release
     repository: ljfranklin/terraform-resource
     tag: test
-- name: terraform-backend
-  type: docker-image
-  source:
-    repository: ljfranklin/terraform-resource
-    tag: backend-test
 - name: slack-notification
   type: docker-image
   source:
@@ -615,12 +403,6 @@ resources:
   source:
     uri: git@github.com:ljfranklin/terraform-resource.git
     branch: master
-    private_key: {{git_private_key}}
-- name: resource-backend-src
-  type: git
-  source:
-    uri: git@github.com:ljfranklin/terraform-resource.git
-    branch: WIP-tf-backends
     private_key: {{git_private_key}}
 - name: terraform-github-release
   type: github-release
@@ -659,30 +441,6 @@ resources:
     email: {{docker_email}}
     username: {{docker_username}}
     password: {{docker_password}}
-- name: terraform-backend-dev-image
-  type: docker-image
-  source:
-    repository: ljfranklin/terraform-resource
-    tag: backend-dev
-    email: {{docker_email}}
-    username: {{docker_username}}
-    password: {{docker_password}}
-- name: terraform-backend-test-image
-  type: docker-image
-  source:
-    repository: ljfranklin/terraform-resource
-    tag: backend-test
-    email: {{docker_email}}
-    username: {{docker_username}}
-    password: {{docker_password}}
-- name: terraform-backend-beta-image
-  type: docker-image
-  source:
-    repository: ljfranklin/terraform-resource
-    tag: beta-backend
-    email: {{docker_email}}
-    username: {{docker_username}}
-    password: {{docker_password}}
 - name: locks
   type: pool
   source:
@@ -690,22 +448,8 @@ resources:
     branch: ci-pool-test
     pool: aws-ci-pool
     private_key: {{git_private_key}}
-- name: terraform
-  type: terraform
-  source: &terraform-source
-    # options common to all jobs can be specified under source
-    storage:
-      access_key_id:     {{storage_access_key}}
-      secret_access_key: {{storage_secret_key}}
-      bucket:            {{storage_bucket}}
-      bucket_path:       ci-pipeline
-    terraform_source: resource-src/fixtures/module
-    vars:
-      access_key:  {{ec2_access_key}}
-      secret_key:  {{ec2_secret_key}}
-      bucket:      {{storage_bucket}}
 - name: terraform-s3-backend
-  type: terraform-backend
+  type: terraform
   source:
     backend_type: s3
     backend_config:
@@ -721,7 +465,7 @@ resources:
       secret_key:  {{ec2_secret_key}}
       bucket:      {{storage_bucket}}
 - name: terraform-gcs-backend
-  type: terraform-backend
+  type: terraform
   source:
     backend_type: gcs
     backend_config:
@@ -735,7 +479,7 @@ resources:
       secret_key:  {{ec2_secret_key}}
       bucket:      {{storage_bucket}}
 - name: terraform-migrated-backend
-  type: terraform-backend
+  type: terraform
   source:
     backend_type: s3
     backend_config:
@@ -756,7 +500,7 @@ resources:
       secret_key:  {{ec2_secret_key}}
       bucket:      {{storage_bucket}}
 - name: terraform-legacy-storage
-  type: terraform-backend
+  type: terraform
   source:
     storage:
       access_key_id:     {{storage_access_key}}
