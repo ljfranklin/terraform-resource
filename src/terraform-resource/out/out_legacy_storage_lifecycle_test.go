@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"strconv"
 	"time"
 
 	"terraform-resource/models"
@@ -20,47 +19,51 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Out Backend Lifecycle", func() {
+var _ = Describe("Out Legacy Storage Lifecycle", func() {
 
 	var (
-		envName         string
-		stateFilePath   string
-		s3ObjectPath    string
-		workingDir      string
-		workspacePath   string
-		resetWorkingDir func()
+		envName       string
+		stateFilePath string
+		planFilePath  string
+		s3ObjectPath  string
+		workingDir    string
 	)
 
 	BeforeEach(func() {
-		envName = helpers.RandomString("out-backend-test")
-
-		workspacePath = helpers.RandomString("out-backend-test")
-
+		envName = helpers.RandomString("out-legacy-test")
+		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
+		planFilePath = path.Join(bucketPath, fmt.Sprintf("%s.plan", envName))
 		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-lifecycle"))
-		stateFilePath = path.Join(workspacePath, envName, "terraform.tfstate")
 
-		resetWorkingDir()
+		var err error
+		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test")
+		Expect(err).ToNot(HaveOccurred())
+
+		// ensure relative paths resolve correctly
+		err = os.Chdir(workingDir)
+		Expect(err).ToNot(HaveOccurred())
+
+		fixturesDir := path.Join(helpers.ProjectRoot(), "fixtures")
+		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	AfterEach(func() {
 		_ = os.RemoveAll(workingDir)
 		awsVerifier.DeleteObjectFromS3(bucket, s3ObjectPath)
 		awsVerifier.DeleteObjectFromS3(bucket, stateFilePath)
+		awsVerifier.DeleteObjectFromS3(bucket, planFilePath)
 	})
 
 	It("creates, updates, and deletes infrastructure", func() {
 		outRequest := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType: "s3",
-					BackendConfig: map[string]interface{}{
-						"bucket":               bucket,
-						"key":                  "terraform.tfstate",
-						"access_key":           accessKey,
-						"secret_key":           secretKey,
-						"region":               region,
-						"workspace_key_prefix": workspacePath,
-					},
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
 				},
 			},
 			Params: models.OutParams{
@@ -82,7 +85,7 @@ var _ = Describe("Out Backend Lifecycle", func() {
 		By("ensuring state file does not already exist")
 
 		awsVerifier.ExpectS3FileToNotExist(
-			bucket,
+			outRequest.Source.Storage.Bucket,
 			stateFilePath,
 		)
 
@@ -105,33 +108,33 @@ var _ = Describe("Out Backend Lifecycle", func() {
 		Expect(fields["content_md5"]).To(Equal(expectedMD5))
 
 		awsVerifier.ExpectS3FileToExist(
-			bucket,
+			outRequest.Source.Storage.Bucket,
 			s3ObjectPath,
 		)
 
-		Expect(createOutput.Version.Serial).ToNot(Equal(0))
-
-		By("ensuring that state file exists")
+		By("ensuring that state file exists with valid version (LastModified)")
 
 		awsVerifier.ExpectS3FileToExist(
-			bucket,
+			outRequest.Source.Storage.Bucket,
 			stateFilePath,
 		)
-		lastModified := awsVerifier.GetLastModifiedFromS3(
-			bucket,
-			stateFilePath,
-		)
-		stateFileCreatedTime, err := time.Parse(storage.TimeFormat, lastModified)
-		Expect(err).ToNot(HaveOccurred())
-		time.Sleep(1 * time.Second) // ensure LastModified changes
 
+		createVersion, err := time.Parse(storage.TimeFormat, createOutput.Version.LastModified)
+		Expect(err).ToNot(HaveOccurred())
 		Expect(createOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
+
+		time.Sleep(1 * time.Second) // ensure LastModified changes
 
 		By("running 'out' to update the S3 file")
 
-		resetWorkingDir()
+		// omits some fields to ensure the resource feeds previous output back in as input
+		outRequest.Params.Terraform.Vars = map[string]interface{}{
+			"access_key":     accessKey,
+			"secret_key":     secretKey,
+			"object_content": "terraform-is-still-neat",
+			"region":         region,
+		}
 
-		outRequest.Params.Terraform.Vars["object_content"] = "terraform-is-still-neat"
 		updateOutput, err := runner.Run(outRequest)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -143,66 +146,53 @@ var _ = Describe("Out Backend Lifecycle", func() {
 		expectedMD5 = fmt.Sprintf("%x", md5.Sum([]byte("terraform-is-still-neat")))
 		Expect(fields["content_md5"]).To(Equal(expectedMD5))
 
-		createSerial, err := strconv.Atoi(createOutput.Version.Serial)
-		Expect(err).ToNot(HaveOccurred())
-		updateSerial, err := strconv.Atoi(updateOutput.Version.Serial)
-		Expect(err).ToNot(HaveOccurred())
-		Expect(updateSerial).To(BeNumerically(">", createSerial))
-
 		By("ensuring that state file has been updated")
 
 		awsVerifier.ExpectS3FileToExist(
-			bucket,
+			outRequest.Source.Storage.Bucket,
 			stateFilePath,
 		)
 
-		lastModified = awsVerifier.GetLastModifiedFromS3(
-			bucket,
-			stateFilePath,
-		)
-		stateFileUpdatedTime, err := time.Parse(storage.TimeFormat, lastModified)
+		updatedVersion, err := time.Parse(storage.TimeFormat, updateOutput.Version.LastModified)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(stateFileUpdatedTime).To(BeTemporally(">", stateFileCreatedTime))
-		time.Sleep(1 * time.Second) // ensure LastModified changes
-
+		Expect(updatedVersion).To(BeTemporally(">", createVersion))
 		Expect(updateOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
 
-		By("running 'out' to delete the S3 file")
+		time.Sleep(1 * time.Second) // ensure LastModified changes
 
-		resetWorkingDir()
+		By("running 'out' to delete the S3 file")
 
 		outRequest.Params.Action = models.DestroyAction
 		deleteOutput, err := runner.Run(outRequest)
 		Expect(err).ToNot(HaveOccurred())
 
 		awsVerifier.ExpectS3FileToNotExist(
-			bucket,
+			outRequest.Source.Storage.Bucket,
 			s3ObjectPath,
 		)
 
 		By("ensuring that state file no longer exists")
 
 		awsVerifier.ExpectS3FileToNotExist(
-			bucket,
+			outRequest.Source.Storage.Bucket,
 			stateFilePath,
 		)
 
+		deletedVersion, err := time.Parse(storage.TimeFormat, deleteOutput.Version.LastModified)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(deletedVersion).To(BeTemporally(">", updatedVersion))
 		Expect(deleteOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
 	})
 
 	It("can delete after a failed put", func() {
 		outRequest := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType: "s3",
-					BackendConfig: map[string]interface{}{
-						"bucket":               bucket,
-						"key":                  "terraform.tfstate",
-						"access_key":           accessKey,
-						"secret_key":           secretKey,
-						"region":               region,
-						"workspace_key_prefix": workspacePath,
-					},
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
 				},
 			},
 			Params: models.OutParams{
@@ -236,39 +226,21 @@ var _ = Describe("Out Backend Lifecycle", func() {
 		By("ensuring that tainted state file exists")
 
 		awsVerifier.ExpectS3FileToExist(
-			bucket,
-			stateFilePath,
+			outRequest.Source.Storage.Bucket,
+			fmt.Sprintf("%s.tainted", stateFilePath),
 		)
 
 		By("running 'out' to delete the environment and state file")
-
-		resetWorkingDir()
 
 		outRequest.Params.Action = models.DestroyAction
 		deleteOutput, err := runner.Run(outRequest)
 		Expect(err).ToNot(HaveOccurred())
 
 		awsVerifier.ExpectS3FileToNotExist(
-			bucket,
+			outRequest.Source.Storage.Bucket,
 			stateFilePath,
 		)
 
 		Expect(deleteOutput.Version.EnvName).To(Equal(outRequest.Params.EnvName))
 	})
-
-	resetWorkingDir = func() {
-		err := os.RemoveAll(workingDir)
-		Expect(err).ToNot(HaveOccurred())
-
-		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test")
-		Expect(err).ToNot(HaveOccurred())
-
-		// ensure relative paths resolve correctly
-		err = os.Chdir(workingDir)
-		Expect(err).ToNot(HaveOccurred())
-
-		fixturesDir := path.Join(helpers.ProjectRoot(), "fixtures")
-		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
-		Expect(err).ToNot(HaveOccurred())
-	}
 })

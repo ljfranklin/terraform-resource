@@ -15,17 +15,19 @@ func TestOut(t *testing.T) {
 }
 
 var (
-	awsVerifier           *helpers.AWSVerifier
-	accessKey             string
-	secretKey             string
-	bucket                string
-	s3CompatibleAccessKey string
-	s3CompatibleSecretKey string
-	s3CompatibleBucket    string
-	s3CompatibleEndpoint  string
-	bucketPath            string
-	region                string
-	kmsKeyID              string
+	awsVerifier    *helpers.AWSVerifier
+	accessKey      string
+	secretKey      string
+	bucket         string
+	gcsAccessKey   string
+	gcsSecretKey   string
+	gcsBucket      string
+	gcsRegion      string
+	gcsEndpoint    string
+	gcsCredentials string
+	bucketPath     string
+	region         string
+	kmsKeyID       string
 )
 
 var _ = BeforeSuite(func() {
@@ -38,14 +40,19 @@ var _ = BeforeSuite(func() {
 	bucketPath = os.Getenv("AWS_BUCKET_SUBFOLDER")
 	Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_SUBFOLDER must be set")
 
-	s3CompatibleAccessKey = os.Getenv("S3_COMPATIBLE_ACCESS_KEY")
-	Expect(s3CompatibleAccessKey).ToNot(BeEmpty(), "S3_COMPATIBLE_ACCESS_KEY must be set")
-	s3CompatibleSecretKey = os.Getenv("S3_COMPATIBLE_SECRET_KEY")
-	Expect(s3CompatibleSecretKey).ToNot(BeEmpty(), "S3_COMPATIBLE_SECRET_KEY must be set")
-	s3CompatibleBucket = os.Getenv("S3_COMPATIBLE_BUCKET")
-	Expect(s3CompatibleBucket).ToNot(BeEmpty(), "S3_COMPATIBLE_BUCKET must be set")
-	s3CompatibleEndpoint = os.Getenv("S3_COMPATIBLE_ENDPOINT")
-	Expect(s3CompatibleEndpoint).ToNot(BeEmpty(), "S3_COMPATIBLE_ENDPOINT must be set")
+	gcsBucket = os.Getenv("GCS_BUCKET")
+	Expect(gcsBucket).ToNot(BeEmpty(), "GCS_BUCKET must be set")
+	gcsCredentials = os.Getenv("GCS_CREDENTIALS_JSON")
+	Expect(gcsCredentials).ToNot(BeEmpty(), "GCS_CREDENTIALS_JSON must be set")
+	gcsAccessKey = os.Getenv("GCS_ACCESS_KEY")
+	Expect(gcsAccessKey).ToNot(BeEmpty(), "GCS_ACCESS_KEY must be set")
+	gcsSecretKey = os.Getenv("GCS_SECRET_KEY")
+	Expect(gcsSecretKey).ToNot(BeEmpty(), "GCS_SECRET_KEY must be set")
+	gcsEndpoint = "storage.googleapis.com"
+	gcsRegion = os.Getenv("GCS_REGION")
+	if gcsRegion == "" {
+		gcsRegion = "us-central1"
+	}
 
 	kmsKeyID = os.Getenv("S3_KMS_KEY_ID") // optional
 	region = os.Getenv("AWS_REGION")      // optional

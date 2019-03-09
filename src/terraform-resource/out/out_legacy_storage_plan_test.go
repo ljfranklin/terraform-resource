@@ -3,62 +3,39 @@ package out_test
 import (
 	"crypto/md5"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
-	"runtime"
 	"time"
 
 	"terraform-resource/models"
 	"terraform-resource/out"
+	"terraform-resource/storage"
 	"terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Out Plan", func() {
+var _ = Describe("Out Legacy Storage Plan", func() {
 
 	var (
-		backendType   string
-		backendConfig map[string]interface{}
 		envName       string
 		stateFilePath string
 		planFilePath  string
 		s3ObjectPath  string
 		workingDir    string
-		workspacePath string
 	)
 
 	BeforeEach(func() {
-		region := os.Getenv("AWS_REGION") // optional
-		if region == "" {
-			region = "us-east-1"
-		}
-
-		workspacePath = helpers.RandomString("out-backend-test")
-
 		envName = helpers.RandomString("out-test")
-		stateFilePath = path.Join(workspacePath, envName, "terraform.tfstate")
-		planFilePath = path.Join(workspacePath, fmt.Sprintf("%s-plan", envName), "terraform.tfstate")
-		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-test"))
-
-		backendType = "s3"
-		backendConfig = map[string]interface{}{
-			"bucket":               bucket,
-			"key":                  "terraform.tfstate",
-			"access_key":           accessKey,
-			"secret_key":           secretKey,
-			"region":               region,
-			"workspace_key_prefix": workspacePath,
-		}
+		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
+		planFilePath = path.Join(bucketPath, fmt.Sprintf("%s.plan", envName))
+		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-plan"))
 
 		var err error
-		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test")
+		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-plan-test")
 		Expect(err).ToNot(HaveOccurred())
 
 		// ensure relative paths resolve correctly
@@ -68,24 +45,24 @@ var _ = Describe("Out Plan", func() {
 		fixturesDir := path.Join(helpers.ProjectRoot(), "fixtures")
 		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
 		Expect(err).ToNot(HaveOccurred())
-
-		err = downloadStatefulPlugin(workingDir)
-		Expect(err).ToNot(HaveOccurred())
 	})
 
 	AfterEach(func() {
 		_ = os.RemoveAll(workingDir)
 		awsVerifier.DeleteObjectFromS3(bucket, s3ObjectPath)
-		awsVerifier.DeleteObjectFromS3(bucket, planFilePath)
 		awsVerifier.DeleteObjectFromS3(bucket, stateFilePath)
+		awsVerifier.DeleteObjectFromS3(bucket, planFilePath)
 	})
 
 	It("plan infrastructure and apply it", func() {
 		planOutRequest := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
 				},
 			},
 			Params: models.OutParams{
@@ -93,9 +70,6 @@ var _ = Describe("Out Plan", func() {
 				Terraform: models.Terraform{
 					Source:   "fixtures/aws/",
 					PlanOnly: true,
-					Env: map[string]string{
-						"HOME": workingDir, // in prod plugin is installed system-wide
-					},
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -110,9 +84,12 @@ var _ = Describe("Out Plan", func() {
 
 		applyRequest := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
 				},
 			},
 			Params: models.OutParams{
@@ -120,12 +97,16 @@ var _ = Describe("Out Plan", func() {
 				Terraform: models.Terraform{
 					Source:  "fixtures/aws/",
 					PlanRun: true,
-					Env: map[string]string{
-						"HOME": workingDir, // in prod plugin is installed system-wide
-					},
 				},
 			},
 		}
+
+		By("ensuring plan file does not already exist")
+
+		awsVerifier.ExpectS3FileToNotExist(
+			planOutRequest.Source.Storage.Bucket,
+			planFilePath,
+		)
 
 		By("running 'out' to create the plan file")
 
@@ -136,22 +117,25 @@ var _ = Describe("Out Plan", func() {
 		planOutput, err := planrunner.Run(planOutRequest)
 		Expect(err).ToNot(HaveOccurred())
 
-		By("ensuring that plan file exists")
+		By("ensuring that plan file exists with valid version (LastModified)")
 
 		awsVerifier.ExpectS3FileToExist(
-			bucket,
+			planOutRequest.Source.Storage.Bucket,
 			planFilePath,
 		)
-		defer awsVerifier.DeleteObjectFromS3(bucket, planFilePath)
 
+		_, err = time.Parse(storage.TimeFormat, planOutput.Version.LastModified)
+		Expect(err).ToNot(HaveOccurred())
 		Expect(planOutput.Version.EnvName).To(Equal(planOutRequest.Params.EnvName))
 		Expect(planOutput.Version.PlanOnly).To(Equal("true"), "Expected PlanOnly to be true, but was false")
 
-		By("ensuring s3 file does not already exist")
+		time.Sleep(1 * time.Second) // ensure LastModified changes
+
+		By("ensuring state file does not already exist")
 
 		awsVerifier.ExpectS3FileToNotExist(
-			bucket,
-			s3ObjectPath,
+			applyRequest.Source.Storage.Bucket,
+			stateFilePath,
 		)
 
 		By("applying the plan")
@@ -175,14 +159,14 @@ var _ = Describe("Out Plan", func() {
 		Expect(fields["content_md5"]).To(Equal(expectedMD5))
 
 		awsVerifier.ExpectS3FileToExist(
-			bucket,
+			applyRequest.Source.Storage.Bucket,
 			s3ObjectPath,
 		)
 
 		By("ensuring that plan file no longer exists after the apply")
 
 		awsVerifier.ExpectS3FileToNotExist(
-			bucket,
+			applyRequest.Source.Storage.Bucket,
 			planFilePath,
 		)
 		Expect(err).ToNot(HaveOccurred())
@@ -191,18 +175,18 @@ var _ = Describe("Out Plan", func() {
 	It("takes the existing statefile into account when generating a plan", func() {
 		initialApplyRequest := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
 				},
 			},
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
 					Source: "fixtures/aws/",
-					Env: map[string]string{
-						"HOME": workingDir, // in prod plugin is installed system-wide
-					},
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -217,19 +201,19 @@ var _ = Describe("Out Plan", func() {
 
 		planRequest := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
 				},
 			},
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
-					Source:   "fixtures/aws/",
 					PlanOnly: true,
-					Env: map[string]string{
-						"HOME": workingDir, // in prod plugin is installed system-wide
-					},
+					Source:   "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -244,9 +228,12 @@ var _ = Describe("Out Plan", func() {
 
 		applyPlanRequest := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
 				},
 			},
 			Params: models.OutParams{
@@ -254,9 +241,6 @@ var _ = Describe("Out Plan", func() {
 				Terraform: models.Terraform{
 					Source:  "fixtures/aws/",
 					PlanRun: true,
-					Env: map[string]string{
-						"HOME": workingDir, // in prod plugin is installed system-wide
-					},
 				},
 			},
 		}
@@ -264,11 +248,11 @@ var _ = Describe("Out Plan", func() {
 		By("ensuring plan and state files does not already exist")
 
 		awsVerifier.ExpectS3FileToNotExist(
-			bucket,
+			initialApplyRequest.Source.Storage.Bucket,
 			stateFilePath,
 		)
 		awsVerifier.ExpectS3FileToNotExist(
-			bucket,
+			initialApplyRequest.Source.Storage.Bucket,
 			planFilePath,
 		)
 
@@ -327,120 +311,22 @@ var _ = Describe("Out Plan", func() {
 		Expect(finalLastModified).To(Equal(initialLastModified))
 	})
 
-	It("allows re-generating a plan", func() {
-		initialPlanRequest := models.OutRequest{
-			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
-			},
-			Params: models.OutParams{
-				EnvName: envName,
-				Terraform: models.Terraform{
-					Source:   "fixtures/aws/",
-					PlanOnly: true,
-					Env: map[string]string{
-						"HOME": workingDir, // in prod plugin is installed system-wide
-					},
-					Vars: map[string]interface{}{
-						"access_key":     accessKey,
-						"secret_key":     secretKey,
-						"bucket":         bucket,
-						"object_key":     s3ObjectPath,
-						"object_content": "terraform-is-neat",
-						"region":         region,
-					},
-				},
-			},
-		}
-
-		planRequest := models.OutRequest{
-			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
-				},
-			},
-			Params: models.OutParams{
-				EnvName: envName,
-				Terraform: models.Terraform{
-					Source:   "fixtures/aws/",
-					PlanOnly: true,
-					Env: map[string]string{
-						"HOME": workingDir, // in prod plugin is installed system-wide
-					},
-					Vars: map[string]interface{}{
-						"access_key":     accessKey,
-						"secret_key":     secretKey,
-						"bucket":         bucket,
-						"object_key":     s3ObjectPath,
-						"object_content": "terraform-is-neat",
-						"region":         region,
-					},
-				},
-			},
-		}
-
-		By("ensuring plan files does not already exist")
-
-		awsVerifier.ExpectS3FileToNotExist(
-			bucket,
-			planFilePath,
-		)
-
-		By("running 'out' to create the plan file")
-
-		runner := out.Runner{
-			SourceDir: workingDir,
-			LogWriter: GinkgoWriter,
-		}
-		_, err := runner.Run(initialPlanRequest)
-		Expect(err).ToNot(HaveOccurred())
-
-		By("ensuring that plan exists")
-
-		awsVerifier.ExpectS3FileToExist(
-			bucket,
-			planFilePath,
-		)
-
-		initialLastModified := awsVerifier.GetLastModifiedFromS3(bucket, planFilePath)
-
-		time.Sleep(1 * time.Second) // ensure LastModified has time to change
-
-		By("recreating the plan")
-
-		_, err = runner.Run(planRequest)
-		Expect(err).ToNot(HaveOccurred())
-
-		By("ensuring that plan file still exists")
-
-		awsVerifier.ExpectS3FileToExist(
-			bucket,
-			planFilePath,
-		)
-
-		finalLastModified := awsVerifier.GetLastModifiedFromS3(bucket, planFilePath)
-		Expect(finalLastModified).ToNot(Equal(initialLastModified))
-	})
-
 	It("plan should be deleted on destroy", func() {
 		planOutRequest := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType:   backendType,
-					BackendConfig: backendConfig,
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
 				},
 			},
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
-					Source:   "fixtures/aws/",
 					PlanOnly: true,
-					Env: map[string]string{
-						"HOME": workingDir, // in prod plugin is installed system-wide
-					},
+					Source:   "fixtures/aws/",
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -456,7 +342,7 @@ var _ = Describe("Out Plan", func() {
 		By("ensuring state and plan file does not already exist")
 
 		awsVerifier.ExpectS3FileToNotExist(
-			bucket,
+			planOutRequest.Source.Storage.Bucket,
 			planFilePath,
 		)
 
@@ -472,7 +358,7 @@ var _ = Describe("Out Plan", func() {
 		By("ensuring that plan file exists with valid version (LastModified)")
 
 		awsVerifier.ExpectS3FileToExist(
-			bucket,
+			planOutRequest.Source.Storage.Bucket,
 			planFilePath,
 		)
 
@@ -486,43 +372,8 @@ var _ = Describe("Out Plan", func() {
 		By("ensuring that plan file no longer exists")
 
 		awsVerifier.ExpectS3FileToNotExist(
-			bucket,
+			planOutRequest.Source.Storage.Bucket,
 			planFilePath,
 		)
 	})
 })
-
-func downloadStatefulPlugin(workingDir string) error {
-	var hostOS string
-	if runtime.GOOS == "darwin" {
-		hostOS = "darwin"
-	} else {
-		hostOS = "linux"
-	}
-	url := fmt.Sprintf("https://github.com/ashald/terraform-provider-stateful/releases/download/v1.0.0/terraform-provider-stateful_v1.0.0-%s-amd64", hostOS)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	err = os.MkdirAll(filepath.Join(workingDir, ".terraform.d", "plugins"), os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	pluginPath := filepath.Join(workingDir, ".terraform.d", "plugins", "terraform-provider-stateful")
-	out, err := os.Create(pluginPath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	if err = out.Chmod(0755); err != nil {
-		return err
-	}
-
-	_, err = io.Copy(out, resp.Body)
-	return err
-}

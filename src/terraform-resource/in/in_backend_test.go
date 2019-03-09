@@ -2,28 +2,26 @@ package in_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"strconv"
 	"time"
 
 	"terraform-resource/in"
 	"terraform-resource/models"
-	"terraform-resource/storage"
 	"terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("In", func() {
+var _ = Describe("In with Backend", func() {
 
 	var (
 		awsVerifier            *helpers.AWSVerifier
 		inReq                  models.InRequest
 		bucket                 string
-		bucketPath             string
 		prevEnvName            string
 		currEnvName            string
 		modulesEnvName         string
@@ -43,7 +41,7 @@ var _ = Describe("In", func() {
 		bucket = os.Getenv("AWS_BUCKET")
 		Expect(bucket).ToNot(BeEmpty(), "AWS_BUCKET must be set")
 
-		bucketPath = os.Getenv("AWS_BUCKET_SUBFOLDER")
+		bucketPath := os.Getenv("AWS_BUCKET_SUBFOLDER")
 		Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_SUBFOLDER must be set")
 
 		region := os.Getenv("AWS_REGION") // optional
@@ -60,24 +58,34 @@ var _ = Describe("In", func() {
 		prevEnvName = helpers.RandomString("s3-test-fixture-previous")
 		currEnvName = helpers.RandomString("s3-test-fixture-current")
 		modulesEnvName = helpers.RandomString("s3-test-fixture-modules")
-		pathToPrevS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", prevEnvName))
-		pathToCurrS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", currEnvName))
-		pathToModulesS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", modulesEnvName))
+
+		workspacePath := helpers.RandomString("in-backend-test")
+
+		pathToPrevS3Fixture = path.Join(workspacePath, prevEnvName, "terraform.tfstate")
+		pathToCurrS3Fixture = path.Join(workspacePath, currEnvName, "terraform.tfstate")
+		pathToModulesS3Fixture = path.Join(workspacePath, modulesEnvName, "terraform.tfstate")
 
 		inReq = models.InRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 		}
 
 		var err error
 		tmpDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-in-test")
+		Expect(err).ToNot(HaveOccurred())
+
+		err = os.Chdir(tmpDir)
 		Expect(err).ToNot(HaveOccurred())
 	})
 
@@ -87,21 +95,21 @@ var _ = Describe("In", func() {
 
 	Context("when multiple state files exist on S3", func() {
 		BeforeEach(func() {
-			prevFixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-previous.tfstate"))
+			prevFixture, err := os.Open(helpers.FileLocation("fixtures/s3-backend/terraform-previous.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
 			defer prevFixture.Close()
 
 			awsVerifier.UploadObjectToS3(bucket, pathToPrevS3Fixture, prevFixture)
 			time.Sleep(5 * time.Second) // ensure last modified is different
 
-			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-current.tfstate"))
+			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3-backend/terraform-current.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
 			defer currFixture.Close()
 			awsVerifier.UploadObjectToS3(bucket, pathToCurrS3Fixture, currFixture)
 
-			modulesFixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-modules.tfstate"))
+			modulesFixture, err := os.Open(helpers.FileLocation("fixtures/s3-backend/terraform-modules.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
-			defer currFixture.Close()
+			defer modulesFixture.Close()
 			awsVerifier.UploadObjectToS3(bucket, pathToModulesS3Fixture, modulesFixture)
 		})
 
@@ -112,10 +120,9 @@ var _ = Describe("In", func() {
 		})
 
 		It("fetches the state file matching the provided version", func() {
-
 			inReq.Version = models.Version{
-				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToPrevS3Fixture),
-				EnvName:      prevEnvName,
+				EnvName: prevEnvName,
+				Serial:  "0",
 			}
 
 			runner := in.Runner{
@@ -124,10 +131,11 @@ var _ = Describe("In", func() {
 			resp, err := runner.Run(inReq)
 			Expect(err).ToNot(HaveOccurred())
 
-			_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
-			Expect(err).ToNot(HaveOccurred())
-
 			Expect(resp.Version.EnvName).To(Equal(prevEnvName))
+			serial, err := strconv.Atoi(resp.Version.Serial)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(serial).To(BeNumerically(">=", 0))
+			Expect(resp.Version.Lineage).To(Equal("f62eee11-6a4e-4d39-b5c7-15d3dad8e5f7"))
 
 			metadata := map[string]string{}
 			for _, field := range resp.Metadata {
@@ -168,8 +176,8 @@ var _ = Describe("In", func() {
 		It("outputs the statefile if `output_statefile` is given", func() {
 			inReq.Params.OutputStatefile = true
 			inReq.Version = models.Version{
-				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToPrevS3Fixture),
-				EnvName:      prevEnvName,
+				EnvName: prevEnvName,
+				Serial:  "0",
 			}
 
 			runner := in.Runner{
@@ -186,13 +194,17 @@ var _ = Describe("In", func() {
 
 			expectedStatePath := path.Join(tmpDir, "terraform.tfstate")
 			Expect(expectedStatePath).To(BeAnExistingFile())
+
+			stateContents, err := ioutil.ReadFile(expectedStatePath)
+			Expect(err).To(BeNil())
+			Expect(string(stateContents)).To(ContainSubstring("previous"))
 		})
 
 		It("retrieve module specific output when `output_module` is specified", func() {
 			inReq.Params.OutputModule = "module_1"
 			inReq.Version = models.Version{
-				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToModulesS3Fixture),
-				EnvName:      modulesEnvName,
+				EnvName: modulesEnvName,
+				Serial:  "1",
 			}
 
 			runner := in.Runner{
@@ -201,10 +213,10 @@ var _ = Describe("In", func() {
 			resp, err := runner.Run(inReq)
 			Expect(err).ToNot(HaveOccurred())
 
-			_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
-			Expect(err).ToNot(HaveOccurred())
-
 			Expect(resp.Version.EnvName).To(Equal(modulesEnvName))
+			serial, err := strconv.Atoi(resp.Version.Serial)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(serial).To(BeNumerically(">=", 1))
 
 			metadata := map[string]string{}
 			for _, field := range resp.Metadata {
@@ -243,66 +255,6 @@ var _ = Describe("In", func() {
 		})
 	})
 
-	Context("when state file exists as tainted on S3", func() {
-		var (
-			pathToTaintedS3Fixture string
-		)
-
-		BeforeEach(func() {
-			pathToTaintedS3Fixture = path.Join(bucketPath, fmt.Sprintf("%s.tfstate.tainted", currEnvName))
-			fixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-current.tfstate"))
-			Expect(err).ToNot(HaveOccurred())
-			defer fixture.Close()
-			awsVerifier.UploadObjectToS3(bucket, pathToTaintedS3Fixture, fixture)
-		})
-
-		AfterEach(func() {
-			awsVerifier.DeleteObjectFromS3(bucket, pathToTaintedS3Fixture)
-		})
-
-		It("fetches the state file matching the provided version", func() {
-			inReq.Version = models.Version{
-				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToTaintedS3Fixture),
-				EnvName:      currEnvName,
-			}
-
-			runner := in.Runner{
-				OutputDir: tmpDir,
-			}
-			resp, err := runner.Run(inReq)
-			Expect(err).ToNot(HaveOccurred())
-
-			_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(resp.Version.EnvName).To(Equal(currEnvName))
-
-			metadata := map[string]string{}
-			for _, field := range resp.Metadata {
-				metadata[field.Name] = field.Value
-			}
-			Expect(metadata["env_name"]).To(Equal("current"))
-
-			expectedOutputPath := path.Join(tmpDir, "metadata")
-			Expect(expectedOutputPath).To(BeAnExistingFile())
-			outputFile, err := os.Open(expectedOutputPath)
-			Expect(err).ToNot(HaveOccurred())
-			defer outputFile.Close()
-
-			outputContents := map[string]interface{}{}
-			err = json.NewDecoder(outputFile).Decode(&outputContents)
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(outputContents["env_name"]).To(Equal("current"))
-
-			expectedNamePath := path.Join(tmpDir, "name")
-			Expect(expectedNamePath).To(BeAnExistingFile())
-			nameContents, err := ioutil.ReadFile(expectedNamePath)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(string(nameContents)).To(Equal(currEnvName))
-		})
-	})
-
 	Context("when state file does not exist on S3", func() {
 
 		Context("and it was called as part of the 'destroy' action", func() {
@@ -310,12 +262,12 @@ var _ = Describe("In", func() {
 			BeforeEach(func() {
 				inReq.Params.Action = models.DestroyAction
 				inReq.Version = models.Version{
-					LastModified: time.Now().UTC().Format(storage.TimeFormat),
-					EnvName:      currEnvName,
+					EnvName: currEnvName,
+					Serial:  "1",
 				}
 			})
 
-			It("returns the deleted version, creates a name file, but does not create the metadata file", func() {
+			It("returns the deleted version, but does not create the metadata file", func() {
 
 				runner := in.Runner{
 					OutputDir: tmpDir,
@@ -323,14 +275,10 @@ var _ = Describe("In", func() {
 				resp, err := runner.Run(inReq)
 				Expect(err).ToNot(HaveOccurred())
 
-				_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
+				Expect(resp.Version.EnvName).To(Equal(currEnvName))
+				serial, err := strconv.Atoi(resp.Version.Serial)
 				Expect(err).ToNot(HaveOccurred())
-
-				expectedNamePath := path.Join(tmpDir, "name")
-				Expect(expectedNamePath).To(BeAnExistingFile())
-				nameContents, err := ioutil.ReadFile(expectedNamePath)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(nameContents)).To(Equal(currEnvName))
+				Expect(serial).To(BeNumerically(">=", 1))
 
 				expectedOutputPath := path.Join(tmpDir, "metadata")
 				Expect(expectedOutputPath).ToNot(BeAnExistingFile())
@@ -340,9 +288,9 @@ var _ = Describe("In", func() {
 		Context("and it was called with 'plan_only'", func() {
 			BeforeEach(func() {
 				inReq.Version = models.Version{
-					LastModified: time.Now().UTC().Format(storage.TimeFormat),
-					EnvName:      currEnvName,
-					PlanOnly:     "true",
+					EnvName:  currEnvName,
+					Serial:   "1",
+					PlanOnly: "true",
 				}
 			})
 
@@ -353,8 +301,10 @@ var _ = Describe("In", func() {
 				resp, err := runner.Run(inReq)
 				Expect(err).ToNot(HaveOccurred())
 
-				_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
+				Expect(resp.Version.EnvName).To(Equal(currEnvName))
+				serial, err := strconv.Atoi(resp.Version.Serial)
 				Expect(err).ToNot(HaveOccurred())
+				Expect(serial).To(BeNumerically(">=", 1))
 
 				expectedOutputPath := path.Join(tmpDir, "metadata")
 				Expect(expectedOutputPath).ToNot(BeAnExistingFile())
@@ -365,8 +315,8 @@ var _ = Describe("In", func() {
 			BeforeEach(func() {
 				inReq.Params.Action = ""
 				inReq.Version = models.Version{
-					LastModified: time.Now().UTC().Format(storage.TimeFormat),
-					EnvName:      "missing-env-name",
+					EnvName: "missing-env-name",
+					Serial:  "0",
 				}
 			})
 

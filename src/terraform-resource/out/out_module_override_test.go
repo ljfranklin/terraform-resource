@@ -10,7 +10,6 @@ import (
 
 	"terraform-resource/models"
 	"terraform-resource/out"
-	"terraform-resource/storage"
 	"terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
@@ -23,6 +22,7 @@ var _ = Describe("Out Module Override", func() {
 		envName       string
 		stateFilePath string
 		s3ObjectPath  string
+		workspacePath string
 		workingDir    string
 	)
 
@@ -53,12 +53,16 @@ var _ = Describe("Out Module Override", func() {
 	It("overrides the existing resource definition in module", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
@@ -102,12 +106,16 @@ var _ = Describe("Out Module Override", func() {
 	It("errors when given a directory for source", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
@@ -141,12 +149,16 @@ var _ = Describe("Out Module Override", func() {
 	It("errors when given a file for destination", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
@@ -180,12 +192,16 @@ var _ = Describe("Out Module Override", func() {
 	It("errors when given an invalid path for source", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
@@ -219,12 +235,16 @@ var _ = Describe("Out Module Override", func() {
 	It("errors when given an invalid path for destination", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
@@ -258,12 +278,16 @@ var _ = Describe("Out Module Override", func() {
 	It("errors when src key is missing", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
@@ -297,12 +321,16 @@ var _ = Describe("Out Module Override", func() {
 	It("errors when dst key is missing", func() {
 		req := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{

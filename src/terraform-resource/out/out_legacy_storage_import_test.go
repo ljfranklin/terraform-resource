@@ -9,28 +9,25 @@ import (
 
 	"terraform-resource/models"
 	"terraform-resource/out"
+	"terraform-resource/storage"
 	"terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Out Import", func() {
+var _ = Describe("Out Legacy Storage Import", func() {
 
 	var (
 		envName       string
 		stateFilePath string
 		s3ObjectPath  string
-		workspacePath string
 		workingDir    string
 	)
 
 	BeforeEach(func() {
 		envName = helpers.RandomString("out-test")
-
-		workspacePath = helpers.RandomString("out-backend-test")
-
-		stateFilePath = path.Join(workspacePath, envName, "terraform.tfstate")
+		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
 		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-import"))
 
 		var err error
@@ -64,16 +61,12 @@ var _ = Describe("Out Import", func() {
 
 		importRequest := models.OutRequest{
 			Source: models.Source{
-				Terraform: models.Terraform{
-					BackendType: "s3",
-					BackendConfig: map[string]interface{}{
-						"bucket":               bucket,
-						"key":                  "terraform.tfstate",
-						"access_key":           accessKey,
-						"secret_key":           secretKey,
-						"region":               region,
-						"workspace_key_prefix": workspacePath,
-					},
+				Storage: storage.Model{
+					Bucket:          bucket,
+					BucketPath:      bucketPath,
+					AccessKeyID:     accessKey,
+					SecretAccessKey: secretKey,
+					RegionName:      region,
 				},
 			},
 			Params: models.OutParams{

@@ -38,26 +38,14 @@ var _ = Describe("Terraform Models", func() {
 				Vars: map[string]interface{}{
 					"fake-key": "fake-value",
 				},
+				BackendType: "fake-type",
+				BackendConfig: map[string]interface{}{
+					"fake-backend-key": "fake-backend-value",
+				},
 			}
 
 			err := model.Validate()
 			Expect(err).ToNot(HaveOccurred())
-		})
-
-		It("returns an error if terraform fields are missing", func() {
-			requiredFields := []string{
-				"state_file_local_path",
-				"state_file_remote_path",
-			}
-
-			model := models.Terraform{}
-
-			err := model.Validate()
-			Expect(err).To(HaveOccurred())
-
-			for _, field := range requiredFields {
-				Expect(err.Error()).To(ContainSubstring(field))
-			}
 		})
 	})
 
@@ -98,6 +86,8 @@ var _ = Describe("Terraform Models", func() {
 				ModuleOverrideFiles: []map[string]string{ map[string]string{"src": "fake-override-src-path", "dst" : "fake-override-dst-path",}, },
 				Imports:             map[string]string{"fake-key": "fake-value"},
 				PluginDir:           "fake-plugin-path",
+				BackendType:         "fake-type",
+				BackendConfig:       map[string]interface{}{"fake-backend-key": "fake-backend-value"},
 			}
 
 			finalModel := baseModel.Merge(mergeModel)
@@ -110,6 +100,8 @@ var _ = Describe("Terraform Models", func() {
 			Expect(finalModel.ModuleOverrideFiles).To(Equal([]map[string]string{ map[string]string{"src": "fake-override-src-path", "dst" : "fake-override-dst-path"}}))
 			Expect(finalModel.Imports).To(Equal(map[string]string{"fake-key": "fake-value"}))
 			Expect(finalModel.PluginDir).To(Equal("fake-plugin-path"))
+			Expect(finalModel.BackendType).To(Equal("fake-type"))
+			Expect(finalModel.BackendConfig).To(Equal(map[string]interface{}{"fake-backend-key": "fake-backend-value"}))
 		})
 
 		It("returns original vars and vars from Merged model", func() {
