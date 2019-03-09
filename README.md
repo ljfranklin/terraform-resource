@@ -104,13 +104,13 @@ A `get` step outputs the same `metadata` file format shown below for `put`.
 * `terraform_source`: *Required.* The relative path of the directory containing your Terraform configuration files.
 For example: if your `.tf` files are stored in a git repo called `prod-config` under a directory `terraform-configs`, you could do a `get: prod-config` in your pipeline with `terraform_source: prod-config/terraform-configs/` as the source.
 
-* `env_name`: *Optional.* The name of the environment to create or modify. A [Terraform workspace](https://www.terraform.io/docs/state/workspaces.html) will be created with this name. Multiple environments can be managed with a single resource.
+* `env_name`: *Optional, see Note.* The name of the environment to create or modify. A [Terraform workspace](https://www.terraform.io/docs/state/workspaces.html) will be created with this name. Multiple environments can be managed with a single resource.
 
-* `generate_random_name`: *Optional. Default `false`* Generates a random `env_name` (e.g. "coffee-bee"). See [Single vs Pool](#managing-a-single-environment-vs-a-pool-of-environments) section below.
+* `generate_random_name`: *Optional, see Note. Default `false`* Generates a random `env_name` (e.g. "coffee-bee"). See [Single vs Pool](#managing-a-single-environment-vs-a-pool-of-environments) section below.
 
-* `env_name_file`: *Optional.* Reads the `env_name` from a specified file path. Useful for destroying environments from a lock file.
+* `env_name_file`: *Optional, see Note.* Reads the `env_name` from a specified file path. Useful for destroying environments from a lock file.
 
-  > You must specify one of the following options: `source.env_name`, `put.params.env_name`, `put.params.generate_random_name`, or `env_name_file`
+  > Note: You must specify one of the following options: `source.env_name`, `put.params.env_name`, `put.params.generate_random_name`, or `env_name_file`
 
 * `delete_on_failure`: *Optional. Default `false`.* See description under `source.delete_on_failure`.
 
