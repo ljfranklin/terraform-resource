@@ -248,6 +248,16 @@ func (a *LegacyStorageAction) setup() error {
 		if err != nil {
 			return err
 		}
+
+		outputs, err := a.Client.OutputWithLegacyStorage()
+		if err != nil {
+			return err
+		}
+		previousResult := Result{
+			Output: outputs,
+		}
+
+		a.Client.SetModel(models.Terraform{Vars: previousResult.RawOutput()}.Merge(a.Model))
 	}
 
 	if err := LinkToThirdPartyPluginDir(a.Model.Source); err != nil {

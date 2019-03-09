@@ -43,6 +43,7 @@ type Client interface {
 	CurrentStateVersion(string) (StateVersion, error)
 	SavePlanToBackend(string) error
 	GetPlanFromBackend(string) error
+	SetModel(models.Terraform)
 }
 
 type client struct {
@@ -663,6 +664,10 @@ func (c *client) GetPlanFromBackend(planEnvName string) error {
 	}
 
 	return nil
+}
+
+func (c *client) SetModel(model models.Terraform) {
+	c.model = model
 }
 
 func (c *client) resourceExists(tfID string, envName string) (bool, error) {

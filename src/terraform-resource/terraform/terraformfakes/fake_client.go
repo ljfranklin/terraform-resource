@@ -3,6 +3,7 @@ package terraformfakes
 
 import (
 	sync "sync"
+	models "terraform-resource/models"
 	terraform "terraform-resource/terraform"
 )
 
@@ -137,6 +138,11 @@ type FakeClient struct {
 	}
 	savePlanToBackendReturnsOnCall map[int]struct {
 		result1 error
+	}
+	SetModelStub        func(models.Terraform)
+	setModelMutex       sync.RWMutex
+	setModelArgsForCall []struct {
+		arg1 models.Terraform
 	}
 	StatePullStub        func(string) ([]byte, error)
 	statePullMutex       sync.RWMutex
@@ -908,6 +914,37 @@ func (fake *FakeClient) SavePlanToBackendReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeClient) SetModel(arg1 models.Terraform) {
+	fake.setModelMutex.Lock()
+	fake.setModelArgsForCall = append(fake.setModelArgsForCall, struct {
+		arg1 models.Terraform
+	}{arg1})
+	fake.recordInvocation("SetModel", []interface{}{arg1})
+	fake.setModelMutex.Unlock()
+	if fake.SetModelStub != nil {
+		fake.SetModelStub(arg1)
+	}
+}
+
+func (fake *FakeClient) SetModelCallCount() int {
+	fake.setModelMutex.RLock()
+	defer fake.setModelMutex.RUnlock()
+	return len(fake.setModelArgsForCall)
+}
+
+func (fake *FakeClient) SetModelCalls(stub func(models.Terraform)) {
+	fake.setModelMutex.Lock()
+	defer fake.setModelMutex.Unlock()
+	fake.SetModelStub = stub
+}
+
+func (fake *FakeClient) SetModelArgsForCall(i int) models.Terraform {
+	fake.setModelMutex.RLock()
+	defer fake.setModelMutex.RUnlock()
+	argsForCall := fake.setModelArgsForCall[i]
+	return argsForCall.arg1
+}
+
 func (fake *FakeClient) StatePull(arg1 string) ([]byte, error) {
 	fake.statePullMutex.Lock()
 	ret, specificReturn := fake.statePullReturnsOnCall[len(fake.statePullArgsForCall)]
@@ -1409,6 +1446,8 @@ func (fake *FakeClient) Invocations() map[string][][]interface{} {
 	defer fake.planMutex.RUnlock()
 	fake.savePlanToBackendMutex.RLock()
 	defer fake.savePlanToBackendMutex.RUnlock()
+	fake.setModelMutex.RLock()
+	defer fake.setModelMutex.RUnlock()
 	fake.statePullMutex.RLock()
 	defer fake.statePullMutex.RUnlock()
 	fake.versionMutex.RLock()

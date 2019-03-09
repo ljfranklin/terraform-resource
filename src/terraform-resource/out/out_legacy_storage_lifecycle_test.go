@@ -127,7 +127,14 @@ var _ = Describe("Out Legacy Storage Lifecycle", func() {
 
 		By("running 'out' to update the S3 file")
 
-		outRequest.Params.Terraform.Vars["object_content"] = "terraform-is-still-neat"
+		// omits some fields to ensure the resource feeds previous output back in as input
+		outRequest.Params.Terraform.Vars = map[string]interface{}{
+			"access_key":     accessKey,
+			"secret_key":     secretKey,
+			"object_content": "terraform-is-still-neat",
+			"region":         region,
+		}
+
 		updateOutput, err := runner.Run(outRequest)
 		Expect(err).ToNot(HaveOccurred())
 

@@ -118,8 +118,7 @@ For example: if your `.tf` files are stored in a git repo called `prod-config` u
 
 * `var_files`: *Optional.* A list of files containing Terraform input variables. These files can be in YAML, JSON, or HCL (filename must end in .tfvars) format.
 
-  > Terraform variables will be merged from the following locations in increasing order of precedence: `source.vars`, `put.params.vars`, and `put.params.var_files`. If a state file already exists, the outputs will be fed back in as input `vars` to subsequent `puts` with the lowest precedence.
-Finally, `env_name` is automatically passed as an input `var`.
+  > Terraform variables will be merged from the following locations in increasing order of precedence: `source.vars`, `put.params.vars`, and `put.params.var_files`. Finally, `env_name` is automatically passed as an input `var`.
 
 * `env`: *Optional.* A key-value collection of environment variables to pass to Terraform. See description under `source.env`.
 
@@ -272,6 +271,8 @@ If you have an existing pipeline that uses `source.storage`, your statefiles wil
 5. Once all statefiles have been migrated and everything is working as expected, you may:
   - Remove the old `.migrated` statefiles.
   - Remove the `source.migrate_from_storage` from your pipeline config.
+
+> Breaking Change: The backend mode drops support for feeding Terraform outputs back in as input vars to subsequent puts. This "feature" causes suprising errors if inputs and outputs have the same name but different types and the implementation was significantly more complicated with the new migrated_from_storage flow.
 
 #### Legacy storage configuration
 
