@@ -262,6 +262,9 @@ jobs:
         params:
           env_name_file: locks/name
           action: destroy
+          vars:
+            object_key: ci-pipeline/track3
+            object_content: "terraform is neat!"
         get_params:
           action: destroy
       - put: locks
