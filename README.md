@@ -262,7 +262,7 @@ Previous versions of this resource required statefiles to be stored in an S3-com
 The latest version of this resource instead uses the build-in [Terraform Backends](https://www.terraform.io/docs/backends/types/index.html) to support many other statefile storage options in addition to S3.
 If you have an existing pipeline that uses `source.storage`, your statefiles will need to be migrated into the new backend directory structure using the following steps:
 
-1. Rename `source.storage` to `source.migrate_from_storage` in your pipeline config. All fields within `source.storage` should remain unchanged, only the top-level key should be renamed.
+1. Rename `source.storage` to `source.migrated_from_storage` in your pipeline config. All fields within `source.storage` should remain unchanged, only the top-level key should be renamed.
 2. Add `source.backend_type` and `source.backend_config` fields as described under [Source Configuration](#source-configuration).
 3. Update your pipeline: `fly set-pipeline`.
 4. The next time your pipeline performs a `put` to the Terraform resource:
@@ -270,30 +270,30 @@ If you have an existing pipeline that uses `source.storage`, your statefiles wil
   - The resource will rename the old statefile in S3 to `$ENV_NAME.migrated`.
 5. Once all statefiles have been migrated and everything is working as expected, you may:
   - Remove the old `.migrated` statefiles.
-  - Remove the `source.migrate_from_storage` from your pipeline config.
+  - Remove the `source.migrated_from_storage` from your pipeline config.
 
 > Breaking Change: The backend mode drops support for feeding Terraform outputs back in as input vars to subsequent puts. This "feature" causes suprising errors if inputs and outputs have the same name but different types and the implementation was significantly more complicated with the new migrated_from_storage flow.
 
 #### Legacy storage configuration
 
-* `migrate_from_storage.bucket`: *Required.* The S3 bucket used to store the state files.
+* `migrated_from_storage.bucket`: *Required.* The S3 bucket used to store the state files.
 
-* `migrate_from_storage.bucket_path`: *Required.* The S3 path used to store state files, e.g. `mydir/`.
+* `migrated_from_storage.bucket_path`: *Required.* The S3 path used to store state files, e.g. `mydir/`.
 
-* `migrate_from_storage.access_key_id`: *Required.* The AWS access key used to access the bucket.
+* `migrated_from_storage.access_key_id`: *Required.* The AWS access key used to access the bucket.
 
-* `migrate_from_storage.secret_access_key`: *Required.* The AWS secret key used to access the bucket.
+* `migrated_from_storage.secret_access_key`: *Required.* The AWS secret key used to access the bucket.
 
-* `migrate_from_storage.region_name`: *Optional.* The AWS region where the bucket is located.
+* `migrated_from_storage.region_name`: *Optional.* The AWS region where the bucket is located.
 
-* `migrate_from_storage.server_side_encryption`: *Optional.* An encryption algorithm to use when storing objects in S3, e.g. "AES256".
+* `migrated_from_storage.server_side_encryption`: *Optional.* An encryption algorithm to use when storing objects in S3, e.g. "AES256".
 
-* `migrate_from_storage.sse_kms_key_id` *Optional.* The ID of the AWS KMS master encryption key used for the object.
+* `migrated_from_storage.sse_kms_key_id` *Optional.* The ID of the AWS KMS master encryption key used for the object.
 
-* `migrate_from_storage.endpoint`: *Optional.* The endpoint for an s3-compatible blobstore (e.g. Ceph).
+* `migrated_from_storage.endpoint`: *Optional.* The endpoint for an s3-compatible blobstore (e.g. Ceph).
 
   > **Note:** By default, the resource will use S3 signing version v2 if an endpoint is specified as many non-S3 blobstores do not support v4.
-Opt into v4 signing by setting `migrate_from_storage.use_signing_v4: true`.
+Opt into v4 signing by setting `migrated_from_storage.use_signing_v4: true`.
 
 #### Migration Example
 
@@ -309,7 +309,7 @@ resources:
         region: us-east-1
         access_key: {{storage_access_key}}
         secret_key: {{storage_secret_key}}
-      migrate_from_storage:
+      migrated_from_storage:
         bucket: mybucket
         bucket_path: mydir/
         region: us-east-1
