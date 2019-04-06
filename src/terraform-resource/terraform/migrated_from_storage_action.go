@@ -233,8 +233,43 @@ func (a *MigratedFromStorageAction) attemptPlan() (Result, error) {
 	a.Logger.InfoSection("Terraform Plan")
 	defer a.Logger.EndSection()
 
-	if err := a.Client.WorkspaceNewIfNotExists(a.EnvName); err != nil {
+	legacyStateFileExists, err := a.StateFile.Exists()
+	if err != nil {
 		return Result{}, err
+	}
+
+	if legacyStateFileExists == false {
+		legacyStateFileExists, err = a.StateFile.ExistsAsTainted()
+		if err != nil {
+			return Result{}, err
+		}
+		if legacyStateFileExists {
+			a.StateFile = a.StateFile.ConvertToTainted()
+		}
+	}
+
+	if legacyStateFileExists {
+		_, err = a.StateFile.Download()
+		if err != nil {
+			return Result{}, err
+		}
+
+		if err = a.importExistingStateFileIntoNewWorkspace(); err != nil {
+			return Result{}, err
+		}
+
+		// make sure that legacy state file is deleted immediately after new workspace is created
+		migratedStateFile := a.StateFile.ConvertToMigrated()
+		if _, err = migratedStateFile.Upload(); err != nil {
+			return Result{}, err
+		}
+		if _, err = a.StateFile.Delete(); err != nil {
+			return Result{}, err
+		}
+	} else {
+		if err = a.Client.WorkspaceNewIfNotExists(a.EnvName); err != nil {
+			return Result{}, err
+		}
 	}
 
 	if err := a.Client.Plan(); err != nil {

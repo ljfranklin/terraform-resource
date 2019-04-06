@@ -722,11 +722,7 @@ var _ = Describe("Out - Migrated From Storage", func() {
 		It("takes the existing statefile into account when generating a plan", func() {
 			initialApplyRequest := models.OutRequest{
 				Source: models.Source{
-					Terraform: models.Terraform{
-						BackendType:   backendType,
-						BackendConfig: backendConfig,
-					},
-					MigratedFromStorage: storageModel,
+					Storage: storageModel,
 				},
 				Params: models.OutParams{
 					EnvName: envName,
@@ -799,6 +795,10 @@ var _ = Describe("Out - Migrated From Storage", func() {
 
 			awsVerifier.ExpectS3FileToNotExist(
 				bucket,
+				storageStateFilePath,
+			)
+			awsVerifier.ExpectS3FileToNotExist(
+				bucket,
 				backendStateFilePath,
 			)
 			awsVerifier.ExpectS3FileToNotExist(
@@ -806,7 +806,7 @@ var _ = Describe("Out - Migrated From Storage", func() {
 				planFilePath,
 			)
 
-			By("running 'out' to create the statefile")
+			By("running 'out' to create the legacy statefile")
 
 			runner := out.Runner{
 				SourceDir: workingDir,
@@ -815,9 +815,13 @@ var _ = Describe("Out - Migrated From Storage", func() {
 			_, err := runner.Run(initialApplyRequest)
 			Expect(err).ToNot(HaveOccurred())
 
-			By("ensuring that statefile exists and plan does not")
+			By("ensuring that legacy statefile exists and backend/plan do not")
 
 			awsVerifier.ExpectS3FileToExist(
+				bucket,
+				storageStateFilePath,
+			)
+			awsVerifier.ExpectS3FileToNotExist(
 				bucket,
 				backendStateFilePath,
 			)
@@ -842,6 +846,14 @@ var _ = Describe("Out - Migrated From Storage", func() {
 
 			By("ensuring that state and plan files exist")
 
+			awsVerifier.ExpectS3FileToNotExist(
+				bucket,
+				storageStateFilePath,
+			)
+			awsVerifier.ExpectS3FileToExist(
+				bucket,
+				fmt.Sprintf("%s.migrated", storageStateFilePath),
+			)
 			awsVerifier.ExpectS3FileToExist(
 				bucket,
 				backendStateFilePath,
