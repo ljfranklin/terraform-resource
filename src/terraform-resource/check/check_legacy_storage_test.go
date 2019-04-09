@@ -15,7 +15,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Check", func() {
+var _ = Describe("Check with Legacy `storage`", func() {
 
 	var (
 		checkInput          models.InRequest
@@ -40,7 +40,7 @@ var _ = Describe("Check", func() {
 		bucketPath := os.Getenv("AWS_BUCKET_SUBFOLDER")
 		Expect(bucketPath).ToNot(BeEmpty(), "AWS_BUCKET_SUBFOLDER must be set")
 		// create nested folder to all running in parallel
-		bucketPath = path.Join(bucketPath, helpers.RandomString("check-test"))
+		bucketPath = path.Join(bucketPath, helpers.RandomString("check-storage-test"))
 
 		region := os.Getenv("AWS_REGION") // optional
 		if region == "" {
@@ -89,14 +89,14 @@ var _ = Describe("Check", func() {
 
 	Context("when bucket contains multiple state files", func() {
 		BeforeEach(func() {
-			prevFixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-previous.tfstate"))
+			prevFixture, err := os.Open(helpers.FileLocation("fixtures/s3-storage/terraform-previous.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
 			defer prevFixture.Close()
 
 			awsVerifier.UploadObjectToS3(bucket, pathToPrevS3Fixture, prevFixture)
 			time.Sleep(5 * time.Second) // ensure last modified is different
 
-			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-current.tfstate"))
+			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3-storage/terraform-current.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
 			defer currFixture.Close()
 			awsVerifier.UploadObjectToS3(bucket, pathToCurrS3Fixture, currFixture)
@@ -118,7 +118,7 @@ var _ = Describe("Check", func() {
 			Expect(resp).To(Equal(expectOutput))
 		})
 
-		It("returns an empty version list when current version matches storage version", func() {
+		It("returns the requested version when current version matches storage version", func() {
 			currentLastModified := awsVerifier.GetLastModifiedFromS3(bucket, pathToCurrS3Fixture)
 			checkInput.Version = models.Version{
 				LastModified: currentLastModified,
@@ -129,7 +129,12 @@ var _ = Describe("Check", func() {
 			resp, err := runner.Run(checkInput)
 			Expect(err).ToNot(HaveOccurred())
 
-			expectOutput := []models.Version{}
+			expectOutput := []models.Version{
+				models.Version{
+					LastModified: currentLastModified,
+					EnvName:      currEnvName,
+				},
+			}
 			Expect(resp).To(Equal(expectOutput))
 		})
 	})
@@ -138,7 +143,7 @@ var _ = Describe("Check", func() {
 		var pathToTaintedFixture string
 
 		BeforeEach(func() {
-			prevFixture, err := os.Open(helpers.FileLocation("fixtures/s3/terraform-previous.tfstate"))
+			prevFixture, err := os.Open(helpers.FileLocation("fixtures/s3-storage/terraform-previous.tfstate"))
 			Expect(err).ToNot(HaveOccurred())
 			defer prevFixture.Close()
 

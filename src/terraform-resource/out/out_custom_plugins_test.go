@@ -109,8 +109,9 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
-					Source:  "fixtures/aws/",
-					PlanRun: true,
+					Source:    "fixtures/aws/",
+					PluginDir: pluginDir,
+					PlanRun:   true,
 				},
 			},
 		}

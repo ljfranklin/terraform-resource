@@ -5,11 +5,16 @@ export AWS_BUCKET=""
 export AWS_BUCKET_SUBFOLDER=""
 export AWS_REGION=""
 
-# s3-compatible tests (e.g. Google Cloud Storage, Ceph)
-export S3_COMPATIBLE_BUCKET=""
-export S3_COMPATIBLE_ENDPOINT=""
-export S3_COMPATIBLE_ACCESS_KEY=""
-export S3_COMPATIBLE_SECRET_KEY=""
+export GCS_BUCKET=""
+export GCS_REGION=""
+export GCS_ACCESS_KEY=""
+export GCS_SECRET_KEY=""
+export GCS_CREDENTIALS_JSON='{"type":"service_account",...}'
+export GCS_ENDPOINT=storage.googleapis.com
+
+export GITHUB_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
+...
+-----END RSA PRIVATE KEY-----"
 
 # OPTIONAL
 # encryption support

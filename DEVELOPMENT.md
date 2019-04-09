@@ -21,8 +21,9 @@
     ]
   }
   ```
+1. Create a GCP service account with Storage Object permission on a given GCS bucket
 1. `cp ./scripts/test.env.tpl ./tmp/test.env`
-1. Fill in `./tmp/test.env` with your AWS creds
+1. Fill in `./tmp/test.env` with your creds
 1. Run tests: `source ./tmp/test.env && ./scripts/run-tests`
 
 #### Add / Updating dependencies
