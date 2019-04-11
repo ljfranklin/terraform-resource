@@ -716,6 +716,9 @@ func (c *client) terraformCmd(args []string, env []string) *exec.Cmd {
 	// TODO: remove the following line once this issue is fixed:
 	// https://github.com/hashicorp/terraform/issues/17655
 	cmd.Env = append(cmd.Env, "TF_WARN_OUTPUT_ERRORS=1")
+	// To control terraform output in automation.
+	// As suggested in https://learn.hashicorp.com/terraform/development/running-terraform-in-automation#controlling-terraform-output-in-automation
+	cmd.Env = append(cmd.Env, "TF_IN_AUTOMATION=1")
 	for _, e := range env {
 		cmd.Env = append(cmd.Env, e)
 	}
