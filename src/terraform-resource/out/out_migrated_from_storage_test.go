@@ -939,6 +939,132 @@ var _ = Describe("Out - Migrated From Storage", func() {
 				planFilePath,
 			)
 		})
+
+		It("overrides the existing resource definition when generating a plan", func() {
+			planRequest := models.OutRequest{
+				Source: models.Source{
+					Terraform: models.Terraform{
+						BackendType:   backendType,
+						BackendConfig: backendConfig,
+					},
+					MigratedFromStorage: storageModel,
+				},
+				Params: models.OutParams{
+					EnvName: envName,
+					Terraform: models.Terraform{
+						PlanOnly: true,
+						OverrideFiles: []string{
+							"fixtures/override/example_override.tf",
+						},
+						Source: "fixtures/aws/",
+						Vars: map[string]interface{}{
+							"access_key":     accessKey,
+							"secret_key":     secretKey,
+							"bucket":         bucket,
+							"object_key":     s3ObjectPath,
+							"object_content": "terraform-is-neat",
+							"region":         region,
+						},
+						Env: map[string]string{
+							"HOME": workingDir, // in prod plugin is installed system-wide
+						},
+					},
+				},
+			}
+
+			applyPlanRequest := models.OutRequest{
+				Source: models.Source{
+					Terraform: models.Terraform{
+						BackendType:   backendType,
+						BackendConfig: backendConfig,
+					},
+					MigratedFromStorage: storageModel,
+				},
+				Params: models.OutParams{
+					EnvName: envName,
+					Terraform: models.Terraform{
+						Source:  "fixtures/aws/",
+						PlanRun: true,
+						Env: map[string]string{
+							"HOME": workingDir, // in prod plugin is installed system-wide
+						},
+					},
+				},
+			}
+
+			runner := out.Runner{
+				SourceDir: workingDir,
+				LogWriter: GinkgoWriter,
+			}
+
+			_, err := runner.Run(planRequest)
+			Expect(err).ToNot(HaveOccurred())
+
+			output, err := runner.Run(applyPlanRequest)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(output.Metadata).ToNot(BeEmpty())
+			fields := map[string]interface{}{}
+			for _, field := range output.Metadata {
+				fields[field.Name] = field.Value
+			}
+			Expect(fields["env_name"]).To(Equal(envName))
+			Expect(fields["object_content"]).To(Equal("OVERRIDE"))
+			expectedMD5 := fmt.Sprintf("%x", md5.Sum([]byte("OVERRIDE")))
+			Expect(fields["content_md5"]).To(Equal(expectedMD5))
+
+			awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
+		})
+
+	})
+
+	It("overrides the existing resource definition", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					BackendType:   backendType,
+					BackendConfig: backendConfig,
+				},
+				MigratedFromStorage: storageModel,
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					OverrideFiles: []string{
+						"fixtures/override/example_override.tf",
+					},
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: GinkgoWriter,
+		}
+
+		output, err := runner.Run(req)
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(output.Metadata).ToNot(BeEmpty())
+		fields := map[string]interface{}{}
+		for _, field := range output.Metadata {
+			fields[field.Name] = field.Value
+		}
+		Expect(fields["env_name"]).To(Equal(envName))
+		Expect(fields["object_content"]).To(Equal("OVERRIDE"))
+		expectedMD5 := fmt.Sprintf("%x", md5.Sum([]byte("OVERRIDE")))
+		Expect(fields["content_md5"]).To(Equal(expectedMD5))
+
+		awsVerifier.ExpectS3FileToExist(bucket, s3ObjectPath)
 	})
 
 	assertOutBehavior = func(outRequest models.OutRequest, expectedMetadata map[string]string) {

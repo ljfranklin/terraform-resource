@@ -96,10 +96,6 @@ func (a *MigratedFromStorageAction) attemptApply() (Result, error) {
 		}
 	}
 
-	if err = copyOverrideFilesIntoSource(a.Model.OverrideFiles, a.Model.Source); err != nil {
-		return Result{}, err
-	}
-
 	if err = a.Client.Import(a.EnvName); err != nil {
 		return Result{}, err
 	}
@@ -290,6 +286,14 @@ func (a *MigratedFromStorageAction) attemptPlan() (Result, error) {
 
 func (a *MigratedFromStorageAction) setup() error {
 	if err := LinkToThirdPartyPluginDir(a.Model.Source); err != nil {
+		return err
+	}
+
+	if err := copyOverrideFilesIntoSource(a.Model.OverrideFiles, a.Model.Source); err != nil {
+		return err
+	}
+
+	if err := copyOverrideFilesIntoSourceDir(a.Model.ModuleOverrideFiles); err != nil {
 		return err
 	}
 
