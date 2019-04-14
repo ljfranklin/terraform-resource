@@ -30,18 +30,20 @@ func (b BackendEnvNamer) EnvName() (string, error) {
 			return "", fmt.Errorf("Failed to read `env_name_file`: %s", err)
 		}
 		envName = string(contents)
-	} else if len(params.EnvName) > 0 {
-		envName = params.EnvName
 	} else if params.GenerateRandomName {
 		var err error
 		envName, err = b.generateRandomName()
 		if err != nil {
 			return "", err
 		}
+	} else if len(params.EnvName) > 0 {
+		envName = params.EnvName
+	} else if len(b.Req.Source.EnvName) > 0 {
+		envName = b.Req.Source.EnvName
 	}
 
 	if len(envName) == 0 {
-		return "", fmt.Errorf("Must specify `put.params.env_name`, `put.params.env_name_file`, or `put.params.generate_random_name`")
+		return "", fmt.Errorf("Must specify `put.params.env_name`, `put.params.env_name_file`, `put.params.generate_random_name`, or `source.env_name`")
 	}
 	envName = strings.TrimSpace(envName)
 	envName = strings.Replace(envName, " ", "-", -1)
@@ -173,10 +175,12 @@ func (l LegacyStorageEnvNamer) EnvName() (string, error) {
 		if len(envName) == 0 {
 			return "", fmt.Errorf("Failed to generate a non-clashing random name after %d attempts", NameClashRetries)
 		}
+	} else if len(l.Req.Source.EnvName) > 0 {
+		envName = params.EnvName
 	}
 
 	if len(envName) == 0 {
-		return "", fmt.Errorf("Must specify `put.params.env_name`, `put.params.env_name_file`, or `put.params.generate_random_name`")
+		return "", fmt.Errorf("Must specify `put.params.env_name`, `put.params.env_name_file`, `put.params.generate_random_name`, or `source.env_name`")
 	}
 	envName = strings.TrimSpace(envName)
 	envName = strings.Replace(envName, " ", "-", -1)
