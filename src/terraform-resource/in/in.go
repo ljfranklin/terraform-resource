@@ -1,6 +1,7 @@
 package in
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -21,6 +22,8 @@ type Runner struct {
 }
 
 type EnvNotFoundError error
+
+var ErrOutputModule error = errors.New("the `output_module` feature was removed in Terraform 0.12.0, you must now explicitly declare all outputs in the root module")
 
 func (r Runner) Run(req models.InRequest) (models.InResponse, error) {
 	if err := req.Version.Validate(); err != nil {
@@ -97,8 +100,9 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 	}
 	terraformModel.Source = "."
 	if req.Params.OutputModule != "" {
-		terraformModel.OutputModule = req.Params.OutputModule
+		return models.InResponse{}, ErrOutputModule
 	}
+
 	targetEnvName := req.Version.EnvName
 
 	client := terraform.NewClient(
@@ -256,7 +260,7 @@ func (r Runner) inWithLegacyStorage(req models.InRequest, tmpDir string) (models
 	}
 
 	if req.Params.OutputModule != "" {
-		terraformModel.OutputModule = req.Params.OutputModule
+		return models.InResponse{}, ErrOutputModule
 	}
 
 	if err := terraformModel.Validate(); err != nil {

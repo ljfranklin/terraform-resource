@@ -196,7 +196,7 @@ var _ = Describe("In with legacy storage", func() {
 			Expect(expectedStatePath).To(BeAnExistingFile())
 		})
 
-		It("retrieve module specific output when `output_module` is specified", func() {
+		It("returns an error when OutputModule is used", func() {
 			inReq.Params.OutputModule = "module_1"
 			inReq.Version = models.Version{
 				LastModified: awsVerifier.GetLastModifiedFromS3(bucket, pathToModulesS3Fixture),
@@ -207,48 +207,9 @@ var _ = Describe("In with legacy storage", func() {
 				OutputDir: tmpDir,
 				LogWriter: &logWriter,
 			}
-			resp, err := runner.Run(inReq)
-			Expect(err).ToNot(HaveOccurred())
-
-			_, err = time.Parse(storage.TimeFormat, resp.Version.LastModified)
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(resp.Version.EnvName).To(Equal(modulesEnvName))
-
-			metadata := map[string]string{}
-			for _, field := range resp.Metadata {
-				metadata[field.Name] = field.Value
-			}
-			Expect(metadata["terraform_version"]).To(MatchRegexp("Terraform v.*"))
-			Expect(metadata["env_name"]).To(Equal("module_1"))
-			Expect(metadata["secret"]).To(Equal("<sensitive>"))
-
-			expectedOutputPath := path.Join(tmpDir, "metadata")
-			Expect(expectedOutputPath).To(BeAnExistingFile())
-			outputFile, err := os.Open(expectedOutputPath)
-			Expect(err).ToNot(HaveOccurred())
-			defer outputFile.Close()
-
-			outputContents := map[string]interface{}{}
-			err = json.NewDecoder(outputFile).Decode(&outputContents)
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(outputContents["env_name"]).To(Equal("module_1"))
-			Expect(outputContents["map"]).To(Equal(map[string]interface{}{
-				"key-1": "value-1",
-				"key-2": "value-2",
-			}))
-			Expect(outputContents["list"]).To(Equal([]interface{}{
-				"item-1",
-				"item-2",
-			}))
-			Expect(outputContents["secret"]).To(Equal("super-secret"))
-
-			expectedNamePath := path.Join(tmpDir, "name")
-			Expect(expectedNamePath).To(BeAnExistingFile())
-			nameContents, err := ioutil.ReadFile(expectedNamePath)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(string(nameContents)).To(Equal(modulesEnvName))
+			_, err := runner.Run(inReq)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(MatchRegexp("output_module"))
 		})
 
 		It("prints a deprecation warning for `storage`", func() {

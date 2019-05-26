@@ -277,10 +277,6 @@ func (c *client) Output(envName string) (map[string]map[string]interface{}, erro
 		"output",
 		"-json",
 	}
-	if c.model.OutputModule != "" {
-		outputArgs = append(outputArgs, fmt.Sprintf("-module=%s", c.model.OutputModule))
-	}
-
 	outputCmd := c.terraformCmd(outputArgs, []string{
 		fmt.Sprintf("TF_WORKSPACE=%s", envName),
 	})
@@ -309,10 +305,6 @@ func (c *client) OutputWithLegacyStorage() (map[string]map[string]interface{}, e
 		"output",
 		"-json",
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
-	}
-
-	if c.model.OutputModule != "" {
-		outputArgs = append(outputArgs, fmt.Sprintf("-module=%s", c.model.OutputModule))
 	}
 
 	outputCmd := c.terraformCmd(outputArgs, nil)
