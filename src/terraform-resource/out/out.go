@@ -331,12 +331,12 @@ func (r Runner) buildTerraformModel(req models.OutRequest) (models.Terraform, er
 		return models.Terraform{}, errors.New("Missing required field `terraform.source`")
 	}
 
-	terraformModel.Vars["build_id"] = os.Getenv("BUILD_ID")
-	terraformModel.Vars["build_name"] = os.Getenv("BUILD_NAME")
-	terraformModel.Vars["build_job_name"] = os.Getenv("BUILD_JOB_NAME")
-	terraformModel.Vars["build_pipeline_name"] = os.Getenv("BUILD_PIPELINE_NAME")
-	terraformModel.Vars["build_team_name"] = os.Getenv("BUILD_TEAM_NAME")
-	terraformModel.Vars["atc_external_url"] = os.Getenv("ATC_EXTERNAL_URL")
+	terraformModel.Env["TF_VAR_build_id"] = os.Getenv("BUILD_ID")
+	terraformModel.Env["TF_VAR_build_name"] = os.Getenv("BUILD_NAME")
+	terraformModel.Env["TF_VAR_build_job_name"] = os.Getenv("BUILD_JOB_NAME")
+	terraformModel.Env["TF_VAR_build_pipeline_name"] = os.Getenv("BUILD_PIPELINE_NAME")
+	terraformModel.Env["TF_VAR_build_team_name"] = os.Getenv("BUILD_TEAM_NAME")
+	terraformModel.Env["TF_VAR_atc_external_url"] = os.Getenv("ATC_EXTERNAL_URL")
 
 	return terraformModel, nil
 }
