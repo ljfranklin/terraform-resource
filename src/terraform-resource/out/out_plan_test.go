@@ -499,7 +499,7 @@ func downloadStatefulPlugin(workingDir string) error {
 	} else {
 		hostOS = "linux"
 	}
-	url := fmt.Sprintf("https://github.com/ashald/terraform-provider-stateful/releases/download/v1.0.0/terraform-provider-stateful_v1.0.0-%s-amd64", hostOS)
+	url := fmt.Sprintf("https://github.com/ashald/terraform-provider-stateful/releases/download/v1.1.0/terraform-provider-stateful_v1.1.0-%s-amd64", hostOS)
 
 	resp, err := http.Get(url)
 	if err != nil {
