@@ -503,6 +503,15 @@ func (c *client) WorkspaceNewFromExistingStateFile(envName string, localStateFil
 		return fmt.Errorf("Error running `workspace new -state`: %s, Output: %s", err, output)
 	}
 
+	cmd = c.terraformCmd([]string{
+		"state",
+		"push",
+		localStateFilePath,
+	}, nil)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("Error running `state push`: %s, Output: %s", err, output)
+	}
+
 	return nil
 }
 
@@ -674,7 +683,7 @@ func (c *client) resourceExists(tfID string, envName string) (bool, error) {
 	})
 	rawOutput, err := cmd.Output()
 	if err != nil {
-		return false, fmt.Errorf("Error running `state list`: %s, Output: %s", err, rawOutput)
+		return false, nil
 	}
 
 	// command returns the ID of the resource if it exists

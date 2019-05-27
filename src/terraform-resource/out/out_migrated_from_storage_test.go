@@ -146,7 +146,7 @@ var _ = Describe("Out - Migrated From Storage", func() {
 		)
 
 		BeforeEach(func() {
-			storageS3ObjectPath = helpers.RandomString("out-migrated-s3-object")
+			storageS3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-migrated-s3-object"))
 
 			req := models.OutRequest{
 				Source: models.Source{

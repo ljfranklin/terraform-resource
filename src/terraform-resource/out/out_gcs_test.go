@@ -47,7 +47,6 @@ var _ = Describe("Out GCS", func() {
 		backendType = "gcs"
 		backendConfig = map[string]interface{}{
 			"bucket":      gcsBucket,
-			"region":      gcsRegion,
 			"prefix":      workspacePath,
 			"credentials": gcsCredentials,
 		}

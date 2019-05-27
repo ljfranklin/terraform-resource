@@ -69,7 +69,7 @@ func (r Runner) runWithBackend(req models.OutRequest, terraformModel models.Terr
 		return models.OutResponse{}, fmt.Errorf("Failed to create env name: %s", err)
 	}
 
-	terraformModel.Vars["env_name"] = envName
+	terraformModel.Env["TF_VAR_env_name"] = envName
 	terraformModel.PlanFileLocalPath = path.Join(tmpDir, "plan")
 
 	client := terraform.NewClient(
@@ -140,7 +140,7 @@ func (r Runner) runWithLegacyStorage(req models.OutRequest, terraformModel model
 	if err != nil {
 		return models.OutResponse{}, err
 	}
-	terraformModel.Vars["env_name"] = envName
+	terraformModel.Env["TF_VAR_env_name"] = envName
 
 	terraformModel.PlanFileLocalPath = path.Join(tmpDir, "plan")
 	terraformModel.PlanFileRemotePath = fmt.Sprintf("%s.plan", envName)
@@ -219,7 +219,7 @@ func (r Runner) runWithMigratedFromStorage(req models.OutRequest, terraformModel
 		return models.OutResponse{}, err
 	}
 
-	terraformModel.Vars["env_name"] = envName
+	terraformModel.Env["TF_VAR_env_name"] = envName
 	terraformModel.PlanFileLocalPath = path.Join(tmpDir, "plan")
 
 	client := terraform.NewClient(
