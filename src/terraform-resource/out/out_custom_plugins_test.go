@@ -46,7 +46,7 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		pluginDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test-plugins")
 		Expect(err).ToNot(HaveOccurred())
 
-		awsProviderURL := fmt.Sprintf("https://releases.hashicorp.com/terraform-provider-aws/1.2.0/terraform-provider-aws_1.2.0_%s_%s.zip", runtime.GOOS, runtime.GOARCH)
+		awsProviderURL := fmt.Sprintf("https://releases.hashicorp.com/terraform-provider-aws/2.9.0/terraform-provider-aws_2.9.0_%s_%s.zip", runtime.GOOS, runtime.GOARCH)
 		err = downloadPlugins(pluginDir, awsProviderURL)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -240,7 +240,7 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 			},
 		}
 
-		customProviderURL := fmt.Sprintf("https://releases.hashicorp.com/terraform-provider-tls/1.0.1/terraform-provider-tls_1.0.1_%s_%s.zip", runtime.GOOS, runtime.GOARCH)
+		customProviderURL := fmt.Sprintf("https://releases.hashicorp.com/terraform-provider-tls/2.0.1/terraform-provider-tls_2.0.1_%s_%s.zip", runtime.GOOS, runtime.GOARCH)
 		thirdPartyPluginDir := fmt.Sprintf("fixtures/custom-plugin/terraform.d/plugins/%s_%s/", runtime.GOOS, runtime.GOARCH)
 		err := os.MkdirAll(thirdPartyPluginDir, 0700)
 		Expect(err).ToNot(HaveOccurred())
