@@ -141,7 +141,9 @@ output "plan_content" {
 
 func (c *client) writeBackendOverride(outputDir string) error {
 	backendPath := path.Join(outputDir, "resource_backend_override.tf")
-	backendContent := fmt.Sprintf(`terraform { backend "%s" {} }`, c.model.BackendType)
+	backendContent := fmt.Sprintf(`terraform {
+		backend "%s" {}
+	}`, c.model.BackendType)
 	return ioutil.WriteFile(backendPath, []byte(backendContent), 0755)
 }
 
@@ -734,7 +736,7 @@ func (c *client) writeVarFile() (string, error) {
 		return "", err
 	}
 
-	varsFile, err := ioutil.TempFile("", "vars-file")
+	varsFile, err := ioutil.TempFile("", "*vars-file.tfvars.json")
 	if err != nil {
 		return "", err
 	}
