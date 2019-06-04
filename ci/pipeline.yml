@@ -474,7 +474,6 @@ resources:
     backend_type: gcs
     backend_config:
       bucket: {{gcs_bucket}}
-      region: {{gcs_region}}
       credentials: {{gcs_credentials_json}}
       prefix: terraform-backend-ci
     terraform_source: resource-src/fixtures/aws
