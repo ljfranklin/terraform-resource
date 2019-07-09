@@ -163,6 +163,7 @@ var _ = Describe("Out", func() {
 	It("creates IaaS resources from `source.terraform.vars`", func() {
 		req := models.OutRequest{
 			Source: models.Source{
+				EnvName: envName,
 				Terraform: models.Terraform{
 					BackendType:   backendType,
 					BackendConfig: backendConfig,
@@ -177,9 +178,7 @@ var _ = Describe("Out", func() {
 					},
 				},
 			},
-			Params: models.OutParams{
-				EnvName: envName,
-			},
+			Params: models.OutParams{},
 		}
 		expectedMetadata := map[string]string{
 			"env_name":    envName,

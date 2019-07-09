@@ -141,7 +141,9 @@ output "plan_content" {
 
 func (c *client) writeBackendOverride(outputDir string) error {
 	backendPath := path.Join(outputDir, "resource_backend_override.tf")
-	backendContent := fmt.Sprintf(`terraform { backend "%s" {} }`, c.model.BackendType)
+	backendContent := fmt.Sprintf(`terraform {
+		backend "%s" {}
+	}`, c.model.BackendType)
 	return ioutil.WriteFile(backendPath, []byte(backendContent), 0755)
 }
 
@@ -277,10 +279,6 @@ func (c *client) Output(envName string) (map[string]map[string]interface{}, erro
 		"output",
 		"-json",
 	}
-	if c.model.OutputModule != "" {
-		outputArgs = append(outputArgs, fmt.Sprintf("-module=%s", c.model.OutputModule))
-	}
-
 	outputCmd := c.terraformCmd(outputArgs, []string{
 		fmt.Sprintf("TF_WORKSPACE=%s", envName),
 	})
@@ -309,10 +307,6 @@ func (c *client) OutputWithLegacyStorage() (map[string]map[string]interface{}, e
 		"output",
 		"-json",
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
-	}
-
-	if c.model.OutputModule != "" {
-		outputArgs = append(outputArgs, fmt.Sprintf("-module=%s", c.model.OutputModule))
 	}
 
 	outputCmd := c.terraformCmd(outputArgs, nil)
@@ -509,6 +503,15 @@ func (c *client) WorkspaceNewFromExistingStateFile(envName string, localStateFil
 		return fmt.Errorf("Error running `workspace new -state`: %s, Output: %s", err, output)
 	}
 
+	cmd = c.terraformCmd([]string{
+		"state",
+		"push",
+		localStateFilePath,
+	}, nil)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("Error running `state push`: %s, Output: %s", err, output)
+	}
+
 	return nil
 }
 
@@ -680,7 +683,7 @@ func (c *client) resourceExists(tfID string, envName string) (bool, error) {
 	})
 	rawOutput, err := cmd.Output()
 	if err != nil {
-		return false, fmt.Errorf("Error running `state list`: %s, Output: %s", err, rawOutput)
+		return false, nil
 	}
 
 	// command returns the ID of the resource if it exists
@@ -716,6 +719,9 @@ func (c *client) terraformCmd(args []string, env []string) *exec.Cmd {
 	// TODO: remove the following line once this issue is fixed:
 	// https://github.com/hashicorp/terraform/issues/17655
 	cmd.Env = append(cmd.Env, "TF_WARN_OUTPUT_ERRORS=1")
+	// To control terraform output in automation.
+	// As suggested in https://learn.hashicorp.com/terraform/development/running-terraform-in-automation#controlling-terraform-output-in-automation
+	cmd.Env = append(cmd.Env, "TF_IN_AUTOMATION=1")
 	for _, e := range env {
 		cmd.Env = append(cmd.Env, e)
 	}
@@ -739,7 +745,7 @@ func (c *client) writeVarFile() (string, error) {
 		return "", err
 	}
 
-	varsFile, err := ioutil.TempFile("", "vars-file")
+	varsFile, err := ioutil.TempFile("", "*vars-file.tfvars.json")
 	if err != nil {
 		return "", err
 	}
