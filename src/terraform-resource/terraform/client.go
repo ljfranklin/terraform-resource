@@ -430,7 +430,7 @@ func (c *client) WorkspaceList() ([]string, error) {
 	}, nil)
 	rawOutput, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Error running `workspace list`: %s, Output: %s", err, rawOutput)
+		return nil, fmt.Errorf("Error running `workspace list`: %s, Output: %s", err, err.(*exec.ExitError).Stderr)
 	}
 
 	envs := []string{}
