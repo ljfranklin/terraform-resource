@@ -382,6 +382,7 @@ jobs:
             pull_tag: test
             cache: true
             tag: resource-src/config/terraform-version
+            additional_tags: resource-src/config/terraform-major-minor
         - put: terraform-prod-image
           params:
             pull_repository: ljfranklin/terraform-resource
