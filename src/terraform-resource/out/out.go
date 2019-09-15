@@ -26,9 +26,14 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	if err := req.Source.Validate(); err != nil {
 		return models.OutResponse{}, err
 	}
+	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-out")
+	if err != nil {
+		return models.OutResponse{}, fmt.Errorf("Failed to create tmp dir at '%s'", os.TempDir())
+	}
+	defer os.RemoveAll(tmpDir)
 
 	req.Source.Terraform = req.Source.Terraform.Merge(req.Params.Terraform)
-	terraformModel, err := r.buildTerraformModel(req)
+	terraformModel, err := r.buildTerraformModel(req, tmpDir)
 	if err != nil {
 		return models.OutResponse{}, err
 	}
@@ -313,14 +318,14 @@ func (r Runner) buildEnvNameFromMigrated(req models.OutRequest, terraformModel m
 	return namer.EnvName()
 }
 
-func (r Runner) buildTerraformModel(req models.OutRequest) (models.Terraform, error) {
+func (r Runner) buildTerraformModel(req models.OutRequest, tmpDir string) (models.Terraform, error) {
 	terraformModel := req.Source.Terraform
 	if terraformModel.VarFiles != nil {
 		for i := range terraformModel.VarFiles {
 			terraformModel.VarFiles[i] = path.Join(r.SourceDir, terraformModel.VarFiles[i])
 		}
 	}
-	if err := terraformModel.ParseVarsFromFiles(); err != nil {
+	if err := terraformModel.ConvertVarFiles(tmpDir); err != nil {
 		return models.Terraform{}, fmt.Errorf("Failed to parse `terraform.var_files`: %s", err)
 	}
 	if err := terraformModel.ParseImportsFromFile(); err != nil {

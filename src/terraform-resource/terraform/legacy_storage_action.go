@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"terraform-resource/logger"
 	"terraform-resource/models"
@@ -257,7 +258,26 @@ func (a *LegacyStorageAction) setup() error {
 			Output: outputs,
 		}
 
-		a.Client.SetModel(models.Terraform{Vars: previousResult.RawOutput()}.Merge(a.Model))
+		if len(previousResult.RawOutput()) > 0 {
+			jsonContents, err := json.Marshal(previousResult.RawOutput())
+			if err != nil {
+				return err
+			}
+			outputVarFile, err := ioutil.TempFile("", "*.tfvars.json")
+			if err != nil {
+				return err
+			}
+			_, err = outputVarFile.Write(jsonContents)
+			if err != nil {
+				return err
+			}
+			err = outputVarFile.Close()
+			if err != nil {
+				return err
+			}
+			a.Model.ConvertedVarFiles = append([]string{outputVarFile.Name()}, a.Model.ConvertedVarFiles...)
+			a.Client.SetModel(a.Model)
+		}
 	}
 
 	if err := LinkToThirdPartyPluginDir(a.Model.Source); err != nil {

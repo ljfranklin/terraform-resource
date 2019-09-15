@@ -15,9 +15,6 @@ import (
 	"strings"
 
 	"terraform-resource/models"
-
-	yamlConverter "github.com/ghodss/yaml"
-	yaml "gopkg.in/yaml.v2"
 )
 
 //go:generate counterfeiter . Client
@@ -190,13 +187,9 @@ func (c *client) Apply() error {
 	}
 
 	if c.model.PlanRun == false {
-		varFile, err := c.writeVarFile()
-		if err != nil {
-			return err
+		for _, varFile := range c.model.ConvertedVarFiles {
+			applyArgs = append(applyArgs, fmt.Sprintf("-var-file=%s", varFile))
 		}
-		defer os.RemoveAll(varFile)
-
-		applyArgs = append(applyArgs, fmt.Sprintf("-var-file=%s", varFile))
 		if c.model.StateFileLocalPath != "" {
 			applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.model.StateFileLocalPath))
 		}
@@ -228,18 +221,14 @@ func (c *client) Destroy() error {
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 
-	varFile, err := c.writeVarFile()
-	if err != nil {
-		return err
+	for _, varFile := range c.model.ConvertedVarFiles {
+		destroyArgs = append(destroyArgs, fmt.Sprintf("-var-file=%s", varFile))
 	}
-	defer os.RemoveAll(varFile)
-
-	destroyArgs = append(destroyArgs, fmt.Sprintf("-var-file=%s", varFile))
 
 	destroyCmd := c.terraformCmd(destroyArgs, nil)
 	destroyCmd.Stdout = c.logWriter
 	destroyCmd.Stderr = c.logWriter
-	err = destroyCmd.Run()
+	err := destroyCmd.Run()
 	if err != nil {
 		return fmt.Errorf("Failed to run Terraform command: %s", err)
 	}
@@ -255,18 +244,14 @@ func (c *client) Plan() error {
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 
-	varFile, err := c.writeVarFile()
-	if err != nil {
-		return err
+	for _, varFile := range c.model.ConvertedVarFiles {
+		planArgs = append(planArgs, fmt.Sprintf("-var-file=%s", varFile))
 	}
-	defer os.RemoveAll(varFile)
-
-	planArgs = append(planArgs, fmt.Sprintf("-var-file=%s", varFile))
 
 	planCmd := c.terraformCmd(planArgs, nil)
 	planCmd.Stdout = c.logWriter
 	planCmd.Stderr = c.logWriter
-	err = planCmd.Run()
+	err := planCmd.Run()
 	if err != nil {
 		return fmt.Errorf("Failed to run Terraform command: %s", err)
 	}
@@ -362,13 +347,10 @@ func (c *client) Import(envName string) error {
 			"import",
 		}
 
-		varFile, err := c.writeVarFile()
-		if err != nil {
-			return err
+		for _, varFile := range c.model.ConvertedVarFiles {
+			importArgs = append(importArgs, fmt.Sprintf("-var-file=%s", varFile))
 		}
-		defer os.RemoveAll(varFile)
 
-		importArgs = append(importArgs, fmt.Sprintf("-var-file=%s", varFile))
 		importArgs = append(importArgs, tfID)
 		importArgs = append(importArgs, iaasID)
 
@@ -403,13 +385,10 @@ func (c *client) ImportWithLegacyStorage() error {
 			fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 		}
 
-		varFile, err := c.writeVarFile()
-		if err != nil {
-			return err
+		for _, varFile := range c.model.ConvertedVarFiles {
+			importArgs = append(importArgs, fmt.Sprintf("-var-file=%s", varFile))
 		}
-		defer os.RemoveAll(varFile)
 
-		importArgs = append(importArgs, fmt.Sprintf("-var-file=%s", varFile))
 		importArgs = append(importArgs, tfID)
 		importArgs = append(importArgs, iaasID)
 
@@ -731,30 +710,4 @@ func (c *client) terraformCmd(args []string, env []string) *exec.Cmd {
 	}
 
 	return cmd
-}
-
-func (c *client) writeVarFile() (string, error) {
-	yamlContents, err := yaml.Marshal(c.model.Vars)
-	if err != nil {
-		return "", err
-	}
-
-	// avoids marshalling errors around map[interface{}]interface{}
-	jsonFileContents, err := yamlConverter.YAMLToJSON(yamlContents)
-	if err != nil {
-		return "", err
-	}
-
-	varsFile, err := ioutil.TempFile("", "*vars-file.tfvars.json")
-	if err != nil {
-		return "", err
-	}
-	if _, err := varsFile.Write(jsonFileContents); err != nil {
-		return "", err
-	}
-	if err := varsFile.Close(); err != nil {
-		return "", err
-	}
-
-	return varsFile.Name(), nil
 }

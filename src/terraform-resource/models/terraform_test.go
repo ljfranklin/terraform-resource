@@ -47,31 +47,6 @@ var _ = Describe("Terraform Models", func() {
 			err := model.Validate()
 			Expect(err).ToNot(HaveOccurred())
 		})
-	})
-
-	Describe("Vars", func() {
-
-		It("returns fields from VarFiles", func() {
-			varFile := path.Join(tmpDir, "var_file")
-
-			fileVars := map[string]interface{}{
-				"fake-key": "fake-value",
-			}
-			fileContents, err := json.Marshal(fileVars)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = ioutil.WriteFile(varFile, fileContents, 0600)
-			Expect(err).ToNot(HaveOccurred())
-
-			model := models.Terraform{
-				VarFiles: []string{varFile},
-			}
-
-			err = model.ParseVarsFromFiles()
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(model.Vars).To(Equal(fileVars))
-		})
 
 		It("merges non-var fields", func() {
 			baseModel := models.Terraform{
@@ -83,7 +58,7 @@ var _ = Describe("Terraform Models", func() {
 				DeleteOnFailure:     true,
 				ImportFiles:         []string{"fake-imports-path"},
 				OverrideFiles:       []string{"fake-override-path"},
-				ModuleOverrideFiles: []map[string]string{ map[string]string{"src": "fake-override-src-path", "dst" : "fake-override-dst-path",}, },
+				ModuleOverrideFiles: []map[string]string{map[string]string{"src": "fake-override-src-path", "dst": "fake-override-dst-path"}},
 				Imports:             map[string]string{"fake-key": "fake-value"},
 				PluginDir:           "fake-plugin-path",
 				BackendType:         "fake-type",
@@ -97,12 +72,15 @@ var _ = Describe("Terraform Models", func() {
 			Expect(finalModel.DeleteOnFailure).To(BeTrue())
 			Expect(finalModel.ImportFiles).To(Equal([]string{"fake-imports-path"}))
 			Expect(finalModel.OverrideFiles).To(Equal([]string{"fake-override-path"}))
-			Expect(finalModel.ModuleOverrideFiles).To(Equal([]map[string]string{ map[string]string{"src": "fake-override-src-path", "dst" : "fake-override-dst-path"}}))
+			Expect(finalModel.ModuleOverrideFiles).To(Equal([]map[string]string{map[string]string{"src": "fake-override-src-path", "dst": "fake-override-dst-path"}}))
 			Expect(finalModel.Imports).To(Equal(map[string]string{"fake-key": "fake-value"}))
 			Expect(finalModel.PluginDir).To(Equal("fake-plugin-path"))
 			Expect(finalModel.BackendType).To(Equal("fake-type"))
 			Expect(finalModel.BackendConfig).To(Equal(map[string]interface{}{"fake-backend-key": "fake-backend-value"}))
 		})
+	})
+
+	Describe("Vars", func() {
 
 		It("returns original vars and vars from Merged model", func() {
 			baseModel := models.Terraform{
@@ -131,61 +109,48 @@ var _ = Describe("Terraform Models", func() {
 			}))
 		})
 
-		It("returns original vars and vars from VarFiles", func() {
-			varFile := path.Join(tmpDir, "var_file")
-
-			fileVars := map[string]interface{}{
-				"merge-key":    "merge-value",
-				"override-key": "merge-override",
-			}
-			fileContents, err := json.Marshal(fileVars)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = ioutil.WriteFile(varFile, fileContents, 0600)
-			Expect(err).ToNot(HaveOccurred())
+		It("writes Vars/VarFiles to formatted files", func() {
+			varFiles := []string{}
+			jsonFileContents := `{
+  "some_json_key": "some_json_value"
+}`
+			varFiles = append(varFiles, writeToTempFile(tmpDir, jsonFileContents, ".json"))
+			yamlFileContents := `
+some_yaml_key: some_yaml_value
+`
+			varFiles = append(varFiles, writeToTempFile(tmpDir, yamlFileContents, ".yaml"))
+			hclFileContents := `
+some_hcl_key = "some_hcl_value"
+`
+			varFiles = append(varFiles, writeToTempFile(tmpDir, hclFileContents, ".tfvars"))
 
 			model := models.Terraform{
-				Source:   "base-source",
-				VarFiles: []string{varFile},
 				Vars: map[string]interface{}{
-					"base-key":     "base-value",
-					"override-key": "base-override",
+					"some_var_key": "some_var_value",
 				},
+				VarFiles: varFiles,
 			}
 
-			err = model.ParseVarsFromFiles()
+			err := model.ConvertVarFiles(tmpDir)
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(model.Vars).To(Equal(map[string]interface{}{
-				"base-key":     "base-value",
-				"merge-key":    "merge-value",
-				"override-key": "merge-override",
+			Expect(model.ConvertedVarFiles).To(HaveLen(4))
+
+			varFile0 := readJsonFile(model.ConvertedVarFiles[0])
+			Expect(varFile0).To(Equal(map[string]string{
+				"some_var_key": "some_var_value",
 			}))
-		})
-
-		It("reads vars from tfvars file in HCL format", func() {
-			varFile := path.Join(tmpDir, "vars.tfvars")
-
-			fileContents := []byte(`
-some_map = {
-	some_key = "some_value"
-}`)
-
-			err := ioutil.WriteFile(varFile, fileContents, 0600)
-			Expect(err).ToNot(HaveOccurred())
-
-			model := models.Terraform{
-				VarFiles: []string{varFile},
-			}
-
-			err = model.ParseVarsFromFiles()
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(model.Vars).To(Equal(map[string]interface{}{
-				"some_map": map[string]interface{}{
-					"some_key": "some_value",
-				},
+			varFile1 := readJsonFile(model.ConvertedVarFiles[1])
+			Expect(varFile1).To(Equal(map[string]string{
+				"some_json_key": "some_json_value",
 			}))
+			varFile2 := readJsonFile(model.ConvertedVarFiles[2])
+			Expect(varFile2).To(Equal(map[string]string{
+				"some_yaml_key": "some_yaml_value",
+			}))
+			varFile3, err := ioutil.ReadFile(model.ConvertedVarFiles[3])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(string(varFile3)).To(Equal(hclFileContents))
 		})
 	})
 
@@ -256,3 +221,21 @@ some_map = {
 		})
 	})
 })
+
+func writeToTempFile(tmpDir string, contents string, ext string) string {
+	f, err := ioutil.TempFile(tmpDir, "*"+ext)
+	Expect(err).ToNot(HaveOccurred())
+	defer f.Close()
+	err = ioutil.WriteFile(f.Name(), []byte(contents), 0600)
+	Expect(err).ToNot(HaveOccurred())
+	return f.Name()
+}
+
+func readJsonFile(varFilePath string) map[string]string {
+	varFileContents, err := ioutil.ReadFile(varFilePath)
+	Expect(err).ToNot(HaveOccurred())
+	var varFile map[string]string
+	err = json.Unmarshal(varFileContents, &varFile)
+	Expect(err).ToNot(HaveOccurred())
+	return varFile
+}

@@ -5,31 +5,32 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/hashicorp/hcl"
-	"gopkg.in/yaml.v2"
+	yamlConverter "github.com/ghodss/yaml"
+	yaml "gopkg.in/yaml.v2"
 )
 
 type Terraform struct {
 	Source              string                 `json:"terraform_source"`
-	Vars                map[string]interface{} `json:"vars,omitempty"`              		// optional
-	VarFiles            []string               `json:"var_files,omitempty"`         		// optional
-	Env                 map[string]string      `json:"env,omitempty"`               		// optional
-	DeleteOnFailure     bool                   `json:"delete_on_failure,omitempty"` 		// optional
-	PlanOnly            bool                   `json:"plan_only,omitempty"`         		// optional
-	PlanRun             bool                   `json:"plan_run,omitempty"`          		// optional
-	OutputModule        string                 `json:"output_module,omitempty"`     		// optional
-	ImportFiles         []string               `json:"import_files,omitempty"`      		// optional
-	OverrideFiles       []string               `json:"override_files,omitempty"`    		// optional
-	ModuleOverrideFiles []map[string]string    `json:"module_override_files,omitempty"`		// optional
-	PluginDir           string                 `json:"plugin_dir,omitempty"`        // optional
-	BackendType         string                 `json:"backend_type,omitempty"`      // optional
-	BackendConfig       map[string]interface{} `json:"backend_config,omitempty"`    // optional
+	Vars                map[string]interface{} `json:"vars,omitempty"`                  // optional
+	VarFiles            []string               `json:"var_files,omitempty"`             // optional
+	Env                 map[string]string      `json:"env,omitempty"`                   // optional
+	DeleteOnFailure     bool                   `json:"delete_on_failure,omitempty"`     // optional
+	PlanOnly            bool                   `json:"plan_only,omitempty"`             // optional
+	PlanRun             bool                   `json:"plan_run,omitempty"`              // optional
+	OutputModule        string                 `json:"output_module,omitempty"`         // optional
+	ImportFiles         []string               `json:"import_files,omitempty"`          // optional
+	OverrideFiles       []string               `json:"override_files,omitempty"`        // optional
+	ModuleOverrideFiles []map[string]string    `json:"module_override_files,omitempty"` // optional
+	PluginDir           string                 `json:"plugin_dir,omitempty"`            // optional
+	BackendType         string                 `json:"backend_type,omitempty"`          // optional
+	BackendConfig       map[string]interface{} `json:"backend_config,omitempty"`        // optional
 	PrivateKey          string                 `json:"private_key,omitempty"`
 	PlanFileLocalPath   string                 `json:"-"` // not specified pipeline
 	PlanFileRemotePath  string                 `json:"-"` // not specified pipeline
 	StateFileLocalPath  string                 `json:"-"` // not specified pipeline
 	StateFileRemotePath string                 `json:"-"` // not specified pipeline
 	Imports             map[string]string      `json:"-"` // not specified pipeline
+	ConvertedVarFiles   []string               `json:"-"` // not specified pipeline
 }
 
 func (m Terraform) Validate() error {
@@ -109,7 +110,7 @@ func (m Terraform) Merge(other Terraform) Terraform {
 
 	if other.ModuleOverrideFiles != nil {
 		m.ModuleOverrideFiles = other.ModuleOverrideFiles
-	}	
+	}
 
 	if other.PluginDir != "" {
 		m.PluginDir = other.PluginDir
@@ -130,62 +131,79 @@ func (m Terraform) Merge(other Terraform) Terraform {
 	return m
 }
 
-func (m *Terraform) ParseVarsFromFiles() error {
-	terraformVars := map[string]interface{}{}
-	for key, value := range m.Vars {
-		terraformVars[key] = value
+// The resource supports input files in JSON, YAML, and HCL formats.
+// Terraform supports JSON and HCL but not YAML.
+// This method converts all YAML files to JSON and writes Vars to the
+// first file to ensure precedence rules are respected.
+func (m *Terraform) ConvertVarFiles(tmpDir string) error {
+	varsContents, err := yaml.Marshal(m.Vars)
+	if err != nil {
+		return err
 	}
 
-	if m.VarFiles != nil {
-		for _, varFile := range m.VarFiles {
-			newVars, err := m.parseVarsFromFiles(varFile)
+	varsFile, err := m.writeJSONFile(tmpDir, varsContents)
+	if err != nil {
+		return err
+	}
+	m.ConvertedVarFiles = append(m.ConvertedVarFiles, varsFile)
+
+	for _, inputVarFile := range m.VarFiles {
+		fileContents, err := ioutil.ReadFile(inputVarFile)
+		if err != nil {
+			return err
+		}
+		var outputVarFile string
+		if strings.HasSuffix(inputVarFile, ".tfvars") {
+			outputVarFile, err = m.writeToTempFile(tmpDir, fileContents)
 			if err != nil {
 				return err
 			}
-
-			for key, value := range newVars {
-				terraformVars[key] = value
+		} else {
+			outputVarFile, err = m.writeJSONFile(tmpDir, fileContents)
+			if err != nil {
+				return err
 			}
 		}
+		m.ConvertedVarFiles = append(m.ConvertedVarFiles, outputVarFile)
 	}
-
-	m.Vars = terraformVars
 
 	return nil
 }
 
-func (m *Terraform) parseVarsFromFiles(filepath string) (map[string]interface{}, error) {
-	terraformVars := map[string]interface{}{}
-
-	fileContents, readErr := ioutil.ReadFile(filepath)
-	if readErr != nil {
-		return nil, fmt.Errorf("Failed to read TerraformVarFile at '%s': %s", filepath, readErr)
+func (m *Terraform) writeJSONFile(tmpDir string, contents []byte) (string, error) {
+	// avoids marshalling errors around map[interface{}]interface{}
+	jsonFileContents, err := yamlConverter.YAMLToJSON(contents)
+	if err != nil {
+		return "", err
 	}
 
-	fileVars := map[string]interface{}{}
-
-	if strings.HasSuffix(filepath, ".tfvars") {
-		readErr = hcl.Unmarshal(fileContents, &fileVars)
-	} else {
-		readErr = yaml.Unmarshal(fileContents, &fileVars)
+	varsFile, err := ioutil.TempFile(tmpDir, "*vars-file.tfvars.json")
+	if err != nil {
+		return "", err
+	}
+	if _, err := varsFile.Write(jsonFileContents); err != nil {
+		return "", err
+	}
+	if err := varsFile.Close(); err != nil {
+		return "", err
 	}
 
-	if readErr != nil {
-		return nil, fmt.Errorf("Failed to parse TerraformVarFile at '%s': %s", filepath, readErr)
+	return varsFile.Name(), nil
+}
+
+func (m *Terraform) writeToTempFile(tmpDir string, contents []byte) (string, error) {
+	varsFile, err := ioutil.TempFile(tmpDir, "*.tfvars")
+	if err != nil {
+		return "", err
+	}
+	if _, err := varsFile.Write(contents); err != nil {
+		return "", err
+	}
+	if err := varsFile.Close(); err != nil {
+		return "", err
 	}
 
-	if strings.HasSuffix(filepath, ".tfvars") {
-		err := flattenMultiMaps(fileVars)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	for key, value := range fileVars {
-		terraformVars[key] = value
-	}
-
-	return terraformVars, nil
+	return varsFile.Name(), nil
 }
 
 func (m *Terraform) ParseImportsFromFile() error {
@@ -212,26 +230,5 @@ func (m *Terraform) ParseImportsFromFile() error {
 		}
 	}
 
-	return nil
-}
-
-// Copied from https://github.com/hashicorp/terraform/blob/6de63cfa7324503c8bb66031c5d97f4cc940db43/helper/variables/parse.go#L101-L118
-//
-// Variables don't support any type that can be configured via multiple
-// declarations of the same HCL map, so any instances of
-// []map[string]interface{} are either a single map that can be flattened, or
-// are invalid config.
-func flattenMultiMaps(m map[string]interface{}) error {
-	for k, v := range m {
-		switch v := v.(type) {
-		case []map[string]interface{}:
-			switch {
-			case len(v) > 1:
-				return fmt.Errorf("multiple map declarations not supported for variables")
-			case len(v) == 1:
-				m[k] = v[0]
-			}
-		}
-	}
 	return nil
 }

@@ -11,12 +11,12 @@ import (
 	"strconv"
 	"strings"
 
-	"gopkg.in/yaml.v2"
-
 	"terraform-resource/models"
 	"terraform-resource/namer/namerfakes"
 	"terraform-resource/out"
 	"terraform-resource/test/helpers"
+
+	yaml "gopkg.in/yaml.v2"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -396,7 +396,13 @@ var _ = Describe("Out", func() {
 object = {
 	key = "%s"
 	content = "terraform-files-are-neat"
-}`, s3ObjectPath)
+}
+map_of_maps = {
+  another_map = {
+	  key = "value"
+	}
+}
+`, s3ObjectPath)
 				_, err = varFile.Write([]byte(tfvarsContent))
 				Expect(err).ToNot(HaveOccurred())
 			})
@@ -407,7 +413,7 @@ object = {
 						Terraform: models.Terraform{
 							BackendType:   backendType,
 							BackendConfig: backendConfig,
-							Source:        "fixtures/aws-map/",
+							Source:        "fixtures/aws-map-of-maps/",
 							Vars: map[string]interface{}{
 								"access_key": accessKey,
 								"secret_key": secretKey,
