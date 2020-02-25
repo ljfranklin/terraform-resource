@@ -49,6 +49,7 @@ resources:
         bucket: mybucket
         key: mydir/terraform.tfstate
         region: us-east-1
+        dynamodb_table: my-dynamodb-table
         access_key: {{storage_access_key}}
         secret_key: {{storage_secret_key}}
       vars:
