@@ -49,7 +49,6 @@ resources:
         bucket: mybucket
         key: mydir/terraform.tfstate
         region: us-east-1
-        dynamodb_table: my-dynamodb-table
         access_key: {{storage_access_key}}
         secret_key: {{storage_secret_key}}
       vars:
@@ -59,8 +58,9 @@ resources:
         AWS_SECRET_ACCESS_KEY: {{environment_secret_key}}
 ```
 
-The above example uses AWS S3 to store the Terraform state files.
-Terraform supports many other [state file backends](https://www.terraform.io/docs/backends/types/index.html), for example [Google Cloud Storage (GCS)](https://www.terraform.io/docs/backends/types/gcs.html):
+The above example uses AWS S3 to store Terraform state files. All `backend_config` options documented [here](https://www.terraform.io/docs/backends/types/s3.html#configuration-variables) are forwarded straight to Terraform.
+
+Terraform also supports many other [state file backends](https://www.terraform.io/docs/backends/types/index.html), for example [Google Cloud Storage (GCS)](https://www.terraform.io/docs/backends/types/gcs.html):
 
 ```yaml
 resources:
