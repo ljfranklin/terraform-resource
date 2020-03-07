@@ -31,6 +31,7 @@ type Terraform struct {
 	StateFileRemotePath string                 `json:"-"` // not specified pipeline
 	Imports             map[string]string      `json:"-"` // not specified pipeline
 	ConvertedVarFiles   []string               `json:"-"` // not specified pipeline
+	DownloadPlugins     bool                   `json:"-"` // not specified pipeline
 }
 
 func (m Terraform) Validate() error {

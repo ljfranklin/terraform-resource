@@ -214,6 +214,40 @@ var _ = Describe("In with Backend", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp("output_module"))
 		})
+
+		Context("when 'default' workspace contains custom plugins", func() {
+			var pathToDefaultS3Fixture string
+
+			BeforeEach(func() {
+				// S3 backend ignores workspace_key_prefix/key for 'default' workspace.
+				// Unfortunately this makes this test vulnerable to test pollution.
+				pathToDefaultS3Fixture = "terraform.tfstate"
+
+				defaultFixture, err := os.Open(helpers.FileLocation("fixtures/custom-plugin-backend/terraform.tfstate"))
+				Expect(err).ToNot(HaveOccurred())
+				defer defaultFixture.Close()
+				awsVerifier.UploadObjectToS3(bucket, pathToDefaultS3Fixture, defaultFixture)
+			})
+
+			AfterEach(func() {
+				awsVerifier.DeleteObjectFromS3(bucket, pathToDefaultS3Fixture)
+			})
+
+			It("fetches the state file without trying to download plugins", func() {
+				inReq.Version = models.Version{
+					EnvName: prevEnvName,
+					Serial:  "0",
+				}
+
+				runner := in.Runner{
+					OutputDir: tmpDir,
+				}
+				resp, err := runner.Run(inReq)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(resp.Version.EnvName).To(Equal(prevEnvName))
+			})
+		})
 	})
 
 	Context("when state file does not exist on S3", func() {

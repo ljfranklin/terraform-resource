@@ -75,6 +75,7 @@ func (c *client) InitWithBackend() error {
 		"-get=true",
 		"-backend=true",
 		fmt.Sprintf("-backend-config=%s", backendConfigPath),
+		fmt.Sprintf("-get-plugins=%t", c.model.DownloadPlugins),
 	}
 	if c.model.PluginDir != "" {
 		initArgs = append(initArgs, fmt.Sprintf("-plugin-dir=%s", c.model.PluginDir))
@@ -83,6 +84,13 @@ func (c *client) InitWithBackend() error {
 	initCmd := c.terraformCmd(initArgs, nil)
 	var output []byte
 	if output, err = initCmd.CombinedOutput(); err != nil {
+		// Even though we tell Terraform to skip downloading plugins, it will still return
+		// an error if the user has previously uploaded a "default" workspace which uses
+		// custom provider plugins. Despite the error message the initialization has otherwise
+		// succeeded so we swallow this error.
+		if !c.model.DownloadPlugins && bytes.Contains(output, []byte("Missing required providers.")) {
+			return nil
+		}
 		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", err, output)
 	}
 

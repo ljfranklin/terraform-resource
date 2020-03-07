@@ -25,6 +25,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 		pathToCurrS3Fixture string
 		awsVerifier         *helpers.AWSVerifier
 		workingDir          string
+		workspacePath       string
 		expectedLineage     = "f62eee11-6a4e-4d39-b5c7-15d3dad8e5f7"
 	)
 
@@ -65,7 +66,7 @@ var _ = Describe("Check with Terraform Backend", func() {
 		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
 		Expect(err).ToNot(HaveOccurred())
 
-		workspacePath := helpers.RandomString("check-backend-test")
+		workspacePath = helpers.RandomString("check-backend-test")
 
 		prevEnvName = "s3-test-fixture-previous"
 		currEnvName = "s3-test-fixture-current"
@@ -75,7 +76,6 @@ var _ = Describe("Check with Terraform Backend", func() {
 		checkInput = models.InRequest{
 			Source: models.Source{
 				Terraform: models.Terraform{
-					Source:      "unused",
 					BackendType: "s3",
 					BackendConfig: map[string]interface{}{
 						"bucket":               bucket,
@@ -310,6 +310,47 @@ var _ = Describe("Check with Terraform Backend", func() {
 				}
 				Expect(resp).To(Equal(expectOutput))
 			})
+		})
+	})
+
+	Context("when 'default' workspace contains custom plugins", func() {
+		var pathToDefaultS3Fixture string
+
+		BeforeEach(func() {
+			// S3 backend ignores workspace_key_prefix/key for 'default' workspace.
+			// Unfortunately this makes this test vulnerable to test pollution.
+			pathToDefaultS3Fixture = "terraform.tfstate"
+
+			defaultFixture, err := os.Open(helpers.FileLocation("fixtures/custom-plugin-backend/terraform.tfstate"))
+			Expect(err).ToNot(HaveOccurred())
+			defer defaultFixture.Close()
+			awsVerifier.UploadObjectToS3(bucket, pathToDefaultS3Fixture, defaultFixture)
+
+			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3-backend/terraform-current.tfstate"))
+			Expect(err).ToNot(HaveOccurred())
+			defer currFixture.Close()
+			awsVerifier.UploadObjectToS3(bucket, pathToCurrS3Fixture, currFixture)
+
+			checkInput.Source.EnvName = currEnvName
+		})
+
+		AfterEach(func() {
+			awsVerifier.DeleteObjectFromS3(bucket, pathToDefaultS3Fixture)
+		})
+
+		It("returns the latest version without trying to download plugins", func() {
+			runner := check.Runner{}
+			resp, err := runner.Run(checkInput)
+			Expect(err).ToNot(HaveOccurred())
+
+			expectOutput := []models.Version{
+				models.Version{
+					Serial:  "1",
+					EnvName: currEnvName,
+					Lineage: expectedLineage,
+				},
+			}
+			Expect(resp).To(Equal(expectOutput))
 		})
 	})
 })
