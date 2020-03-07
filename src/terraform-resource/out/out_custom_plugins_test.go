@@ -15,7 +15,6 @@ import (
 
 	"terraform-resource/models"
 	"terraform-resource/out"
-	"terraform-resource/storage"
 	"terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
@@ -31,13 +30,16 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		s3ObjectPath  string
 		workingDir    string
 		pluginDir     string
+		workspacePath   string
 	)
 
 	BeforeEach(func() {
+		workspacePath = helpers.RandomString("out-backend-test")
+
 		envName = helpers.RandomString("out-test")
-		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
-		planFilePath = path.Join(bucketPath, fmt.Sprintf("%s.plan", envName))
-		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-lifecycle"))
+		stateFilePath = path.Join(workspacePath, envName, "terraform.tfstate")
+		planFilePath = path.Join(workspacePath, fmt.Sprintf("%s-plan", envName), "terraform.tfstate")
+		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-test"))
 
 		var err error
 		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test")
@@ -48,6 +50,9 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 
 		awsProviderURL := fmt.Sprintf("https://releases.hashicorp.com/terraform-provider-aws/2.9.0/terraform-provider-aws_2.9.0_%s_%s.zip", runtime.GOOS, runtime.GOARCH)
 		err = downloadPlugins(pluginDir, awsProviderURL)
+		Expect(err).ToNot(HaveOccurred())
+		planProviderURL := fmt.Sprintf("https://github.com/ashald/terraform-provider-stateful/releases/download/v1.1.0/terraform-provider-stateful_v1.1.0-%s-%s.zip", runtime.GOOS, runtime.GOARCH)
+		err = downloadPlugins(pluginDir, planProviderURL)
 		Expect(err).ToNot(HaveOccurred())
 
 		// ensure relative paths resolve correctly
@@ -70,12 +75,16 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 	It("plan infrastructure and apply it", func() {
 		planOutRequest := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
@@ -98,12 +107,16 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 
 		applyRequest := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
@@ -124,13 +137,6 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		}
 		_, err := planrunner.Run(planOutRequest)
 		Expect(err).ToNot(HaveOccurred())
-
-		By("ensuring state file does not already exist")
-
-		awsVerifier.ExpectS3FileToNotExist(
-			applyRequest.Source.Storage.Bucket,
-			stateFilePath,
-		)
 
 		By("applying the plan")
 
@@ -153,7 +159,7 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		Expect(fields["content_md5"]).To(Equal(expectedMD5))
 
 		awsVerifier.ExpectS3FileToExist(
-			applyRequest.Source.Storage.Bucket,
+			bucket,
 			s3ObjectPath,
 		)
 	})
@@ -161,12 +167,16 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 	It("creates, updates, and deletes infrastructure", func() {
 		outRequest := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
@@ -205,7 +215,7 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		Expect(fields["content_md5"]).To(Equal(expectedMD5))
 
 		awsVerifier.ExpectS3FileToExist(
-			outRequest.Source.Storage.Bucket,
+			bucket,
 			s3ObjectPath,
 		)
 
@@ -216,7 +226,7 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		awsVerifier.ExpectS3FileToNotExist(
-			outRequest.Source.Storage.Bucket,
+			bucket,
 			s3ObjectPath,
 		)
 	})
@@ -224,12 +234,16 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 	It("honors plugins stored in Terraform.Source/terraform.d/plugins", func() {
 		outRequest := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
