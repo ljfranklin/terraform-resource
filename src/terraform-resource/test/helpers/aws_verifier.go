@@ -71,7 +71,7 @@ func (a AWSVerifier) ExpectS3FileToExist(bucketName string, key string) {
 		if lastErr == nil {
 			break
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 
 	ExpectWithOffset(1, lastErr).ToNot(HaveOccurred(),
@@ -92,7 +92,7 @@ func (a AWSVerifier) ExpectS3FileToNotExist(bucketName string, key string) {
 		if lastErr != nil {
 			break
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 
 	ExpectWithOffset(1, lastErr).To(HaveOccurred(),
