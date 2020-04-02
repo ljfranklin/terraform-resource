@@ -91,4 +91,4 @@ pushd "${tmpdir}" > /dev/null
   docker build -t "${image_name}" .
 popd > /dev/null
 
-echo -e "${green}Successfully created docker image '${image_name}'!"
+echo -e "${green}Successfully created docker image '${image_name}'!${nc}"
