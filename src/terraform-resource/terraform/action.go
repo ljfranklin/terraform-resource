@@ -210,7 +210,8 @@ func (a *Action) attemptPlan() (Result, error) {
 		return Result{}, err
 	}
 
-	if err := a.Client.Plan(); err != nil {
+	checksum, err := a.Client.Plan()
+	if err != nil {
 		return Result{}, err
 	}
 
@@ -222,6 +223,7 @@ func (a *Action) attemptPlan() (Result, error) {
 		Output: map[string]map[string]interface{}{},
 		Version: models.Version{
 			EnvName: a.EnvName,
+			PlanChecksum: checksum,
 		},
 	}, nil
 }

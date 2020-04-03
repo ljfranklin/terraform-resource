@@ -20,6 +20,7 @@ type Version struct {
 	Lineage      string `json:"lineage,omitempty"`       // omitted on older version
 	LastModified string `json:"last_modified,omitempty"` // optional
 	PlanOnly     string `json:"plan_only,omitempty"`     //optional
+	PlanChecksum string `json:"plan_checksum,omitempty"` //optional
 }
 
 func NewVersionFromLegacyStorage(storageVersion storage.Version) Version {

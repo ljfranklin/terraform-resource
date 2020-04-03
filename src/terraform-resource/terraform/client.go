@@ -3,6 +3,7 @@ package terraform
 import (
 	"bufio"
 	"bytes"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -24,7 +25,7 @@ type Client interface {
 	InitWithoutBackend() error
 	Apply() error
 	Destroy() error
-	Plan() error
+	Plan() (string, error)
 	Output(string) (map[string]map[string]interface{}, error)
 	OutputWithLegacyStorage() (map[string]map[string]interface{}, error)
 	Version() (string, error)
@@ -244,7 +245,7 @@ func (c *client) Destroy() error {
 	return nil
 }
 
-func (c *client) Plan() error {
+func (c *client) Plan() (string, error) {
 	planArgs := []string{
 		"plan",
 		"-input=false", // do not prompt for inputs
@@ -261,10 +262,21 @@ func (c *client) Plan() error {
 	planCmd.Stderr = c.logWriter
 	err := planCmd.Run()
 	if err != nil {
-		return fmt.Errorf("Failed to run Terraform command: %s", err)
+		return "", fmt.Errorf("Failed to run Terraform command: %s", err)
 	}
 
-	return nil
+	planFile, err := os.Open(c.model.PlanFileLocalPath)
+	if err != nil {
+		return "", fmt.Errorf("Failed to open planfile: %s", err)
+	}
+	defer planFile.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, planFile); err != nil {
+		return "", fmt.Errorf("Failed to get planfile checksum: %s", err)
+	}
+
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
 func (c *client) Output(envName string) (map[string]map[string]interface{}, error) {

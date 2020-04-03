@@ -677,6 +677,8 @@ var _ = Describe("Out - Migrated From Storage", func() {
 
 			Expect(planOutput.Version.EnvName).To(Equal(planRequest.Params.EnvName))
 			Expect(planOutput.Version.PlanOnly).To(Equal("true"), "Expected PlanOnly to be true, but was false")
+			Expect(planOutput.Version.Serial).To(BeEmpty())
+			Expect(planOutput.Version.PlanChecksum).To(MatchRegexp("[0-9|a-f]+"))
 
 			By("ensuring s3 file does not already exist")
 
@@ -695,6 +697,8 @@ var _ = Describe("Out - Migrated From Storage", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(createOutput.Version.PlanOnly).To(BeEmpty())
+			Expect(createOutput.Version.Serial).ToNot(BeEmpty())
+			Expect(createOutput.Version.PlanChecksum).To(BeEmpty())
 
 			Expect(createOutput.Metadata).ToNot(BeEmpty())
 			fields := map[string]interface{}{}

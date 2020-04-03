@@ -201,7 +201,7 @@ func (a *LegacyStorageAction) attemptPlan() (LegacyStorageResult, error) {
 	a.Logger.InfoSection("Terraform Plan")
 	defer a.Logger.EndSection()
 
-	if err := a.Client.Plan(); err != nil {
+	if _, err := a.Client.Plan(); err != nil {
 		return LegacyStorageResult{}, err
 	}
 
