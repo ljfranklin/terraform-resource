@@ -76,6 +76,7 @@ func (r Runner) runWithBackend(req models.OutRequest, terraformModel models.Terr
 
 	terraformModel.Env["TF_VAR_env_name"] = envName
 	terraformModel.PlanFileLocalPath = path.Join(tmpDir, "plan")
+	terraformModel.JSONPlanFileLocalPath = path.Join(tmpDir, "plan.json")
 
 	client := terraform.NewClient(
 		terraformModel,

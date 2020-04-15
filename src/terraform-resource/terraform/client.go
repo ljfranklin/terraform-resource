@@ -15,6 +15,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	terraform_json "github.com/hashicorp/terraform-json"
+
 	"terraform-resource/models"
 )
 
@@ -26,6 +28,7 @@ type Client interface {
 	Apply() error
 	Destroy() error
 	Plan() (string, error)
+	JSONPlan() error
 	Output(string) (map[string]map[string]interface{}, error)
 	OutputWithLegacyStorage() (map[string]map[string]interface{}, error)
 	Version() (string, error)
@@ -116,9 +119,14 @@ func (c *client) writeBackendConfig(outputDir string) (string, error) {
 	return backendPath, nil
 }
 
-func (c *client) writePlanProviderConfig(outputDir string, planContents []byte) error {
+func (c *client) writePlanProviderConfig(outputDir string, planContents, planContentsJSON []byte) error {
 	encodedPlan := base64.StdEncoding.EncodeToString(planContents)
 	escapedPlan, err := json.Marshal(encodedPlan)
+	if err != nil {
+		return err
+	}
+	encodedPlanJSON := base64.StdEncoding.EncodeToString(planContentsJSON)
+	escapedPlanJSON, err := json.Marshal(encodedPlanJSON)
 	if err != nil {
 		return err
 	}
@@ -127,11 +135,18 @@ func (c *client) writePlanProviderConfig(outputDir string, planContents []byte) 
 resource "stateful_string" "plan_output" {
   desired = %s
 }
-output "plan_content" {
+resource "stateful_string" "plan_output_json" {
+  desired = %s
+}
+output "%s" {
   sensitive = true
   value = "${stateful_string.plan_output.desired}"
 }
-`, escapedPlan))
+output "%s" {
+  sensitive = true
+  value = "${stateful_string.plan_output_json.desired}"
+}
+`, escapedPlan, escapedPlanJSON, models.PlanContent, models.PlanContentJSON))
 
 	configPath, err := filepath.Abs(path.Join(outputDir, "resource_plan_config.tf"))
 	if err != nil {
@@ -277,6 +292,33 @@ func (c *client) Plan() (string, error) {
 	}
 
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
+func (c *client) JSONPlan() error {
+	// terraform show -json tfplan.binary > tfplan.json
+	planArgs := []string{
+		"show",
+		"-json",
+		fmt.Sprintf("%s", c.model.PlanFileLocalPath),
+	}
+
+	showCmd := c.terraformCmd(planArgs, nil)
+	rawOutput, err := showCmd.Output()
+	if err != nil {
+		return fmt.Errorf("Failed to retrieve output.\nError: %s\nOutput: %s", err, rawOutput)
+	}
+
+	var plan terraform_json.Plan
+	if err = plan.UnmarshalJSON(rawOutput); err != nil {
+		return fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawOutput)
+	}
+
+	err = ioutil.WriteFile(c.model.JSONPlanFileLocalPath, rawOutput, 0644)
+	if err != nil {
+		return fmt.Errorf("Failed to write JSON planfile to %s: %s", c.model.JSONPlanFileLocalPath, err)
+	}
+
+	return nil
 }
 
 func (c *client) Output(envName string) (map[string]map[string]interface{}, error) {
@@ -588,6 +630,10 @@ func (c *client) SavePlanToBackend(planEnvName string) error {
 	if err != nil {
 		return err
 	}
+	planContentsJSON, err := ioutil.ReadFile(c.model.JSONPlanFileLocalPath)
+	if err != nil {
+		return err
+	}
 
 	tmpDir, err := ioutil.TempDir("", "tf-resource-plan")
 	if err != nil {
@@ -616,7 +662,7 @@ func (c *client) SavePlanToBackend(planEnvName string) error {
 		c.logWriter = origLogger
 	}()
 
-	err = c.writePlanProviderConfig(tmpDir, planContents)
+	err = c.writePlanProviderConfig(tmpDir, planContents, planContentsJSON)
 	if err != nil {
 		return err
 	}
@@ -648,7 +694,13 @@ func (c *client) GetPlanFromBackend(planEnvName string) error {
 	if err != nil {
 		return err
 	}
-	encodedPlan := outputs["plan_content"]["value"].(string)
+
+	var encodedPlan string
+	if val, ok := outputs[models.PlanContent]; ok {
+		encodedPlan = val["value"].(string)
+	} else {
+		return fmt.Errorf("state has no output for key %s", models.PlanContentJSON)
+	}
 
 	decodedPlan, err := base64.StdEncoding.DecodeString(encodedPlan)
 	if err != nil {

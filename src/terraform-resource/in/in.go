@@ -1,6 +1,7 @@
 package in
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -87,13 +88,6 @@ func (r Runner) inWithMigratedFromStorage(req models.InRequest, tmpDir string) (
 }
 
 func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InResponse, error) {
-	if req.Version.IsPlan() {
-		resp := models.InResponse{
-			Version: req.Version,
-		}
-		return resp, nil
-	}
-
 	terraformModel := req.Source.Terraform
 	if err := terraformModel.Validate(); err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
@@ -104,6 +98,10 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 	}
 
 	targetEnvName := req.Version.EnvName
+	if req.Version.IsPlan() {
+		targetEnvName = req.Version.EnvName + "-plan"
+		terraformModel.JSONPlanFileLocalPath = "plan.json"
+	}
 
 	client := terraform.NewClient(
 		terraformModel,
@@ -133,6 +131,10 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 	if req.Params.OutputStatefile {
 		if err = r.writeBackendStateToFile(targetEnvName, client); err != nil {
 			return models.InResponse{}, err
+		}
+		if err = r.writeJSONPlanToFile(tfOutput); err != nil {
+			return models.InResponse{}, err
+
 		}
 	}
 
@@ -206,6 +208,23 @@ func (r Runner) writeBackendStateToFile(envName string, client terraform.Client)
 		return err
 	}
 	return ioutil.WriteFile(stateFilePath, stateContents, 0777)
+}
+
+func (r Runner) writeJSONPlanToFile(tfOutput map[string]map[string]interface{}) error {
+	planFilePath := path.Join(r.OutputDir, "plan.json")
+
+	var encodedPlan string
+	if val, ok := tfOutput[models.PlanContentJSON]; ok {
+		encodedPlan = val["value"].(string)
+	} else {
+		return fmt.Errorf("state has no output for key %s", models.PlanContentJSON)
+	}
+	decodedPlan, err := base64.StdEncoding.DecodeString(encodedPlan)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(planFilePath, decodedPlan, 0644)
 }
 
 func (r Runner) writeLegacyStateToFile(localStatefilePath string) error {

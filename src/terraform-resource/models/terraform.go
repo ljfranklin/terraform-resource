@@ -10,29 +10,35 @@ import (
 )
 
 type Terraform struct {
-	Source              string                 `json:"terraform_source"`
-	Vars                map[string]interface{} `json:"vars,omitempty"`                  // optional
-	VarFiles            []string               `json:"var_files,omitempty"`             // optional
-	Env                 map[string]string      `json:"env,omitempty"`                   // optional
-	DeleteOnFailure     bool                   `json:"delete_on_failure,omitempty"`     // optional
-	PlanOnly            bool                   `json:"plan_only,omitempty"`             // optional
-	PlanRun             bool                   `json:"plan_run,omitempty"`              // optional
-	OutputModule        string                 `json:"output_module,omitempty"`         // optional
-	ImportFiles         []string               `json:"import_files,omitempty"`          // optional
-	OverrideFiles       []string               `json:"override_files,omitempty"`        // optional
-	ModuleOverrideFiles []map[string]string    `json:"module_override_files,omitempty"` // optional
-	PluginDir           string                 `json:"plugin_dir,omitempty"`            // optional
-	BackendType         string                 `json:"backend_type,omitempty"`          // optional
-	BackendConfig       map[string]interface{} `json:"backend_config,omitempty"`        // optional
-	PrivateKey          string                 `json:"private_key,omitempty"`
-	PlanFileLocalPath   string                 `json:"-"` // not specified pipeline
-	PlanFileRemotePath  string                 `json:"-"` // not specified pipeline
-	StateFileLocalPath  string                 `json:"-"` // not specified pipeline
-	StateFileRemotePath string                 `json:"-"` // not specified pipeline
-	Imports             map[string]string      `json:"-"` // not specified pipeline
-	ConvertedVarFiles   []string               `json:"-"` // not specified pipeline
-	DownloadPlugins     bool                   `json:"-"` // not specified pipeline
+	Source                string                 `json:"terraform_source"`
+	Vars                  map[string]interface{} `json:"vars,omitempty"`                  // optional
+	VarFiles              []string               `json:"var_files,omitempty"`             // optional
+	Env                   map[string]string      `json:"env,omitempty"`                   // optional
+	DeleteOnFailure       bool                   `json:"delete_on_failure,omitempty"`     // optional
+	PlanOnly              bool                   `json:"plan_only,omitempty"`             // optional
+	PlanRun               bool                   `json:"plan_run,omitempty"`              // optional
+	OutputModule          string                 `json:"output_module,omitempty"`         // optional
+	ImportFiles           []string               `json:"import_files,omitempty"`          // optional
+	OverrideFiles         []string               `json:"override_files,omitempty"`        // optional
+	ModuleOverrideFiles   []map[string]string    `json:"module_override_files,omitempty"` // optional
+	PluginDir             string                 `json:"plugin_dir,omitempty"`            // optional
+	BackendType           string                 `json:"backend_type,omitempty"`          // optional
+	BackendConfig         map[string]interface{} `json:"backend_config,omitempty"`        // optional
+	PrivateKey            string                 `json:"private_key,omitempty"`
+	PlanFileLocalPath     string                 `json:"-"` // not specified pipeline
+	JSONPlanFileLocalPath string                 `json:"-"` // not specified pipeline
+	PlanFileRemotePath    string                 `json:"-"` // not specified pipeline
+	StateFileLocalPath    string                 `json:"-"` // not specified pipeline
+	StateFileRemotePath   string                 `json:"-"` // not specified pipeline
+	Imports               map[string]string      `json:"-"` // not specified pipeline
+	ConvertedVarFiles     []string               `json:"-"` // not specified pipeline
+	DownloadPlugins       bool                   `json:"-"` // not specified pipeline
 }
+
+const (
+	PlanContent     = "plan_content"
+	PlanContentJSON = "plan_content_json"
+)
 
 func (m Terraform) Validate() error {
 	return nil
@@ -67,6 +73,10 @@ func (m Terraform) Merge(other Terraform) Terraform {
 
 	if other.PlanFileLocalPath != "" {
 		m.PlanFileLocalPath = other.PlanFileLocalPath
+	}
+
+	if other.JSONPlanFileLocalPath != "" {
+		m.JSONPlanFileLocalPath = other.JSONPlanFileLocalPath
 	}
 
 	if other.PlanFileRemotePath != "" {
