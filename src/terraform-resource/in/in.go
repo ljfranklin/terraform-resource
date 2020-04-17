@@ -89,6 +89,13 @@ func (r Runner) inWithMigratedFromStorage(req models.InRequest, tmpDir string) (
 }
 
 func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InResponse, error) {
+	if req.Version.IsPlan() && req.Params.OutputJSONPlanfile == false {
+		resp := models.InResponse{
+			Version: req.Version,
+		}
+		return resp, nil
+	}
+
 	terraformModel := req.Source.Terraform
 	if err := terraformModel.Validate(); err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
@@ -130,12 +137,6 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 			return models.InResponse{}, err
 		}
 	}
-	if req.Params.OutputJSONPlanfile {
-		if err = r.writeJSONPlanToFile(targetEnvName+"-plan", client); err != nil {
-			return models.InResponse{}, err
-		}
-	}
-
 	stateVersion, err := client.CurrentStateVersion(targetEnvName)
 	if err != nil {
 		return models.InResponse{}, err
@@ -144,6 +145,13 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 	metadata, err := r.sanitizedOutput(result, client)
 	if err != nil {
 		return models.InResponse{}, err
+	}
+
+	if req.Params.OutputJSONPlanfile {
+		if err = r.writeJSONPlanToFile(targetEnvName+"-plan", client); err != nil {
+			return models.InResponse{}, err
+		}
+		metadata = nil
 	}
 
 	resp := models.InResponse{
