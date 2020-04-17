@@ -15,8 +15,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	terraform_json "github.com/hashicorp/terraform-json"
-
 	"terraform-resource/models"
 )
 
@@ -306,11 +304,6 @@ func (c *client) JSONPlan() error {
 	rawOutput, err := showCmd.Output()
 	if err != nil {
 		return fmt.Errorf("Failed to retrieve output.\nError: %s\nOutput: %s", err, rawOutput)
-	}
-
-	var plan terraform_json.Plan
-	if err = plan.UnmarshalJSON(rawOutput); err != nil {
-		return fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, rawOutput)
 	}
 
 	err = ioutil.WriteFile(c.model.JSONPlanFileLocalPath, rawOutput, 0644)
