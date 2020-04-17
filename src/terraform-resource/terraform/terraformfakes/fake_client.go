@@ -93,6 +93,16 @@ type FakeClient struct {
 	initWithoutBackendReturnsOnCall map[int]struct {
 		result1 error
 	}
+	JSONPlanStub        func() error
+	jSONPlanMutex       sync.RWMutex
+	jSONPlanArgsForCall []struct {
+	}
+	jSONPlanReturns struct {
+		result1 error
+	}
+	jSONPlanReturnsOnCall map[int]struct {
+		result1 error
+	}
 	OutputStub        func(string) (map[string]map[string]interface{}, error)
 	outputMutex       sync.RWMutex
 	outputArgsForCall []struct {
@@ -682,6 +692,58 @@ func (fake *FakeClient) InitWithoutBackendReturnsOnCall(i int, result1 error) {
 		})
 	}
 	fake.initWithoutBackendReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) JSONPlan() error {
+	fake.jSONPlanMutex.Lock()
+	ret, specificReturn := fake.jSONPlanReturnsOnCall[len(fake.jSONPlanArgsForCall)]
+	fake.jSONPlanArgsForCall = append(fake.jSONPlanArgsForCall, struct {
+	}{})
+	fake.recordInvocation("JSONPlan", []interface{}{})
+	fake.jSONPlanMutex.Unlock()
+	if fake.JSONPlanStub != nil {
+		return fake.JSONPlanStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.jSONPlanReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeClient) JSONPlanCallCount() int {
+	fake.jSONPlanMutex.RLock()
+	defer fake.jSONPlanMutex.RUnlock()
+	return len(fake.jSONPlanArgsForCall)
+}
+
+func (fake *FakeClient) JSONPlanCalls(stub func() error) {
+	fake.jSONPlanMutex.Lock()
+	defer fake.jSONPlanMutex.Unlock()
+	fake.JSONPlanStub = stub
+}
+
+func (fake *FakeClient) JSONPlanReturns(result1 error) {
+	fake.jSONPlanMutex.Lock()
+	defer fake.jSONPlanMutex.Unlock()
+	fake.JSONPlanStub = nil
+	fake.jSONPlanReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) JSONPlanReturnsOnCall(i int, result1 error) {
+	fake.jSONPlanMutex.Lock()
+	defer fake.jSONPlanMutex.Unlock()
+	fake.JSONPlanStub = nil
+	if fake.jSONPlanReturnsOnCall == nil {
+		fake.jSONPlanReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.jSONPlanReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -1443,6 +1505,8 @@ func (fake *FakeClient) Invocations() map[string][][]interface{} {
 	defer fake.initWithBackendMutex.RUnlock()
 	fake.initWithoutBackendMutex.RLock()
 	defer fake.initWithoutBackendMutex.RUnlock()
+	fake.jSONPlanMutex.RLock()
+	defer fake.jSONPlanMutex.RUnlock()
 	fake.outputMutex.RLock()
 	defer fake.outputMutex.RUnlock()
 	fake.outputWithLegacyStorageMutex.RLock()
