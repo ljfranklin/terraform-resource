@@ -2,6 +2,7 @@ package in
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -98,10 +99,6 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 	}
 
 	targetEnvName := req.Version.EnvName
-	if req.Version.IsPlan() {
-		targetEnvName = req.Version.EnvName + "-plan"
-		terraformModel.JSONPlanFileLocalPath = "plan.json"
-	}
 
 	client := terraform.NewClient(
 		terraformModel,
@@ -132,9 +129,10 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 		if err = r.writeBackendStateToFile(targetEnvName, client); err != nil {
 			return models.InResponse{}, err
 		}
-		if err = r.writeJSONPlanToFile(tfOutput); err != nil {
+	}
+	if req.Params.OutputJSONPlanfile {
+		if err = r.writeJSONPlanToFile(targetEnvName+"-plan", client); err != nil {
 			return models.InResponse{}, err
-
 		}
 	}
 
@@ -210,11 +208,22 @@ func (r Runner) writeBackendStateToFile(envName string, client terraform.Client)
 	return ioutil.WriteFile(stateFilePath, stateContents, 0777)
 }
 
-func (r Runner) writeJSONPlanToFile(tfOutput map[string]map[string]interface{}) error {
+func (r Runner) writeJSONPlanToFile(envName string, client terraform.Client) error {
+
+	stateContents, err := client.StatePull(envName)
+	if err != nil {
+		return err
+	}
+
+	tfOutput := models.TfState{}
+	if err = json.Unmarshal(stateContents, &tfOutput); err != nil {
+		return fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, stateContents)
+	}
+
 	planFilePath := path.Join(r.OutputDir, "plan.json")
 
 	var encodedPlan string
-	if val, ok := tfOutput[models.PlanContentJSON]; ok {
+	if val, ok := tfOutput.Outputs[models.PlanContentJSON]; ok {
 		encodedPlan = val["value"].(string)
 	} else {
 		return fmt.Errorf("state has no output for key %s", models.PlanContentJSON)
