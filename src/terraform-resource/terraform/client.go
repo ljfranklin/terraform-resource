@@ -699,7 +699,7 @@ func (c *client) GetPlanFromBackend(planEnvName string) error {
 	if val, ok := outputs[models.PlanContent]; ok {
 		encodedPlan = val["value"].(string)
 	} else {
-		return fmt.Errorf("state has no output for key %s", models.PlanContentJSON)
+		return fmt.Errorf("state has no output for key %s", models.PlanContent)
 	}
 
 	decodedPlan, err := base64.StdEncoding.DecodeString(encodedPlan)
