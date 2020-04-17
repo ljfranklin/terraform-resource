@@ -96,7 +96,10 @@ A `get` step outputs the same `metadata` file format shown below for `put`.
 
 > **Note:** In Concourse, a `put` is always followed by an implicit `get`. To pass `get` params via `put`, use `put.get_params`.
 
-* `output_statefile`: *Optional. Default `false`* If true, the resource writes the Terraform statefile to a file named `terraform.tfstate`. **Warning:** Ensure any changes to this statefile are persisted back to the resource's storage bucket. **Another warning:** Some statefiles contain unencrypted secrets, be careful not to expose these in your build logs.
+* `output_statefile`: *Optional. Default `false`* If true, the resource writes the Terraform statefile to a file named `terraform.tfstate`.
+* `output_planfile`: *Optional. Default `false`* If true a file named `plan.json` with the JSON representation of the Terraform binary plan file will be created.   
+
+**Warning:** Ensure any changes to this statefile are persisted back to the resource's storage bucket. **Another warning:** Some statefiles contain unencrypted secrets, be careful not to expose these in your build logs.
 
 * `output_module` *Optional.* Write only the outputs from the given module name to the `metadata` file.
 
