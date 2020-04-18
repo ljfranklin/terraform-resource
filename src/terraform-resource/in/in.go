@@ -116,6 +116,18 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 		return models.InResponse{}, err
 	}
 
+	if req.Params.OutputJSONPlanfile {
+		if err := r.writeJSONPlanToFile(targetEnvName+"-plan", client); err != nil {
+			return models.InResponse{}, err
+		}
+		if req.Version.IsPlan() {
+			resp := models.InResponse{
+				Version: req.Version,
+			}
+			return resp, nil
+		}
+	}
+
 	if err := r.ensureEnvExistsInBackend(targetEnvName, client); err != nil {
 		return models.InResponse{}, err
 	}
@@ -145,13 +157,6 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 	metadata, err := r.sanitizedOutput(result, client)
 	if err != nil {
 		return models.InResponse{}, err
-	}
-
-	if req.Params.OutputJSONPlanfile {
-		if err = r.writeJSONPlanToFile(targetEnvName+"-plan", client); err != nil {
-			return models.InResponse{}, err
-		}
-		metadata = nil
 	}
 
 	resp := models.InResponse{
