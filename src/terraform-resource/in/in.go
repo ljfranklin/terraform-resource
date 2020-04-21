@@ -88,6 +88,7 @@ func (r Runner) inWithMigratedFromStorage(req models.InRequest, tmpDir string) (
 }
 
 func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InResponse, error) {
+	// get after put without output_planfile
 	if req.Version.IsPlan() && req.Params.OutputJSONPlanfile == false {
 		resp := models.InResponse{
 			Version: req.Version,
@@ -119,6 +120,7 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 		if err := r.writeJSONPlanToFile(targetEnvName+"-plan", client); err != nil {
 			return models.InResponse{}, err
 		}
+		// get after put with output_planfile
 		if req.Version.IsPlan() {
 			resp := models.InResponse{
 				Version: req.Version,

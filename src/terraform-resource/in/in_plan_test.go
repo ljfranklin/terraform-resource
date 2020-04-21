@@ -107,7 +107,7 @@ var _ = Describe("JSON Plan", func() {
 		awsVerifier.DeleteObjectFromS3(bucket, stateFilePath)
 	})
 
-	It("plan infrastructure and test it", func() {
+	It("plan infrastructure and test it without plan output", func() {
 		planOutRequest := models.OutRequest{
 			Source: models.Source{
 				Terraform: models.Terraform{
@@ -157,7 +157,86 @@ var _ = Describe("JSON Plan", func() {
 		Expect(planOutput.Version.Serial).To(BeEmpty())
 		Expect(planOutput.Version.PlanChecksum).To(MatchRegexp("[0-9|a-f]+"))
 
-		By("outputs the statefile if `output_planfile` is given")
+		By("does not output the planfile if `output_planfile` is not given")
+
+		inReq := models.InRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					Source: ".",
+					Env: map[string]string{
+						"HOME": inDir,
+					},
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
+				},
+			},
+			Version: models.Version{
+				EnvName: envName,
+				Serial:  "0",
+			},
+			Params: models.InParams{
+				OutputJSONPlanfile: false,
+			},
+		}
+
+		runner := in.Runner{
+			OutputDir: inDir,
+		}
+		_, err = runner.Run(inReq)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedNamePath := path.Join(inDir, "name")
+		Expect(expectedNamePath).To(BeAnExistingFile())
+
+		expectedPlanPath := path.Join(inDir, "plan.json")
+		Expect(expectedPlanPath).ToNot(BeAnExistingFile())
+	})
+
+	It("plan infrastructure and test it", func() {
+		planOutRequest := models.OutRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					BackendType:   backendType,
+					BackendConfig: backendConfig,
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source:   "fixtures/aws/",
+					PlanOnly: true,
+					Env: map[string]string{
+						"HOME": workingDir, // in prod plugin is installed system-wide
+					},
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		By("running 'out' to create the plan file")
+
+		planrunner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: GinkgoWriter,
+		}
+		_, err := planrunner.Run(planOutRequest)
+		Expect(err).ToNot(HaveOccurred())
+
+		By("outputs the planfile if `output_planfile` is given")
 
 		inReq := models.InRequest{
 			Source: models.Source{
