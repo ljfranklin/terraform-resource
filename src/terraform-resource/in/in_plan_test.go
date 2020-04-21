@@ -195,10 +195,10 @@ var _ = Describe("JSON Plan", func() {
 		expectedNamePath := path.Join(inDir, "name")
 		Expect(expectedNamePath).To(BeAnExistingFile())
 
-		expectedStatePath := path.Join(inDir, "plan.json")
-		Expect(expectedStatePath).To(BeAnExistingFile())
+		expectedPlanPath := path.Join(inDir, "plan.json")
+		Expect(expectedPlanPath).To(BeAnExistingFile())
 
-		stateContents, err := ioutil.ReadFile(expectedStatePath)
+		stateContents, err := ioutil.ReadFile(expectedPlanPath)
 		Expect(err).To(BeNil())
 		Expect(string(stateContents)).To(ContainSubstring("variables"))
 		Expect(string(stateContents)).To(ContainSubstring("output_changes"))
