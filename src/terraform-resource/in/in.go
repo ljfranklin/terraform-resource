@@ -2,7 +2,6 @@ package in
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -222,21 +221,15 @@ func (r Runner) writeBackendStateToFile(envName string, client terraform.Client)
 }
 
 func (r Runner) writeJSONPlanToFile(envName string, client terraform.Client) error {
-
-	stateContents, err := client.StatePull(envName)
+	tfOutput, err := client.Output(envName)
 	if err != nil {
 		return err
-	}
-
-	tfOutput := models.TfState{}
-	if err = json.Unmarshal(stateContents, &tfOutput); err != nil {
-		return fmt.Errorf("Failed to unmarshal JSON output.\nError: %s\nOutput: %s", err, stateContents)
 	}
 
 	planFilePath := path.Join(r.OutputDir, "plan.json")
 
 	var encodedPlan string
-	if val, ok := tfOutput.Outputs[models.PlanContentJSON]; ok {
+	if val, ok := tfOutput[models.PlanContentJSON]; ok {
 		encodedPlan = val["value"].(string)
 	} else {
 		return fmt.Errorf("state has no output for key %s", models.PlanContentJSON)

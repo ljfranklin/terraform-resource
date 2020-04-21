@@ -17,7 +17,3 @@ type InParams struct {
 	OutputJSONPlanfile bool   `json:"output_planfile,omitempty"`  // optional
 	Terraform
 }
-
-type TfState struct {
-	Outputs map[string]map[string]interface{} `json:"outputs,omitempty"`
-}
