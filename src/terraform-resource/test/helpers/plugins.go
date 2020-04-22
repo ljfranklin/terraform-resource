@@ -2,11 +2,13 @@ package helpers
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 func DownloadPlugins(pluginPath string, url string) error {
@@ -57,4 +59,39 @@ func DownloadPlugins(pluginPath string, url string) error {
 	}
 
 	return nil
+}
+
+func DownloadStatefulPlugin(workingDir string) error {
+	var hostOS string
+	if runtime.GOOS == "darwin" {
+		hostOS = "darwin"
+	} else {
+		hostOS = "linux"
+	}
+	url := fmt.Sprintf("https://github.com/ashald/terraform-provider-stateful/releases/download/v1.1.0/terraform-provider-stateful_v1.1.0-%s-amd64", hostOS)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	err = os.MkdirAll(filepath.Join(workingDir, ".terraform.d", "plugins"), os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	pluginPath := filepath.Join(workingDir, ".terraform.d", "plugins", "terraform-provider-stateful")
+	out, err := os.Create(pluginPath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	if err = out.Chmod(0755); err != nil {
+		return err
+	}
+
+	_, err = io.Copy(out, resp.Body)
+	return err
 }

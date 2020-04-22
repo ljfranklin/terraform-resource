@@ -215,14 +215,19 @@ func (a *Action) attemptPlan() (Result, error) {
 		return Result{}, err
 	}
 
-	if err := a.Client.SavePlanToBackend(a.planNameForEnv()); err != nil {
+	err = a.Client.JSONPlan()
+	if err != nil {
+		return Result{}, err
+	}
+
+	if err = a.Client.SavePlanToBackend(a.planNameForEnv()); err != nil {
 		return Result{}, err
 	}
 
 	return Result{
 		Output: map[string]map[string]interface{}{},
 		Version: models.Version{
-			EnvName: a.EnvName,
+			EnvName:      a.EnvName,
 			PlanChecksum: checksum,
 		},
 	}, nil

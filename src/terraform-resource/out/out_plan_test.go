@@ -3,14 +3,10 @@ package out_test
 import (
 	"crypto/md5"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
-	"runtime"
 	"time"
 
 	"terraform-resource/models"
@@ -69,7 +65,7 @@ var _ = Describe("Out Plan", func() {
 		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
 		Expect(err).ToNot(HaveOccurred())
 
-		err = downloadStatefulPlugin(workingDir)
+		err = helpers.DownloadStatefulPlugin(workingDir)
 		Expect(err).ToNot(HaveOccurred())
 	})
 
@@ -495,38 +491,3 @@ var _ = Describe("Out Plan", func() {
 		)
 	})
 })
-
-func downloadStatefulPlugin(workingDir string) error {
-	var hostOS string
-	if runtime.GOOS == "darwin" {
-		hostOS = "darwin"
-	} else {
-		hostOS = "linux"
-	}
-	url := fmt.Sprintf("https://github.com/ashald/terraform-provider-stateful/releases/download/v1.1.0/terraform-provider-stateful_v1.1.0-%s-amd64", hostOS)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	err = os.MkdirAll(filepath.Join(workingDir, ".terraform.d", "plugins"), os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	pluginPath := filepath.Join(workingDir, ".terraform.d", "plugins", "terraform-provider-stateful")
-	out, err := os.Create(pluginPath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	if err = out.Chmod(0755); err != nil {
-		return err
-	}
-
-	_, err = io.Copy(out, resp.Body)
-	return err
-}

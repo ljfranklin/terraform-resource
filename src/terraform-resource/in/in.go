@@ -1,6 +1,7 @@
 package in
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -87,7 +88,7 @@ func (r Runner) inWithMigratedFromStorage(req models.InRequest, tmpDir string) (
 }
 
 func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InResponse, error) {
-	if req.Version.IsPlan() {
+	if req.Version.IsPlan() && req.Params.OutputJSONPlanfile == false {
 		resp := models.InResponse{
 			Version: req.Version,
 		}
@@ -114,6 +115,16 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 		return models.InResponse{}, err
 	}
 
+	if req.Params.OutputJSONPlanfile && req.Version.IsPlan() {
+		if err := r.writeJSONPlanToFile(targetEnvName+"-plan", client); err != nil {
+			return models.InResponse{}, err
+		}
+		resp := models.InResponse{
+			Version: req.Version,
+		}
+		return resp, nil
+	}
+
 	if err := r.ensureEnvExistsInBackend(targetEnvName, client); err != nil {
 		return models.InResponse{}, err
 	}
@@ -135,7 +146,6 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 			return models.InResponse{}, err
 		}
 	}
-
 	stateVersion, err := client.CurrentStateVersion(targetEnvName)
 	if err != nil {
 		return models.InResponse{}, err
@@ -206,6 +216,28 @@ func (r Runner) writeBackendStateToFile(envName string, client terraform.Client)
 		return err
 	}
 	return ioutil.WriteFile(stateFilePath, stateContents, 0777)
+}
+
+func (r Runner) writeJSONPlanToFile(envName string, client terraform.Client) error {
+	tfOutput, err := client.Output(envName)
+	if err != nil {
+		return err
+	}
+
+	planFilePath := path.Join(r.OutputDir, "plan.json")
+
+	var encodedPlan string
+	if val, ok := tfOutput[models.PlanContentJSON]; ok {
+		encodedPlan = val["value"].(string)
+	} else {
+		return fmt.Errorf("state has no output for key %s", models.PlanContentJSON)
+	}
+	decodedPlan, err := base64.StdEncoding.DecodeString(encodedPlan)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(planFilePath, decodedPlan, 0644)
 }
 
 func (r Runner) writeLegacyStateToFile(localStatefilePath string) error {
