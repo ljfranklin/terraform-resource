@@ -177,10 +177,7 @@ var _ = Describe("JSON Plan", func() {
 					},
 				},
 			},
-			Version: models.Version{
-				EnvName: envName,
-				Serial:  "0",
-			},
+			Version: planOutput.Version,
 			Params: models.InParams{
 				OutputJSONPlanfile: false,
 			},
@@ -233,7 +230,7 @@ var _ = Describe("JSON Plan", func() {
 			SourceDir: workingDir,
 			LogWriter: GinkgoWriter,
 		}
-		_, err := planrunner.Run(planOutRequest)
+		planOutput, err := planrunner.Run(planOutRequest)
 		Expect(err).ToNot(HaveOccurred())
 
 		By("outputs the planfile if `output_planfile` is given")
@@ -256,10 +253,7 @@ var _ = Describe("JSON Plan", func() {
 					},
 				},
 			},
-			Version: models.Version{
-				EnvName: envName,
-				Serial:  "0",
-			},
+			Version: planOutput.Version,
 			Params: models.InParams{
 				OutputJSONPlanfile: true,
 			},
