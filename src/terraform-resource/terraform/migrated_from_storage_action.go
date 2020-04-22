@@ -273,6 +273,11 @@ func (a *MigratedFromStorageAction) attemptPlan() (Result, error) {
 		return Result{}, err
 	}
 
+	err = a.Client.JSONPlan()
+	if err != nil {
+		return Result{}, err
+	}
+
 	if err := a.Client.SavePlanToBackend(a.planNameForEnv()); err != nil {
 		return Result{}, err
 	}
