@@ -647,7 +647,13 @@ func (c *client) SavePlanToBackend(planEnvName string) error {
 		return err
 	}
 	c.model.Source = tmpDir
-	c.logWriter = ioutil.Discard // prevent provider from logging creds
+
+	logFile, err := os.OpenFile(path.Join(os.TempDir(), "tf-plan.log"), os.O_RDWR|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+	defer logFile.Close()
+	c.logWriter = logFile // prevent provider from logging creds
 
 	defer func() {
 		os.Chdir(origDir)

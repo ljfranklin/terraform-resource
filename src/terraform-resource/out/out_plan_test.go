@@ -145,6 +145,8 @@ var _ = Describe("Out Plan", func() {
 		Expect(planOutput.Version.Serial).To(BeEmpty())
 		Expect(planOutput.Version.PlanChecksum).To(MatchRegexp("[0-9|a-f]+"))
 
+		Expect(path.Join(os.TempDir(), "tf-plan.log")).To(BeAnExistingFile())
+
 		By("ensuring s3 file does not already exist")
 
 		awsVerifier.ExpectS3FileToNotExist(
