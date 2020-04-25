@@ -375,6 +375,22 @@ jobs:
       - get: resource-src
         passed: [destroy-env-with-s3-backend, destroy-env-with-gcs-backend, destroy-env-and-lock, destroy-migrated-env, destroy-plan-env]
         trigger: true
+      - task: write-sha-tag
+        image: terraform-dev-image
+        config:
+          platform: linux
+          inputs:
+            - name: resource-src
+          outputs:
+            - name: sha-tag
+          run:
+            path: /bin/bash
+            args:
+              - "-c"
+              - |
+                  TF_VERSION="$(cat resource-src/config/terraform-version)"
+                  SHA="$(cat resource-src/.git/short_ref)"
+                  echo "${TF_VERSION}-${SHA}" > sha-tag/tag
       - aggregate:
         - put: terraform-pinned-image
           params:
@@ -382,6 +398,12 @@ jobs:
             pull_tag: test
             cache: true
             tag: resource-src/config/terraform-version
+        - put: terraform-sha-image
+          params:
+            pull_repository: ljfranklin/terraform-resource
+            pull_tag: test
+            cache: true
+            tag: sha-tag/tag
         - put: terraform-prod-image
           params:
             pull_repository: ljfranklin/terraform-resource
@@ -431,6 +453,13 @@ resources:
     username: {{docker_username}}
     password: {{docker_password}}
 - name: terraform-pinned-image
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+    email: {{docker_email}}
+    username: {{docker_username}}
+    password: {{docker_password}}
+- name: terraform-sha-image
   type: docker-image
   source:
     repository: ljfranklin/terraform-resource
