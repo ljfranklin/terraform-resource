@@ -132,6 +132,8 @@ var _ = Describe("Out Plan", func() {
 		planOutput, err := planrunner.Run(planOutRequest)
 		Expect(err).ToNot(HaveOccurred())
 
+		defer os.RemoveAll(path.Join(os.TempDir(), "tf-plan.log"))
+
 		By("ensuring that plan file exists")
 
 		awsVerifier.ExpectS3FileToExist(
