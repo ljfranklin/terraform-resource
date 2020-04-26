@@ -375,14 +375,14 @@ jobs:
       - get: resource-src
         passed: [destroy-env-with-s3-backend, destroy-env-with-gcs-backend, destroy-env-and-lock, destroy-migrated-env, destroy-plan-env]
         trigger: true
-      - task: write-sha-tag
+      - task: write-tag-file
         image: terraform-dev-image
         config:
           platform: linux
           inputs:
             - name: resource-src
           outputs:
-            - name: sha-tag
+            - name: docker-tags
           run:
             path: /bin/bash
             args:
@@ -390,25 +390,14 @@ jobs:
               - |
                   TF_VERSION="$(cat resource-src/config/terraform-version)"
                   SHA="$(cat resource-src/.git/short_ref)"
-                  echo "${TF_VERSION}-${SHA}" > sha-tag/tag
-      - aggregate:
-        - put: terraform-pinned-image
-          params:
-            pull_repository: ljfranklin/terraform-resource
-            pull_tag: test
-            cache: true
-            tag: resource-src/config/terraform-version
-        - put: terraform-sha-image
-          params:
-            pull_repository: ljfranklin/terraform-resource
-            pull_tag: test
-            cache: true
-            tag: sha-tag/tag
-        - put: terraform-prod-image
-          params:
-            pull_repository: ljfranklin/terraform-resource
-            pull_tag: test
-            cache: true
+                  echo "${TF_VERSION} ${TF_VERSION}-${SHA}" > docker-tags/tags
+      - put: terraform-prod-image
+        params:
+          pull_repository: ljfranklin/terraform-resource
+          pull_tag: test
+          tag_as_latest: true
+          additional_tags: docker-tags/tags
+          cache: true
 
 resource_types:
 - name: terraform
@@ -449,20 +438,6 @@ resources:
   source:
     repository: ljfranklin/terraform-resource
     tag: test
-    email: {{docker_email}}
-    username: {{docker_username}}
-    password: {{docker_password}}
-- name: terraform-pinned-image
-  type: docker-image
-  source:
-    repository: ljfranklin/terraform-resource
-    email: {{docker_email}}
-    username: {{docker_username}}
-    password: {{docker_password}}
-- name: terraform-sha-image
-  type: docker-image
-  source:
-    repository: ljfranklin/terraform-resource
     email: {{docker_email}}
     username: {{docker_username}}
     password: {{docker_password}}
