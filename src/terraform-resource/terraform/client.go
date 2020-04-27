@@ -3,6 +3,7 @@ package terraform
 import (
 	"bufio"
 	"bytes"
+	"compress/gzip"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
@@ -118,13 +119,29 @@ func (c *client) writeBackendConfig(outputDir string) (string, error) {
 }
 
 func (c *client) writePlanProviderConfig(outputDir string, planContents, planContentsJSON []byte) error {
+	// GZip JSON plan to save space:
+	// https://github.com/ljfranklin/terraform-resource/issues/115#issuecomment-619525494
+	// Not gzipping the binary plan for now to avoid migration issues.
+
 	encodedPlan := base64.StdEncoding.EncodeToString(planContents)
 	escapedPlan, err := json.Marshal(encodedPlan)
 	if err != nil {
 		return err
 	}
-	encodedPlanJSON := base64.StdEncoding.EncodeToString(planContentsJSON)
-	escapedPlanJSON, err := json.Marshal(encodedPlanJSON)
+
+	var encodedJSONBuffer bytes.Buffer
+	baseEncoder := base64.NewEncoder(base64.StdEncoding, &encodedJSONBuffer)
+	zw := gzip.NewWriter(baseEncoder)
+	if _, err = zw.Write(planContentsJSON); err != nil {
+		return err
+	}
+	if err = zw.Close(); err != nil {
+		return err
+	}
+	if err = baseEncoder.Close(); err != nil {
+		return err
+	}
+	escapedJSONPlan, err := json.Marshal(encodedJSONBuffer.String())
 	if err != nil {
 		return err
 	}
@@ -144,7 +161,7 @@ output "%s" {
   sensitive = true
   value = "${stateful_string.plan_output_json.desired}"
 }
-`, escapedPlan, escapedPlanJSON, models.PlanContent, models.PlanContentJSON))
+`, escapedPlan, escapedJSONPlan, models.PlanContent, models.PlanContentJSON))
 
 	configPath, err := filepath.Abs(path.Join(outputDir, "resource_plan_config.tf"))
 	if err != nil {

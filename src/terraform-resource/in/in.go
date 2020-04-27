@@ -1,6 +1,7 @@
 package in
 
 import (
+	"compress/gzip"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
 	"terraform-resource/encoder"
 	"terraform-resource/logger"
@@ -232,12 +234,32 @@ func (r Runner) writeJSONPlanToFile(envName string, client terraform.Client) err
 	} else {
 		return fmt.Errorf("state has no output for key %s", models.PlanContentJSON)
 	}
-	decodedPlan, err := base64.StdEncoding.DecodeString(encodedPlan)
+
+	// Base64 decode then gunzip the JSON plan
+	rawPlanReader := strings.NewReader(encodedPlan)
+	decodedReader := base64.NewDecoder(base64.StdEncoding, rawPlanReader)
+	zr, err := gzip.NewReader(decodedReader)
+	if err != nil {
+		return err
+	}
+	outputFile, err := os.OpenFile(planFilePath, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(planFilePath, decodedPlan, 0644)
+	if _, err := io.Copy(outputFile, zr); err != nil {
+		return err
+	}
+
+	if err := zr.Close(); err != nil {
+		return err
+	}
+
+	if err := outputFile.Close(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r Runner) writeLegacyStateToFile(localStatefilePath string) error {
