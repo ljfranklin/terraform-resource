@@ -376,9 +376,13 @@ jobs:
         passed: [destroy-env-with-s3-backend, destroy-env-with-gcs-backend, destroy-env-and-lock, destroy-migrated-env, destroy-plan-env]
         trigger: true
       - task: write-tag-file
-        image: terraform-dev-image
         config:
           platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: ljfranklin/terraform-resource
+              tag: dev
           inputs:
             - name: resource-src
           outputs:
