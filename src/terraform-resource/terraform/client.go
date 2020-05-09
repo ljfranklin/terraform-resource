@@ -603,7 +603,11 @@ func (c *client) StatePull(envName string) ([]byte, error) {
 
 	rawOutput, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Error running `state pull`: %s, Output: %s", err, rawOutput)
+		errOutput := rawOutput
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			errOutput = exitErr.Stderr
+		}
+		return nil, fmt.Errorf("Error running `state pull`: %s, Output: %s", err, errOutput)
 	}
 
 	return rawOutput, nil
