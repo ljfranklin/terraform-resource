@@ -148,10 +148,13 @@ Every `put` action creates `name` and `metadata` files as an output containing t
 
 ```yaml
 jobs:
+- name: update-infrastructure
+  plan:
+  - get: project-git-repo
   - put: terraform
     params:
       env_name: e2e
-      terraform_source: project-src/terraform
+      terraform_source: project-git-repo/terraform
   - task: show-outputs
     config:
       platform: linux
@@ -176,24 +179,31 @@ metadata: { "vpc_id": "vpc-123456", "vpc_tag_name": "concourse" }
 #### Plan and apply example
 
 ```yaml
+jobs:
 - name: terraform-plan
   plan:
-    - put: terraform
-      params:
-        env_name: staging
-        plan_only: true
-        vars:
-          subnet_cidr: 10.0.1.0/24
+  - get: project-git-repo
+  - put: terraform
+    params:
+      env_name: staging
+      terraform_source: project-git-repo/terraform
+      plan_only: true
+      vars:
+        subnet_cidr: 10.0.1.0/24
 
 - name: terraform-apply
   plan:
-    - get: terraform
-      trigger: false
-      passed: [terraform-plan]
-    - put: terraform
-      params:
-        env_name: staging
-        plan_run: true
+  - get: project-git-repo
+    trigger: false
+    passed: [terraform-plan]
+  - get: terraform
+    trigger: false
+    passed: [terraform-plan]
+  - put: terraform
+    params:
+      env_name: staging
+      terraform_source: project-git-repo/terraform
+      plan_run: true
 ```
 
 ## Managing a single environment vs a pool of environments
@@ -213,49 +223,54 @@ Setting `put.params.generate_random_name: true` will create a random, unique `en
 the pool-resource will persist the name and metadata for these environments in a private `git` repo.
 
 ```yaml
-  - name: create-env-and-lock
-    plan:
-      # apply the terraform template with a random env_name
-      - put: terraform
-        params:
-          generate_random_name: true
-          delete_on_failure: true
-          vars:
-            subnet_cidr: 10.0.1.0/24
-      # create a new pool-resource lock containing the terraform output
-      - put: locks
-        params:
-          add: terraform/
+jobs:
+- name: create-env-and-lock
+  plan:
+    # apply the terraform template with a random env_name
+    - get: project-git-repo
+    - put: terraform
+      params:
+        terraform_source: project-git-repo/terraform
+        generate_random_name: true
+        delete_on_failure: true
+        vars:
+          subnet_cidr: 10.0.1.0/24
+    # create a new pool-resource lock containing the terraform output
+    - put: locks
+      params:
+        add: terraform/
 
-  - name: claim-env-and-test
-    plan:
-      # claim a random env lock
-      - put: locks
-        params:
-          acquire: true
-      # the locks dir will contain `name` and `metadata` files described above
-      - task: run-tests-against-env
-        file: test.yml
-        input_mapping:
-          env: locks/
+- name: claim-env-and-test
+  plan:
+    # claim a random env lock
+    - put: locks
+      params:
+        acquire: true
+    # the locks dir will contain `name` and `metadata` files described above
+    - task: run-tests-against-env
+      file: test.yml
+      input_mapping:
+        env: locks/
 
-  - name: destroy-env-and-lock
-    plan:
-      # acquire a lock
-      - put: locks
-        params:
-          acquire: true
-      # destroy the IaaS resources
-      - put: terraform
-        params:
-          env_name_file: locks/name
-          action: destroy
-        get_params:
-          action: destroy
-      # destroy the lock
-      - put: locks
-        params:
-          remove: locks/
+- name: destroy-env-and-lock
+  plan:
+    - get: project-git-repo
+    # acquire a lock
+    - put: locks
+      params:
+        acquire: true
+    # destroy the IaaS resources
+    - put: terraform
+      params:
+        terraform_source: project-git-repo/terraform
+        env_name_file: locks/name
+        action: destroy
+      get_params:
+        action: destroy
+    # destroy the lock
+    - put: locks
+      params:
+        remove: locks/
 ```
 
 ## Backend Migration
