@@ -54,6 +54,11 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		}
 	}
 
+	if req.Source.BackendType == "local" {
+		return models.OutResponse{},
+			errors.New("backend type 'local' is not supported, Concourse requires that state is persisted outside the container; use one of the other backend types listed here: https://www.terraform.io/docs/backends/types/index.html")
+	}
+
 	if req.Source.BackendType != "" && req.Source.MigratedFromStorage != (storage.Model{}) {
 		return r.runWithMigratedFromStorage(req, terraformModel)
 	} else if req.Source.BackendType == "" {

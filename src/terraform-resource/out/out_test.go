@@ -855,6 +855,41 @@ map_of_maps = {
 		assertOutBehavior(req, expectedMetadata)
 	})
 
+	It("errors if 'local' backend is given", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					BackendType:   "local",
+					BackendConfig: map[string]interface{}{},
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: &bytes.Buffer{},
+			Namer:     &namer,
+		}
+		_, err := runner.Run(req)
+
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("local"))
+	})
+
 	Context("when bucket contains a state file", func() {
 		BeforeEach(func() {
 			currFixture, err := os.Open(helpers.FileLocation("fixtures/s3-storage/terraform-current.tfstate"))

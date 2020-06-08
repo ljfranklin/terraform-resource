@@ -13,7 +13,7 @@ See [DEVELOPMENT](DEVELOPMENT.md) if you're interested in submitting a PR :+1:
 
 * `backend_type`: *Required.* The name of the [Terraform backend](https://www.terraform.io/docs/backends/types/index.html) the resource will use to store statefiles, e.g. `s3` or `consul`.
 
-  > **Note:** Only a [subset of the backends](https://www.terraform.io/docs/state/workspaces.html) support the multiple workspace feature this resource requires.
+  > **Note:** The 'local' backend type is not supported, Concourse requires that state is persisted outside the container
 
 * `backend_config`: *Required.* A map of key-value configuration options specific to your choosen backend, e.g. [S3 options](https://www.terraform.io/docs/backends/types/s3.html#configuration-variables).
 
