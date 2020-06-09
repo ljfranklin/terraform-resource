@@ -1,8 +1,10 @@
 FROM golang:alpine
 
+# Temporarily work around missing bzr in v3.12 branch
+RUN echo '@previous http://nl.alpinelinux.org/alpine/v3.11/community' >> /etc/apk/repositories
 RUN apk update && \
    apk --no-cache add ca-certificates git bash wget gnupg unzip make \
-                      libc6-compat openssh-client build-base bzr
+                      libc6-compat openssh-client build-base bzr@previous
 
 # install go deps
 RUN go get github.com/onsi/ginkgo/ginkgo
