@@ -68,8 +68,8 @@ var _ = Describe("Out Module Override", func() {
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
-					ModuleOverrideFiles: []map[string]string{ map[string]string{"src": "fixtures/override/example_override.tf", "dst" : "fixtures/aws",}, },
-					Source: "fixtures/module/",
+					ModuleOverrideFiles: []map[string]string{map[string]string{"src": "fixtures/override/example_override.tf", "dst": "fixtures/aws"}},
+					Source:              "fixtures/module/",
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -121,8 +121,8 @@ var _ = Describe("Out Module Override", func() {
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
-					ModuleOverrideFiles: []map[string]string{ map[string]string{"src": "fixtures/override/", "dst" : "fixtures/aws",}, },
-					Source: "fixtures/module/",
+					ModuleOverrideFiles: []map[string]string{map[string]string{"src": "fixtures/override/", "dst": "fixtures/aws"}},
+					Source:              "fixtures/module/",
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -164,8 +164,8 @@ var _ = Describe("Out Module Override", func() {
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
-					ModuleOverrideFiles: []map[string]string{ map[string]string{"src": "fixtures/override/example_override.tf", "dst" : "fixtures/aws/example.tf",}, },
-					Source: "fixtures/module/",
+					ModuleOverrideFiles: []map[string]string{map[string]string{"src": "fixtures/override/example_override.tf", "dst": "fixtures/aws/example.tf"}},
+					Source:              "fixtures/module/",
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -207,8 +207,8 @@ var _ = Describe("Out Module Override", func() {
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
-					ModuleOverrideFiles: []map[string]string{ map[string]string{"src": "does-not-exist", "dst" : "fixtures/aws",}, },
-					Source: "fixtures/module/",
+					ModuleOverrideFiles: []map[string]string{map[string]string{"src": "does-not-exist", "dst": "fixtures/aws"}},
+					Source:              "fixtures/module/",
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -250,8 +250,8 @@ var _ = Describe("Out Module Override", func() {
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
-					ModuleOverrideFiles: []map[string]string{ map[string]string{"src": "fixtures/override/example_override.tf", "dst" : "does-not-exist",}, },
-					Source: "fixtures/module/",
+					ModuleOverrideFiles: []map[string]string{map[string]string{"src": "fixtures/override/example_override.tf", "dst": "does-not-exist"}},
+					Source:              "fixtures/module/",
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -293,8 +293,8 @@ var _ = Describe("Out Module Override", func() {
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
-					ModuleOverrideFiles: []map[string]string{ map[string]string{"dst" : "fixtures/aws",}, },
-					Source: "fixtures/module/",
+					ModuleOverrideFiles: []map[string]string{map[string]string{"dst": "fixtures/aws"}},
+					Source:              "fixtures/module/",
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,
@@ -336,8 +336,8 @@ var _ = Describe("Out Module Override", func() {
 			Params: models.OutParams{
 				EnvName: envName,
 				Terraform: models.Terraform{
-					ModuleOverrideFiles: []map[string]string{ map[string]string{"src": "fixtures/override/example_override.tf",}, },
-					Source: "fixtures/module/",
+					ModuleOverrideFiles: []map[string]string{map[string]string{"src": "fixtures/override/example_override.tf"}},
+					Source:              "fixtures/module/",
 					Vars: map[string]interface{}{
 						"access_key":     accessKey,
 						"secret_key":     secretKey,

@@ -46,10 +46,18 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		awsProviderURL := fmt.Sprintf("https://releases.hashicorp.com/terraform-provider-aws/2.9.0/terraform-provider-aws_2.9.0_%s_%s.zip", runtime.GOOS, runtime.GOARCH)
-		err = helpers.DownloadPlugins(pluginDir, awsProviderURL)
+		awsPluginDir := path.Join(pluginDir, "registry.terraform.io", "hashicorp", "aws", "2.9.0", fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
+		err = os.MkdirAll(awsPluginDir, 0700)
 		Expect(err).ToNot(HaveOccurred())
-		planProviderURL := fmt.Sprintf("https://github.com/ashald/terraform-provider-stateful/releases/download/v1.1.0/terraform-provider-stateful_v1.1.0-%s-%s.zip", runtime.GOOS, runtime.GOARCH)
-		err = helpers.DownloadPlugins(pluginDir, planProviderURL)
+		err = helpers.DownloadPlugins(awsPluginDir, awsProviderURL)
+		Expect(err).ToNot(HaveOccurred())
+		// In production image the stateful provider is installed in system-wide location, but manually install
+		// this plugin in plugin dir to avoid needing to run tests as root.
+		statefulProviderURL := fmt.Sprintf("https://github.com/ashald/terraform-provider-stateful/releases/download/v1.1.0/terraform-provider-stateful_v1.1.0-%s-%s.zip", runtime.GOOS, runtime.GOARCH)
+		statefulPluginDir := path.Join(pluginDir, "github.com", "ashald", "stateful", "1.1.0", fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
+		err = os.MkdirAll(statefulPluginDir, 0700)
+		Expect(err).ToNot(HaveOccurred())
+		err = helpers.DownloadPlugins(statefulPluginDir, statefulProviderURL)
 		Expect(err).ToNot(HaveOccurred())
 
 		// ensure relative paths resolve correctly
@@ -252,7 +260,7 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		}
 
 		customProviderURL := fmt.Sprintf("https://releases.hashicorp.com/terraform-provider-tls/2.0.1/terraform-provider-tls_2.0.1_%s_%s.zip", runtime.GOOS, runtime.GOARCH)
-		thirdPartyPluginDir := fmt.Sprintf("fixtures/custom-plugin/terraform.d/plugins/%s_%s/", runtime.GOOS, runtime.GOARCH)
+		thirdPartyPluginDir := path.Join("fixtures", "custom-plugin", "terraform.d", "plugins", "github.com", "ljfranklin", "custom", "999.999.999", fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
 		err := os.MkdirAll(thirdPartyPluginDir, 0700)
 		Expect(err).ToNot(HaveOccurred())
 

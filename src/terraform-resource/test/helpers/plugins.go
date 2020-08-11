@@ -76,12 +76,14 @@ func DownloadStatefulPlugin(workingDir string) error {
 	}
 	defer resp.Body.Close()
 
-	err = os.MkdirAll(filepath.Join(workingDir, ".terraform.d", "plugins"), os.ModePerm)
+	pluginDir := filepath.Join(workingDir, ".terraform.d", "plugins", "github.com",
+		"ashald", "stateful", "1.1.0", fmt.Sprintf("%s_amd64", hostOS))
+	err = os.MkdirAll(pluginDir, os.ModePerm)
 	if err != nil {
 		return err
 	}
 
-	pluginPath := filepath.Join(workingDir, ".terraform.d", "plugins", "terraform-provider-stateful")
+	pluginPath := filepath.Join(pluginDir, "terraform-provider-stateful_v1.1.0")
 	out, err := os.Create(pluginPath)
 	if err != nil {
 		return err

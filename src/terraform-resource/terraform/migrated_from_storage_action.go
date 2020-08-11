@@ -285,7 +285,7 @@ func (a *MigratedFromStorageAction) attemptPlan() (Result, error) {
 	return Result{
 		Output: map[string]map[string]interface{}{},
 		Version: models.Version{
-			EnvName: a.EnvName,
+			EnvName:      a.EnvName,
 			PlanChecksum: planChecksum,
 		},
 	}, nil

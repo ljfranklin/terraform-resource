@@ -147,6 +147,14 @@ func (c *client) writePlanProviderConfig(outputDir string, planContents, planCon
 	}
 
 	configContents := []byte(fmt.Sprintf(`
+terraform {
+  required_providers {
+    stateful = {
+      source = "github.com/ashald/stateful"
+      version = "~> 1.0"
+    }
+  }
+}
 resource "stateful_string" "plan_output" {
   desired = %s
 }
