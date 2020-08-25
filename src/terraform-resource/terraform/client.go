@@ -569,13 +569,15 @@ func (c *client) WorkspaceNewFromExistingStateFile(envName string, localStateFil
 }
 
 func (c *client) WorkspaceDelete(envName string) error {
-	cmd := c.terraformCmd([]string{
-		"workspace",
-		"delete",
-		envName,
-	}, []string{
-		"TF_WORKSPACE=default",
-	})
+	if (envName != "default") {
+		cmd := c.terraformCmd([]string{
+			"workspace",
+			"delete",
+			envName,
+		}, []string{
+			"TF_WORKSPACE=default",
+		})
+	}
 
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("Error running `workspace delete`: %s, Output: %s", err, output)
