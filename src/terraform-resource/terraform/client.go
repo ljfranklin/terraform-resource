@@ -577,29 +577,29 @@ func (c *client) WorkspaceDelete(envName string) error {
 		}, []string{
 			"TF_WORKSPACE=default",
 		})
-	}
 
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("Error running `workspace delete`: %s, Output: %s", err, output)
+		if output, err := cmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("Error running `workspace delete`: %s, Output: %s", err, output)
+		}
 	}
-
 	return nil
 }
 
 func (c *client) WorkspaceDeleteWithForce(envName string) error {
-	cmd := c.terraformCmd([]string{
-		"workspace",
-		"delete",
-		"-force",
-		envName,
-	}, []string{
-		"TF_WORKSPACE=default",
-	})
+	if (envName != "default") {
+		cmd := c.terraformCmd([]string{
+			"workspace",
+			"delete",
+			"-force",
+			envName,
+		}, []string{
+			"TF_WORKSPACE=default",
+		})
 
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("Error running `workspace delete -force`: %s, Output: %s", err, output)
+		if output, err := cmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("Error running `workspace delete -force`: %s, Output: %s", err, output)
+		}
 	}
-
 	return nil
 }
 
