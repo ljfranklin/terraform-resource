@@ -90,7 +90,7 @@ func (c *client) InitWithBackend() error {
 		// TODO: Terraform 0.13.0 breaks the -get-plugins=false functionality:
 		//       https://github.com/hashicorp/terraform/issues/25813. Swallow
 		//       errors related to downloading plugins until this is fixed.
-		badDownloadPluginsFlagErr := "Failed to query available provider packages"
+		badDownloadPluginsFlagErr := "Failed to install provider"
 		missingRequiredProvidersErr := "Missing required providers."
 		// Even though we tell Terraform to skip downloading plugins, it will still return
 		// an error if the user has previously uploaded a "default" workspace which uses
