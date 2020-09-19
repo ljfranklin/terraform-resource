@@ -87,11 +87,17 @@ func (c *client) InitWithBackend() error {
 	initCmd := c.terraformCmd(initArgs, nil)
 	var output []byte
 	if output, err = initCmd.CombinedOutput(); err != nil {
+		// TODO: Terraform 0.13.0 breaks the -get-plugins=false functionality:
+		//       https://github.com/hashicorp/terraform/issues/25813. Swallow
+		//       errors related to downloading plugins until this is fixed.
+		badDownloadPluginsFlagErr := "Failed to query available provider packages"
+		missingRequiredProvidersErr := "Missing required providers."
 		// Even though we tell Terraform to skip downloading plugins, it will still return
 		// an error if the user has previously uploaded a "default" workspace which uses
 		// custom provider plugins. Despite the error message the initialization has otherwise
 		// succeeded so we swallow this error.
-		if !c.model.DownloadPlugins && bytes.Contains(output, []byte("Missing required providers.")) {
+		if !c.model.DownloadPlugins && (bytes.Contains(output, []byte(missingRequiredProvidersErr)) ||
+			bytes.Contains(output, []byte(badDownloadPluginsFlagErr))) {
 			return nil
 		}
 		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", err, output)
