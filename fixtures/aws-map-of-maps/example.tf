@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
+  required_version = ">= 0.13"
+}
+
 # expect creds to be passed via ENV variables
 provider "aws" {
   region     = "${var.region}"
