@@ -375,7 +375,7 @@ jobs:
       - get: resource-src
         passed: [destroy-env-with-s3-backend, destroy-env-with-gcs-backend, destroy-env-and-lock, destroy-migrated-env, destroy-plan-env]
         trigger: true
-      - task: write-tag-file
+      - task: write-docker-metadata-files
         config:
           platform: linux
           image_resource:
@@ -386,7 +386,7 @@ jobs:
           inputs:
             - name: resource-src
           outputs:
-            - name: docker-tags
+            - name: docker-metadata
           run:
             path: /bin/bash
             args:
@@ -394,14 +394,16 @@ jobs:
               - |
                   TF_VERSION="$(cat resource-src/config/terraform-version)"
                   SHA="$(cat resource-src/.git/short_ref)"
-                  echo "${TF_VERSION} ${TF_VERSION}-${SHA}" > docker-tags/tags
+                  echo "${TF_VERSION} ${TF_VERSION}-${SHA}" > docker-metadata/tags
+                  echo "{\"terraform_version\": \"${TF_VERSION}\"}" > docker-metadata/labels
       - put: terraform-prod-image
         params:
           pull_repository: ljfranklin/terraform-resource
           pull_tag: test
           tag_as_latest: true
-          additional_tags: docker-tags/tags
+          additional_tags: docker-metadata/tags
           cache: true
+          labels_file: docker-metadata/labels
 
 resource_types:
 - name: terraform
