@@ -19,7 +19,7 @@ jobs:
     on_success: *success-alert
     on_failure: *failure-alert
     plan:
-      - aggregate:
+      - in_parallel:
         - get: terraform-github-release
           trigger: true
         - get: resource-src
@@ -56,7 +56,7 @@ jobs:
     serial_groups: [track1, track2, track3, track4, track5]
     on_failure: *failure-alert
     plan:
-      - aggregate:
+      - in_parallel:
         - get: resource-src
           trigger: true
           passed: [push-dev-image]
@@ -82,7 +82,7 @@ jobs:
     serial_groups: [track1, track2, track3, track4, track5]
     on_failure: *failure-alert
     plan:
-      - aggregate:
+      - in_parallel:
         - get: resource-src
           trigger: true
           passed: [test-unit]
@@ -102,7 +102,7 @@ jobs:
           run:
             path: sleep
             args:
-              - 120 # concourse updates resource images every minute
+              - "120" # concourse updates resource images every minute
 
   - name: create-env-with-s3-backend
     serial_groups: [track1]
