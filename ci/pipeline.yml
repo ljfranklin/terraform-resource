@@ -406,7 +406,7 @@ jobs:
           labels_file: docker-metadata/labels
 
 resource_types:
-- name: terraform
+- name: terraform-test
   type: docker-image
   source:
     # use tag `latest` for stable release
@@ -463,7 +463,7 @@ resources:
     pool: aws-ci-pool
     private_key: {{git_private_key}}
 - name: terraform-s3-backend
-  type: terraform
+  type: terraform-test
   source:
     backend_type: s3
     backend_config:
@@ -479,7 +479,7 @@ resources:
       secret_key:  {{ec2_secret_key}}
       bucket:      {{storage_bucket}}
 - name: terraform-gcs-backend
-  type: terraform
+  type: terraform-test
   source:
     backend_type: gcs
     backend_config:
@@ -492,7 +492,7 @@ resources:
       secret_key:  {{ec2_secret_key}}
       bucket:      {{storage_bucket}}
 - name: terraform-migrated-backend
-  type: terraform
+  type: terraform-test
   source:
     backend_type: s3
     backend_config:
@@ -513,7 +513,7 @@ resources:
       secret_key:  {{ec2_secret_key}}
       bucket:      {{storage_bucket}}
 - name: terraform-legacy-storage
-  type: terraform
+  type: terraform-test
   source:
     storage:
       access_key_id:     {{storage_access_key}}
