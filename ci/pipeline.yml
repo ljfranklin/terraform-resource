@@ -396,10 +396,11 @@ jobs:
                   SHA="$(cat resource-src/.git/short_ref)"
                   echo "${TF_VERSION} ${TF_VERSION}-${SHA}" > docker-metadata/tags
                   echo "{\"terraform_version\": \"${TF_VERSION}\"}" > docker-metadata/labels
+      - task: build-artifacts
+        file: resource-src/ci/tasks/build-prod-artifacts.yml
       - put: terraform-prod-image
         params:
-          pull_repository: ljfranklin/terraform-resource
-          pull_tag: test
+          build: build-artifacts/
           tag_as_latest: true
           additional_tags: docker-metadata/tags
           cache: true
