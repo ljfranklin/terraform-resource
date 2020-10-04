@@ -706,6 +706,13 @@ func (c *client) SavePlanToBackend(planEnvName string) error {
 		return err
 	}
 
+	// Delete existing planfile if exists to workaround 0.13 upgrade
+	// issue:
+	// https://github.com/ljfranklin/terraform-resource/issues/131
+	if err := c.WorkspaceDeleteWithForce(planEnvName); err != nil {
+		// swallow error in case workspace doesn't exist yet
+	}
+
 	err = c.WorkspaceNewIfNotExists(planEnvName)
 	if err != nil {
 		return err

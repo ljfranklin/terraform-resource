@@ -494,4 +494,68 @@ var _ = Describe("Out Plan", func() {
 			planFilePath,
 		)
 	})
+
+	It("handles renaming stateful provider for 0.13 upgrade", func() {
+		statefileFixture, err := os.Open(helpers.FileLocation("fixtures/plan-0.12/terraform.tfstate"))
+		Expect(err).ToNot(HaveOccurred())
+		defer statefileFixture.Close()
+		awsVerifier.UploadObjectToS3(bucket, planFilePath, statefileFixture)
+
+		planOutRequest := models.OutRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					BackendType:   backendType,
+					BackendConfig: backendConfig,
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source:   "fixtures/aws/",
+					PlanOnly: true,
+					Env: map[string]string{
+						"HOME": workingDir, // in prod plugin is installed system-wide
+					},
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		By("running 'out' to create the plan file")
+
+		planrunner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: GinkgoWriter,
+		}
+		_, err = planrunner.Run(planOutRequest)
+		Expect(err).ToNot(HaveOccurred())
+
+		By("ensuring that plan file exists with valid version (LastModified)")
+
+		awsVerifier.ExpectS3FileToExist(
+			bucket,
+			planFilePath,
+		)
+
+		By("running 'out' to delete the plan file")
+
+		planOutRequest.Params.Terraform.PlanOnly = false
+		planOutRequest.Params.Action = models.DestroyAction
+		_, err = planrunner.Run(planOutRequest)
+		Expect(err).ToNot(HaveOccurred())
+
+		By("ensuring that plan file no longer exists")
+
+		awsVerifier.ExpectS3FileToNotExist(
+			bucket,
+			planFilePath,
+		)
+	})
 })
