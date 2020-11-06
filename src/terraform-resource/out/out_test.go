@@ -41,16 +41,18 @@ var _ = Describe("Out", func() {
 		workspacePath     string
 	)
 
-	BeforeEach(func() {
-		region := os.Getenv("AWS_REGION") // optional
-		if region == "" {
-			region = "us-east-1"
-		}
+	region := os.Getenv("AWS_REGION") // optional
+	if region == "" {
+		region = "us-east-1"
+	}
 
+	stateFileName := "terraform.tfstate"
+
+	BeforeEach(func() {
 		workspacePath = helpers.RandomString("out-backend-test")
 
 		envName = helpers.RandomString("out-test")
-		stateFilePath = path.Join(workspacePath, envName, "terraform.tfstate")
+		stateFilePath = path.Join(workspacePath, envName, stateFileName)
 		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-test"))
 
 		os.Setenv("BUILD_ID", "sample-build-id")
@@ -63,7 +65,7 @@ var _ = Describe("Out", func() {
 		backendType = "s3"
 		backendConfig = map[string]interface{}{
 			"bucket":               bucket,
-			"key":                  "terraform.tfstate",
+			"key":                  stateFileName,
 			"access_key":           accessKey,
 			"secret_key":           secretKey,
 			"region":               region,
@@ -94,6 +96,66 @@ var _ = Describe("Out", func() {
 		_ = os.RemoveAll(workingDir)
 		awsVerifier.DeleteObjectFromS3(bucket, s3ObjectPath)
 		awsVerifier.DeleteObjectFromS3(bucket, stateFilePath)
+	})
+
+	applyAndDestroyInWorkspace := func(workspace string) {
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: &logWriter,
+			Namer:     &namer,
+		}
+
+		req := models.OutRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":     bucket,
+						"access_key": accessKey,
+						"secret_key": secretKey,
+						"region":     region,
+						"key":        stateFileName,
+					},
+				},
+			},
+			Params: models.OutParams{
+				Action: "plan",
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"region":         region,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+					},
+				},
+			},
+		}
+
+		req.Params.EnvName = workspace
+
+		_, err := runner.Run(req)
+		Expect(err).ToNot(HaveOccurred())
+
+		req.Params.Action = models.DestroyAction
+
+		_, err = runner.Run(req)
+		Expect(err).ToNot(HaveOccurred())
+	}
+
+	It("deletes a non default workspace", func() {
+		workspace := "non-default"
+		applyAndDestroyInWorkspace(workspace)
+
+		statePath := path.Join(workspace, stateFileName)
+		awsVerifier.ExpectS3FileToNotExist(bucket, statePath)
+	})
+
+	It("does not delete the default workspace", func() {
+		applyAndDestroyInWorkspace("default")
+		awsVerifier.ExpectS3FileToExist(bucket, stateFileName)
 	})
 
 	It("creates IaaS resources from a local terraform source", func() {
@@ -398,8 +460,8 @@ object = {
 	content = "terraform-files-are-neat"
 }
 map_of_maps = {
-  another_map = {
-	  key = "value"
+	another_map = {
+		key = "value"
 	}
 }
 `, s3ObjectPath)
