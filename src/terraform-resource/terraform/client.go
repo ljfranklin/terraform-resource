@@ -19,6 +19,8 @@ import (
 	"terraform-resource/models"
 )
 
+const defaultWorkspace = "default"
+
 //go:generate counterfeiter . Client
 
 type Client interface {
@@ -575,12 +577,16 @@ func (c *client) WorkspaceNewFromExistingStateFile(envName string, localStateFil
 }
 
 func (c *client) WorkspaceDelete(envName string) error {
+	if envName == defaultWorkspace {
+		return nil
+	}
+
 	cmd := c.terraformCmd([]string{
 		"workspace",
 		"delete",
 		envName,
 	}, []string{
-		"TF_WORKSPACE=default",
+		fmt.Sprintf("TF_WORKSPACE=%s", defaultWorkspace),
 	})
 
 	if output, err := cmd.CombinedOutput(); err != nil {
@@ -591,13 +597,17 @@ func (c *client) WorkspaceDelete(envName string) error {
 }
 
 func (c *client) WorkspaceDeleteWithForce(envName string) error {
+	if envName == defaultWorkspace {
+		return nil
+	}
+
 	cmd := c.terraformCmd([]string{
 		"workspace",
 		"delete",
 		"-force",
 		envName,
 	}, []string{
-		"TF_WORKSPACE=default",
+		fmt.Sprintf("TF_WORKSPACE=%s", defaultWorkspace),
 	})
 
 	if output, err := cmd.CombinedOutput(); err != nil {
