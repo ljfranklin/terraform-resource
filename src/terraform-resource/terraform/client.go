@@ -177,11 +177,11 @@ resource "stateful_string" "plan_output_json" {
 }
 output "%s" {
   sensitive = true
-  value = "${stateful_string.plan_output.desired}"
+  value = stateful_string.plan_output.desired
 }
 output "%s" {
   sensitive = true
-  value = "${stateful_string.plan_output_json.desired}"
+  value = stateful_string.plan_output_json.desired
 }
 `, escapedPlan, escapedJSONPlan, models.PlanContent, models.PlanContentJSON))
 
