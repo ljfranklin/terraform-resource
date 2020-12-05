@@ -89,18 +89,24 @@ func (c *client) InitWithBackend() error {
 	initCmd := c.terraformCmd(initArgs, nil)
 	var output []byte
 	if output, err = initCmd.CombinedOutput(); err != nil {
-		// TODO: Terraform 0.13.0 breaks the -get-plugins=false functionality:
-		//       https://github.com/hashicorp/terraform/issues/25813. Swallow
-		//       errors related to downloading plugins until this is fixed.
-		badDownloadPluginsFlagErr := "Failed to install provider"
-		missingRequiredProvidersErr := "Missing required providers."
 		// Even though we tell Terraform to skip downloading plugins, it will still return
 		// an error if the user has previously uploaded a "default" workspace which uses
 		// custom provider plugins. Despite the error message the initialization has otherwise
 		// succeeded so we swallow this error.
-		if !c.model.DownloadPlugins && (bytes.Contains(output, []byte(missingRequiredProvidersErr)) ||
-			bytes.Contains(output, []byte(badDownloadPluginsFlagErr))) {
-			return nil
+		if !c.model.DownloadPlugins {
+			// TODO: Terraform 0.13.0 breaks the -get-plugins=false functionality:
+			//       https://github.com/hashicorp/terraform/issues/25813. Swallow
+			//       errors related to downloading plugins until this is fixed.
+			downloadErrsToIgnore := []string{
+				"Failed to install provider",
+				"Failed to query available provider packages",
+				"Invalid provider registry host",
+			}
+			for _, errSnippet := range downloadErrsToIgnore {
+				if bytes.Contains(output, []byte(errSnippet)) {
+					return nil
+				}
+			}
 		}
 		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", err, output)
 	}
