@@ -1,6 +1,7 @@
 package in_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -277,5 +278,114 @@ var _ = Describe("JSON Plan", func() {
 		Expect(string(stateContents)).To(ContainSubstring("output_changes"))
 		Expect(string(stateContents)).To(ContainSubstring("resource_changes"))
 		Expect(string(stateContents)).To(ContainSubstring("\"format_version\":\"0.1\""))
+	})
+
+	It("HACK: outputs metadata file if statefile exists", func() {
+		planApplyRequest := models.OutRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					BackendType:   backendType,
+					BackendConfig: backendConfig,
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Env: map[string]string{
+						"HOME": workingDir, // in prod plugin is installed system-wide
+					},
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		applyRunner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: GinkgoWriter,
+		}
+		_, err := applyRunner.Run(planApplyRequest)
+		Expect(err).ToNot(HaveOccurred())
+
+		planOutRequest := models.OutRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					BackendType:   backendType,
+					BackendConfig: backendConfig,
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source:   "fixtures/aws/",
+					PlanOnly: true,
+					Env: map[string]string{
+						"HOME": workingDir, // in prod plugin is installed system-wide
+					},
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		planrunner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: GinkgoWriter,
+		}
+		planOutput, err := planrunner.Run(planOutRequest)
+		Expect(err).ToNot(HaveOccurred())
+
+		inReq := models.InRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					Source: ".",
+					Env: map[string]string{
+						"HOME": inDir,
+					},
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
+				},
+			},
+			Version: planOutput.Version,
+			Params:  models.InParams{},
+		}
+
+		runner := in.Runner{
+			OutputDir: inDir,
+		}
+		_, err = runner.Run(inReq)
+		Expect(err).ToNot(HaveOccurred())
+
+		expectedOutputPath := path.Join(inDir, "metadata")
+		Expect(expectedOutputPath).To(BeAnExistingFile())
+		outputFile, err := os.Open(expectedOutputPath)
+		Expect(err).ToNot(HaveOccurred())
+		defer outputFile.Close()
+
+		outputContents := map[string]interface{}{}
+		err = json.NewDecoder(outputFile).Decode(&outputContents)
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(outputContents).NotTo(BeEmpty())
 	})
 })

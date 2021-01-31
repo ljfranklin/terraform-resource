@@ -90,13 +90,6 @@ func (r Runner) inWithMigratedFromStorage(req models.InRequest, tmpDir string) (
 }
 
 func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InResponse, error) {
-	if req.Version.IsPlan() && req.Params.OutputJSONPlanfile == false {
-		resp := models.InResponse{
-			Version: req.Version,
-		}
-		return resp, nil
-	}
-
 	terraformModel := req.Source.Terraform
 	if err := terraformModel.Validate(); err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
@@ -117,16 +110,34 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 		return models.InResponse{}, err
 	}
 
-	if req.Params.OutputJSONPlanfile && req.Version.IsPlan() {
-		if err := r.writeJSONPlanToFile(targetEnvName+"-plan", client); err != nil {
-			return models.InResponse{}, err
+	if req.Version.IsPlan() {
+		if req.Params.OutputJSONPlanfile {
+			if err := r.writeJSONPlanToFile(targetEnvName+"-plan", client); err != nil {
+				return models.InResponse{}, err
+			}
 		}
+
+		// HACK: Attempt to download a statefile if one exists, but silently ignore
+		// any errors on failure. This is a workaround for an intermittent issue
+		// where generating and applying a plan within the same job will incorrectly
+		// mark the plan run as the latest version. This results in missing `metadata`
+		// file on subsequent `get` calls. Issue:
+		// https://github.com/ljfranklin/terraform-resource/issues/136. A better long-term
+		// fix would be to make `check` more robust by updating Terraform to record
+		// timestamps in the statefile: https://github.com/hashicorp/terraform/issues/15950.
+		_, _ = r.writeBackendOutputs(req, targetEnvName, client)
+
 		resp := models.InResponse{
 			Version: req.Version,
 		}
+
 		return resp, nil
 	}
 
+	return r.writeBackendOutputs(req, targetEnvName, client)
+}
+
+func (r Runner) writeBackendOutputs(req models.InRequest, targetEnvName string, client terraform.Client) (models.InResponse, error) {
 	if err := r.ensureEnvExistsInBackend(targetEnvName, client); err != nil {
 		return models.InResponse{}, err
 	}
