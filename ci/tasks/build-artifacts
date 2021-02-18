@@ -6,7 +6,6 @@ release_dir="$( cd "$( dirname "$0" )" && cd ../.. && pwd )"
 workspace_dir="$( cd "${release_dir}" && cd .. && pwd )"
 
 # env
-source "${release_dir}/.envrc"
 : ${DOCKERFILE_DIR:?}
 
 terraform_version="$( cat "${release_dir}/config/terraform-version" )"
