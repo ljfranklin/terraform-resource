@@ -12,11 +12,11 @@ import (
 	"strconv"
 	"strings"
 
-	"terraform-resource/encoder"
-	"terraform-resource/logger"
-	"terraform-resource/models"
-	"terraform-resource/storage"
-	"terraform-resource/terraform"
+	"github.com/ljfranklin/terraform-resource/encoder"
+	"github.com/ljfranklin/terraform-resource/logger"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/terraform"
 )
 
 type Runner struct {

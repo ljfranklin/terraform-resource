@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 
-	"terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/models"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -11,10 +11,10 @@ else
 fi
 mkdir -p "${output_dir}"
 
-source "${release_dir}/.envrc"
-
 echo "Building resource..."
-go build -o "${output_dir}/check" terraform-resource/cmd/check
-go build -o "${output_dir}/in" terraform-resource/cmd/in
-go build -o "${output_dir}/out" terraform-resource/cmd/out
-echo "Success! Binaries are in '${output_dir}'."
+pushd "${release_dir}/src/terraform-resource" > /dev/null
+  go build -o "${output_dir}/check" cmd/check/main.go
+  go build -o "${output_dir}/in" cmd/in/main.go
+  go build -o "${output_dir}/out" cmd/out/main.go
+  echo "Success! Binaries are in '${output_dir}'."
+popd > /dev/null

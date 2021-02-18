@@ -2,9 +2,9 @@ package workspaces_test
 
 import (
 	"errors"
-	"terraform-resource/terraform"
-	"terraform-resource/terraform/terraformfakes"
-	"terraform-resource/workspaces"
+	"github.com/ljfranklin/terraform-resource/terraform"
+	"github.com/ljfranklin/terraform-resource/terraform/terraformfakes"
+	"github.com/ljfranklin/terraform-resource/workspaces"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

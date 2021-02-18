@@ -3,7 +3,7 @@ package namer_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"terraform-resource/namer"
+	"github.com/ljfranklin/terraform-resource/namer"
 )
 
 var _ = Describe("Namer", func() {

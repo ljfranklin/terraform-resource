@@ -8,12 +8,12 @@ import (
 	"os"
 	"path"
 
-	"terraform-resource/logger"
-	"terraform-resource/models"
-	"terraform-resource/namer"
-	"terraform-resource/ssh"
-	"terraform-resource/storage"
-	"terraform-resource/terraform"
+	"github.com/ljfranklin/terraform-resource/logger"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/namer"
+	"github.com/ljfranklin/terraform-resource/ssh"
+	"github.com/ljfranklin/terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/terraform"
 )
 
 type Runner struct {

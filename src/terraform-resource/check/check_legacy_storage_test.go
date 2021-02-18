@@ -6,10 +6,10 @@ import (
 	"path"
 	"time"
 
-	"terraform-resource/check"
-	"terraform-resource/models"
-	"terraform-resource/storage"
-	"terraform-resource/test/helpers"
+	"github.com/ljfranklin/terraform-resource/check"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

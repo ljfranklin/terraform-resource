@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/storage"
 )
 
 const (

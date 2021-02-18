@@ -16,7 +16,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/models"
 )
 
 const defaultWorkspace = "default"

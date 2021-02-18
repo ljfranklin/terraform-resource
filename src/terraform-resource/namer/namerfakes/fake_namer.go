@@ -3,7 +3,7 @@ package namerfakes
 
 import (
 	"sync"
-	"terraform-resource/namer"
+	"github.com/ljfranklin/terraform-resource/namer"
 )
 
 type FakeNamer struct {

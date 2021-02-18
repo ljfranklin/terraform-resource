@@ -1,4 +1,4 @@
-module terraform-resource
+module github.com/ljfranklin/terraform-resource
 
 go 1.16
 

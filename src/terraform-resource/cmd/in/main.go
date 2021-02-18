@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 
-	"terraform-resource/encoder"
-	"terraform-resource/in"
-	"terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/encoder"
+	"github.com/ljfranklin/terraform-resource/in"
+	"github.com/ljfranklin/terraform-resource/models"
 )
 
 func main() {

@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"terraform-resource/ssh"
+	"github.com/ljfranklin/terraform-resource/ssh"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

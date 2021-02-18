@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"terraform-resource/logger"
-	"terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/logger"
+	"github.com/ljfranklin/terraform-resource/models"
 )
 
 type Action struct {

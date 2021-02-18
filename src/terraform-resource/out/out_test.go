@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"strings"
 
-	"terraform-resource/models"
-	"terraform-resource/namer/namerfakes"
-	"terraform-resource/out"
-	"terraform-resource/test/helpers"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/namer/namerfakes"
+	"github.com/ljfranklin/terraform-resource/out"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 
 	yaml "gopkg.in/yaml.v2"
 

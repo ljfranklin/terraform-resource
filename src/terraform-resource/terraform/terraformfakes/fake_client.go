@@ -3,8 +3,8 @@ package terraformfakes
 
 import (
 	"sync"
-	"terraform-resource/models"
-	"terraform-resource/terraform"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/terraform"
 )
 
 type FakeClient struct {

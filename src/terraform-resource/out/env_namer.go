@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
-	"terraform-resource/models"
-	"terraform-resource/namer"
-	"terraform-resource/storage"
-	"terraform-resource/terraform"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/namer"
+	"github.com/ljfranklin/terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/terraform"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"io"
 	"time"
 
-	"terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/storage"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"

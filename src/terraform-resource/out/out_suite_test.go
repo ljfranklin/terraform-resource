@@ -2,7 +2,7 @@ package out_test
 
 import (
 	"os"
-	"terraform-resource/test/helpers"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 	"testing"
 
 	. "github.com/onsi/ginkgo"

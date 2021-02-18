@@ -5,10 +5,10 @@ import (
 	"log"
 	"os"
 
-	"terraform-resource/encoder"
-	"terraform-resource/models"
-	"terraform-resource/namer"
-	"terraform-resource/out"
+	"github.com/ljfranklin/terraform-resource/encoder"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/namer"
+	"github.com/ljfranklin/terraform-resource/out"
 )
 
 func main() {

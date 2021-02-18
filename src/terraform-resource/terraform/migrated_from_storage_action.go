@@ -3,9 +3,9 @@ package terraform
 import (
 	"fmt"
 	"strconv"
-	"terraform-resource/logger"
-	"terraform-resource/models"
-	"terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/logger"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/storage"
 )
 
 type MigratedFromStorageAction struct {
