@@ -2,6 +2,8 @@
 
 set -eu -o pipefail
 
+: ${GOARCH:=amd64}
+
 release_dir="$( cd "$( dirname "$0" )" && cd .. && pwd )"
 
 if [ "$#" -eq 1 ]; then

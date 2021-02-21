@@ -78,6 +78,8 @@ resources:
 
 #### Image Variants
 
+Note: all images support AMD64 and ARM64 architectures, although only AMD64 is fully tested prior to release.
+
 - Latest stable release of resource: `ljfranklin/terraform-resource:latest`.
 - Specific versions of Terraform, e.g. `ljfranklin/terraform-resource:0.7.7`.
 - [RC builds](https://concourse.lylefranklin.com/teams/main/pipelines/terraform-resource-rc) from Terraform pre-releases: `ljfranklin/terraform-resource:rc`.

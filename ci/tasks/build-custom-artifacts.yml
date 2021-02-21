@@ -15,4 +15,4 @@ outputs:
 - name: build-artifacts
 
 run:
-  path: resource-src/ci/tasks/build-custom-artifacts
+  path: resource-src/ci/tasks/build-custom-multiarch-artifacts

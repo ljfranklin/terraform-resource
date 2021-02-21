@@ -51,6 +51,7 @@ jobs:
       - put: terraform-dev-image
         params:
           build: build-artifacts/
+          buildx_platforms: "linux/amd64,linux/arm64"
 
   - name: test-unit
     serial_groups: [track1, track2, track3, track4, track5]
@@ -94,7 +95,7 @@ jobs:
       - put: terraform-test-image
         params:
           build: build-artifacts/
-          cache: true
+          buildx_platforms: "linux/amd64,linux/arm64"
       - task: wait-for-resource-type-to-update
         image: terraform-dev-image
         config:
@@ -403,10 +404,16 @@ jobs:
           build: build-artifacts/
           tag_as_latest: true
           additional_tags: docker-metadata/tags
-          cache: true
           labels_file: docker-metadata/labels
+          buildx_platforms: "linux/amd64,linux/arm64"
 
 resource_types:
+- name: docker-buildx
+  type: docker-image
+  privileged: true
+  source:
+    repository: starkandwayne/docker-image-resource
+    tag: latest
 - name: terraform-test
   type: docker-image
   source:
@@ -433,7 +440,7 @@ resources:
     repository: terraform
     access_token: {{github_access_token}}
 - name: terraform-dev-image
-  type: docker-image
+  type: docker-buildx
   source:
     repository: ljfranklin/terraform-resource
     tag: dev
@@ -441,7 +448,7 @@ resources:
     username: {{docker_username}}
     password: {{docker_password}}
 - name: terraform-test-image
-  type: docker-image
+  type: docker-buildx
   source:
     repository: ljfranklin/terraform-resource
     tag: test
@@ -449,7 +456,7 @@ resources:
     username: {{docker_username}}
     password: {{docker_password}}
 - name: terraform-prod-image
-  type: docker-image
+  type: docker-buildx
   source:
     repository: ljfranklin/terraform-resource
     tag: latest

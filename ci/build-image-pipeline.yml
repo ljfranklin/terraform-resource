@@ -21,7 +21,7 @@ jobs:
   - name: push-custom-image
     plan:
       - do:
-        - aggregate:
+        - in_parallel:
           # - get: nightly
           #   trigger: true
           - get: terraform-src
@@ -32,10 +32,17 @@ jobs:
         - put: resource-custom-image
           params:
             build: build-artifacts/
+            buildx_platforms: "linux/amd64,linux/arm64"
         # on_success: *success-alert
         # on_failure: *failure-alert
 
 resource_types:
+- name: docker-buildx
+  type: docker-image
+  privileged: true
+  source:
+    repository: starkandwayne/docker-image-resource
+    tag: latest
 - name: slack-notification
   type: docker-image
   source:
@@ -55,7 +62,7 @@ resources:
     branch: {{terraform_git_branch}}
     tag_filter: {{terraform_git_tag_filter}}
 - name: resource-custom-image
-  type: docker-image
+  type: docker-buildx
   source:
     repository: {{docker_repository}}
     tag: {{docker_tag}}
