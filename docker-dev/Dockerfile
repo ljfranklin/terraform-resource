@@ -1,4 +1,6 @@
-FROM golang:alpine
+# Temporarily pin to alpine 3.12 to avoid:
+# https://gitlab.alpinelinux.org/alpine/aports/-/issues/12406
+FROM golang:alpine3.12
 
 ARG TARGETARCH=amd64
 
