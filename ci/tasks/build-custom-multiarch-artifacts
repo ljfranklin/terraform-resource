@@ -8,6 +8,6 @@ workspace_dir="$( cd "${release_dir}" && cd .. && pwd )"
 # outputs
 output_dir="${workspace_dir}/build-artifacts"
 
-TARGETARCH="amd64" ./ci/tasks/build-custom-artifacts "${output_dir}/amd64"
-TARGETARCH="arm64" ./ci/tasks/build-custom-artifacts "${output_dir}/arm64"
+TARGETARCH="amd64" "${release_dir}/ci/tasks/build-custom-artifacts" "${output_dir}/amd64"
+TARGETARCH="arm64" "${release_dir}/ci/tasks/build-custom-artifacts" "${output_dir}/arm64"
 cp "${workspace_dir}/docker-prod/Dockerfile" "${output_dir}/"
