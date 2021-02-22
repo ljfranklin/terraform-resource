@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-ARG TARGETARCH=amd64
+ARG TARGETARCH
 
 RUN apk update && \
     apk add ca-certificates git bash openssh-client

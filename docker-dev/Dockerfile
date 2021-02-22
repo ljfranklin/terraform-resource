@@ -1,6 +1,6 @@
 FROM golang:alpine
 
-ARG TARGETARCH=amd64
+ARG TARGETARCH
 
 # Temporarily work around missing bzr in v3.12 branch
 RUN echo '@previous http://nl.alpinelinux.org/alpine/v3.11/community' >> /etc/apk/repositories
