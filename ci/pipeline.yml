@@ -412,7 +412,7 @@ resource_types:
   type: docker-image
   privileged: true
   source:
-    repository: starkandwayne/docker-buildx-resource
+    repository: ljfranklin/docker-buildx-resource
     tag: latest
 - name: terraform-test
   type: docker-image
