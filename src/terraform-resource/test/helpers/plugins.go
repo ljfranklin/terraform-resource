@@ -68,7 +68,7 @@ func DownloadStatefulPlugin(workingDir string) error {
 	} else {
 		hostOS = "linux"
 	}
-	url := fmt.Sprintf("https://github.com/ashald/terraform-provider-stateful/releases/download/v1.1.0/terraform-provider-stateful_v1.1.0-%s-amd64", hostOS)
+	url := fmt.Sprintf("https://github.com/ashald/terraform-provider-stateful/releases/download/v1.2.0/terraform-provider-stateful_v1.2.0-%s-amd64", hostOS)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -77,13 +77,13 @@ func DownloadStatefulPlugin(workingDir string) error {
 	defer resp.Body.Close()
 
 	pluginDir := filepath.Join(workingDir, ".terraform.d", "plugins", "github.com",
-		"ashald", "stateful", "1.1.0", fmt.Sprintf("%s_amd64", hostOS))
+		"ashald", "stateful", "1.2.0", fmt.Sprintf("%s_amd64", hostOS))
 	err = os.MkdirAll(pluginDir, os.ModePerm)
 	if err != nil {
 		return err
 	}
 
-	pluginPath := filepath.Join(pluginDir, "terraform-provider-stateful_v1.1.0")
+	pluginPath := filepath.Join(pluginDir, "terraform-provider-stateful_v1.2.0")
 	out, err := os.Create(pluginPath)
 	if err != nil {
 		return err
