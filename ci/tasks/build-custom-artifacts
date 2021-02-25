@@ -12,7 +12,11 @@ workspace_dir="$( cd "${release_dir}" && cd .. && pwd )"
 terraform_input_dir="$( cd "${workspace_dir}/terraform-src" && pwd )"
 
 # outputs
-output_dir="${workspace_dir}/build-artifacts"
+if [ "$#" -eq 1 ]; then
+  output_dir="$1"
+else
+  output_dir="${workspace_dir}/build-artifacts"
+fi
 mkdir -p "${output_dir}/terraform/"
 
 tmp_gopath="$(mktemp -d /tmp/gopath-XXXXXX)"
