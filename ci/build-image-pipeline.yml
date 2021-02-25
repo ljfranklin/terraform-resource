@@ -53,22 +53,22 @@ resources:
 - name: resource-src
   type: git
   source:
-    uri: {{resource_git_uri}}
-    branch: {{resource_git_branch}}
+    uri: ((resource_git_uri))
+    branch: ((resource_git_branch))
 - name: terraform-src
   type: git
   source:
-    uri: {{terraform_git_uri}}
-    branch: {{terraform_git_branch}}
-    tag_filter: {{terraform_git_tag_filter}}
+    uri: ((terraform_git_uri))
+    branch: ((terraform_git_branch))
+    tag_filter: ((terraform_git_tag_filter))
 - name: resource-custom-image
   type: docker-buildx
   source:
-    repository: {{docker_repository}}
-    tag: {{docker_tag}}
-    email: {{docker_email}}
-    username: {{docker_username}}
-    password: {{docker_password}}
+    repository: ((docker_repository))
+    tag: ((docker_tag))
+    email: ((docker_email))
+    username: ((docker_username))
+    password: ((docker_password))
 # - name: nightly
 #   type: time
 #   source:
@@ -77,4 +77,4 @@ resources:
 # - name: slack-alert
 #   type: slack-notification
 #   source:
-#     url: {{slack_url}}
+#     url: ((slack_url))
