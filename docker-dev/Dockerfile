@@ -5,7 +5,7 @@ ARG TARGETARCH
 # Temporarily work around missing bzr in v3.12 branch
 RUN echo '@previous http://nl.alpinelinux.org/alpine/v3.11/community' >> /etc/apk/repositories
 RUN apk update && \
-   apk --no-cache add ca-certificates git bash wget gnupg unzip make \
+   apk --no-cache add ca-certificates git bash wget gnupg zip unzip make \
                       openssh-client build-base bzr@previous
 
 # this glibc compatibility module is needed for some downloaded binaries,
