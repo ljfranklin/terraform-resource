@@ -90,7 +90,7 @@ func (r Runner) inWithMigratedFromStorage(req models.InRequest, tmpDir string) (
 }
 
 func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InResponse, error) {
-	terraformModel := req.Source.Terraform
+	terraformModel := req.Source.Terraform.Merge(req.Params.Terraform)
 	if err := terraformModel.Validate(); err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
 	}

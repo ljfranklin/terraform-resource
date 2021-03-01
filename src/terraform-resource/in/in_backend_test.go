@@ -29,13 +29,14 @@ var _ = Describe("In with Backend", func() {
 		pathToCurrS3Fixture    string
 		pathToModulesS3Fixture string
 		tmpDir                 string
+		secretKey              string
 	)
 
 	BeforeEach(func() {
 		accessKey := os.Getenv("AWS_ACCESS_KEY")
 		Expect(accessKey).ToNot(BeEmpty(), "AWS_ACCESS_KEY must be set")
 
-		secretKey := os.Getenv("AWS_SECRET_KEY")
+		secretKey = os.Getenv("AWS_SECRET_KEY")
 		Expect(secretKey).ToNot(BeEmpty(), "AWS_SECRET_KEY must be set")
 
 		bucket = os.Getenv("AWS_BUCKET")
@@ -213,6 +214,26 @@ var _ = Describe("In with Backend", func() {
 			_, err := runner.Run(inReq)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp("output_module"))
+		})
+
+		It("sets env variables from `source.terraform` and `get.params.terraform`", func() {
+			inReq.Source.Env["AWS_SECRET_ACCESS_KEY"] = "bad-secret-key" // will be overridden by get params
+			inReq.Params.Env = map[string]string{
+				"AWS_SECRET_ACCESS_KEY": secretKey,
+			}
+			inReq.Version = models.Version{
+				EnvName: prevEnvName,
+				Serial:  "0",
+			}
+
+			runner := in.Runner{
+				OutputDir: tmpDir,
+			}
+			_, err := runner.Run(inReq)
+			Expect(err).ToNot(HaveOccurred())
+
+			expectedOutputPath := path.Join(tmpDir, "metadata")
+			Expect(expectedOutputPath).To(BeAnExistingFile())
 		})
 
 		Context("when 'default' workspace contains custom plugins", func() {
