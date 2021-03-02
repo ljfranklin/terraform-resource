@@ -215,6 +215,24 @@ var _ = Describe("In with Backend", func() {
 			Expect(err.Error()).To(MatchRegexp("output_module"))
 		})
 
+		It("sets env variables from `source.terraform` and `get.params.terraform`", func() {
+			inReq.Params.Terraform.BackendConfig = inReq.Source.Terraform.BackendConfig
+			inReq.Source.Terraform.BackendConfig = nil // will be overridden by get params
+			inReq.Version = models.Version{
+				EnvName: prevEnvName,
+				Serial:  "0",
+			}
+
+			runner := in.Runner{
+				OutputDir: tmpDir,
+			}
+			_, err := runner.Run(inReq)
+			Expect(err).ToNot(HaveOccurred())
+
+			expectedOutputPath := path.Join(tmpDir, "metadata")
+			Expect(expectedOutputPath).To(BeAnExistingFile())
+		})
+
 		Context("when 'default' workspace contains custom plugins", func() {
 			var pathToDefaultS3Fixture string
 
