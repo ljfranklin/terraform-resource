@@ -106,8 +106,10 @@ func (a *Action) attemptApply() (Result, error) {
 		return Result{}, err
 	}
 
-	if err := a.Client.Import(a.EnvName); err != nil {
-		return Result{}, err
+	if !a.Model.PlanRun {
+		if err := a.Client.Import(a.EnvName); err != nil {
+			return Result{}, err
+		}
 	}
 
 	if err := a.Client.Apply(); err != nil {
@@ -207,6 +209,10 @@ func (a *Action) attemptPlan() (Result, error) {
 	defer a.Logger.EndSection()
 
 	if err := a.Client.WorkspaceNewIfNotExists(a.EnvName); err != nil {
+		return Result{}, err
+	}
+
+	if err := a.Client.Import(a.EnvName); err != nil {
 		return Result{}, err
 	}
 
