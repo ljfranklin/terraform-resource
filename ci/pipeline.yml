@@ -103,7 +103,7 @@ jobs:
           run:
             path: sleep
             args:
-              - "120" # concourse updates resource images every minute
+              - "300" # concourse updates resource images every couple minutes
 
   - name: create-env-with-s3-backend
     serial_groups: [track1]
