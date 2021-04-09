@@ -96,8 +96,19 @@ jobs:
         params:
           build: build-artifacts/
           buildx_platforms: "linux/amd64,linux/arm64"
+
+  - name: wait-for-test-image
+    serial_groups: [track1, track2, track3, track4, track5]
+    on_failure: *failure-alert
+    plan:
+      - in_parallel:
+        - get: resource-src
+          trigger: true
+          passed: [push-test-image]
+        - get: terraform-test-image
+          passed: [push-test-image]
       - task: wait-for-resource-type-to-update
-        image: terraform-dev-image
+        image: terraform-test-image
         config:
           platform: linux
           run:
@@ -111,7 +122,7 @@ jobs:
     plan:
       - get: resource-src
         trigger: true
-        passed: [push-test-image]
+        passed: [wait-for-test-image]
       - put: terraform
         resource: terraform-s3-backend
         params:
@@ -178,7 +189,7 @@ jobs:
     plan:
       - get: resource-src
         trigger: true
-        passed: [push-test-image]
+        passed: [wait-for-test-image]
       - put: terraform
         resource: terraform-gcs-backend
         params:
@@ -212,7 +223,7 @@ jobs:
     plan:
       - get: resource-src
         trigger: true
-        passed: [push-test-image]
+        passed: [wait-for-test-image]
       - put: terraform
         resource: terraform-s3-backend
         params:
@@ -278,7 +289,7 @@ jobs:
     plan:
       - get: resource-src
         trigger: true
-        passed: [push-test-image]
+        passed: [wait-for-test-image]
       - put: terraform
         resource: terraform-legacy-storage
         params:
@@ -328,7 +339,7 @@ jobs:
     plan:
       - get: resource-src
         trigger: true
-        passed: [push-test-image]
+        passed: [wait-for-test-image]
       - put: terraform
         resource: terraform-s3-backend
         params:
@@ -409,19 +420,19 @@ jobs:
 
 resource_types:
 - name: docker-buildx
-  type: docker-image
+  type: registry-image
   privileged: true
   source:
     repository: ljfranklin/docker-buildx-resource
     tag: latest
 - name: terraform-test
-  type: docker-image
+  type: registry-image
   source:
     # use tag `latest` for stable release
     repository: ljfranklin/terraform-resource
     tag: test
 - name: slack-notification
-  type: docker-image
+  type: registry-image
   source:
     repository: cfcommunity/slack-notification-resource
     tag: latest
