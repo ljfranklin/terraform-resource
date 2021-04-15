@@ -4,7 +4,7 @@ import (
 	"io"
 	"time"
 
-	"terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/storage"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -77,7 +77,7 @@ func (a AWSVerifier) ExpectS3FileToExist(bucketName string, key string) {
 		if lastErr == nil {
 			break
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 
 	ExpectWithOffset(1, lastErr).ToNot(HaveOccurred(),
@@ -98,7 +98,7 @@ func (a AWSVerifier) ExpectS3FileToNotExist(bucketName string, key string) {
 		if lastErr != nil {
 			break
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 
 	ExpectWithOffset(1, lastErr).To(HaveOccurred(),

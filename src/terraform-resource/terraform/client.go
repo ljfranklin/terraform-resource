@@ -3,6 +3,8 @@ package terraform
 import (
 	"bufio"
 	"bytes"
+	"compress/gzip"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -14,11 +16,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"terraform-resource/models"
-
-	yamlConverter "github.com/ghodss/yaml"
-	yaml "gopkg.in/yaml.v2"
+	"github.com/ljfranklin/terraform-resource/models"
 )
+
+const defaultWorkspace = "default"
 
 //go:generate counterfeiter . Client
 
@@ -27,7 +28,8 @@ type Client interface {
 	InitWithoutBackend() error
 	Apply() error
 	Destroy() error
-	Plan() error
+	Plan() (string, error)
+	JSONPlan() error
 	Output(string) (map[string]map[string]interface{}, error)
 	OutputWithLegacyStorage() (map[string]map[string]interface{}, error)
 	Version() (string, error)
@@ -78,6 +80,7 @@ func (c *client) InitWithBackend() error {
 		"-get=true",
 		"-backend=true",
 		fmt.Sprintf("-backend-config=%s", backendConfigPath),
+		fmt.Sprintf("-get-plugins=%t", c.model.DownloadPlugins),
 	}
 	if c.model.PluginDir != "" {
 		initArgs = append(initArgs, fmt.Sprintf("-plugin-dir=%s", c.model.PluginDir))
@@ -86,6 +89,25 @@ func (c *client) InitWithBackend() error {
 	initCmd := c.terraformCmd(initArgs, nil)
 	var output []byte
 	if output, err = initCmd.CombinedOutput(); err != nil {
+		// Even though we tell Terraform to skip downloading plugins, it will still return
+		// an error if the user has previously uploaded a "default" workspace which uses
+		// custom provider plugins. Despite the error message the initialization has otherwise
+		// succeeded so we swallow this error.
+		if !c.model.DownloadPlugins {
+			// TODO: Terraform 0.13.0 breaks the -get-plugins=false functionality:
+			//       https://github.com/hashicorp/terraform/issues/25813. Swallow
+			//       errors related to downloading plugins until this is fixed.
+			downloadErrsToIgnore := []string{
+				"Failed to install provider",
+				"Failed to query available provider packages",
+				"Invalid provider registry host",
+			}
+			for _, errSnippet := range downloadErrsToIgnore {
+				if bytes.Contains(output, []byte(errSnippet)) {
+					return nil
+				}
+			}
+		}
 		return fmt.Errorf("terraform init command failed.\nError: %s\nOutput: %s", err, output)
 	}
 
@@ -110,22 +132,58 @@ func (c *client) writeBackendConfig(outputDir string) (string, error) {
 	return backendPath, nil
 }
 
-func (c *client) writePlanProviderConfig(outputDir string, planContents []byte) error {
+func (c *client) writePlanProviderConfig(outputDir string, planContents, planContentsJSON []byte) error {
+	// GZip JSON plan to save space:
+	// https://github.com/ljfranklin/terraform-resource/issues/115#issuecomment-619525494
+	// Not gzipping the binary plan for now to avoid migration issues.
+
 	encodedPlan := base64.StdEncoding.EncodeToString(planContents)
 	escapedPlan, err := json.Marshal(encodedPlan)
 	if err != nil {
 		return err
 	}
 
+	var encodedJSONBuffer bytes.Buffer
+	baseEncoder := base64.NewEncoder(base64.StdEncoding, &encodedJSONBuffer)
+	zw := gzip.NewWriter(baseEncoder)
+	if _, err = zw.Write(planContentsJSON); err != nil {
+		return err
+	}
+	if err = zw.Close(); err != nil {
+		return err
+	}
+	if err = baseEncoder.Close(); err != nil {
+		return err
+	}
+	escapedJSONPlan, err := json.Marshal(encodedJSONBuffer.String())
+	if err != nil {
+		return err
+	}
+
 	configContents := []byte(fmt.Sprintf(`
+terraform {
+  required_providers {
+    stateful = {
+      source = "github.com/ashald/stateful"
+      version = "~> 1.0"
+    }
+  }
+}
 resource "stateful_string" "plan_output" {
   desired = %s
 }
-output "plan_content" {
-  sensitive = true
-  value = "${stateful_string.plan_output.desired}"
+resource "stateful_string" "plan_output_json" {
+  desired = %s
 }
-`, escapedPlan))
+output "%s" {
+  sensitive = true
+  value = stateful_string.plan_output.desired
+}
+output "%s" {
+  sensitive = true
+  value = stateful_string.plan_output_json.desired
+}
+`, escapedPlan, escapedJSONPlan, models.PlanContent, models.PlanContentJSON))
 
 	configPath, err := filepath.Abs(path.Join(outputDir, "resource_plan_config.tf"))
 	if err != nil {
@@ -190,13 +248,9 @@ func (c *client) Apply() error {
 	}
 
 	if c.model.PlanRun == false {
-		varFile, err := c.writeVarFile()
-		if err != nil {
-			return err
+		for _, varFile := range c.model.ConvertedVarFiles {
+			applyArgs = append(applyArgs, fmt.Sprintf("-var-file=%s", varFile))
 		}
-		defer os.RemoveAll(varFile)
-
-		applyArgs = append(applyArgs, fmt.Sprintf("-var-file=%s", varFile))
 		if c.model.StateFileLocalPath != "" {
 			applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.model.StateFileLocalPath))
 		}
@@ -228,18 +282,14 @@ func (c *client) Destroy() error {
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 
-	varFile, err := c.writeVarFile()
-	if err != nil {
-		return err
+	for _, varFile := range c.model.ConvertedVarFiles {
+		destroyArgs = append(destroyArgs, fmt.Sprintf("-var-file=%s", varFile))
 	}
-	defer os.RemoveAll(varFile)
-
-	destroyArgs = append(destroyArgs, fmt.Sprintf("-var-file=%s", varFile))
 
 	destroyCmd := c.terraformCmd(destroyArgs, nil)
 	destroyCmd.Stdout = c.logWriter
 	destroyCmd.Stderr = c.logWriter
-	err = destroyCmd.Run()
+	err := destroyCmd.Run()
 	if err != nil {
 		return fmt.Errorf("Failed to run Terraform command: %s", err)
 	}
@@ -247,7 +297,7 @@ func (c *client) Destroy() error {
 	return nil
 }
 
-func (c *client) Plan() error {
+func (c *client) Plan() (string, error) {
 	planArgs := []string{
 		"plan",
 		"-input=false", // do not prompt for inputs
@@ -255,20 +305,49 @@ func (c *client) Plan() error {
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 
-	varFile, err := c.writeVarFile()
-	if err != nil {
-		return err
+	for _, varFile := range c.model.ConvertedVarFiles {
+		planArgs = append(planArgs, fmt.Sprintf("-var-file=%s", varFile))
 	}
-	defer os.RemoveAll(varFile)
-
-	planArgs = append(planArgs, fmt.Sprintf("-var-file=%s", varFile))
 
 	planCmd := c.terraformCmd(planArgs, nil)
 	planCmd.Stdout = c.logWriter
 	planCmd.Stderr = c.logWriter
-	err = planCmd.Run()
+	err := planCmd.Run()
 	if err != nil {
-		return fmt.Errorf("Failed to run Terraform command: %s", err)
+		return "", fmt.Errorf("Failed to run Terraform command: %s", err)
+	}
+
+	planFile, err := os.Open(c.model.PlanFileLocalPath)
+	if err != nil {
+		return "", fmt.Errorf("Failed to open planfile: %s", err)
+	}
+	defer planFile.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, planFile); err != nil {
+		return "", fmt.Errorf("Failed to get planfile checksum: %s", err)
+	}
+
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
+func (c *client) JSONPlan() error {
+	// terraform show -json tfplan.binary > tfplan.json
+	planArgs := []string{
+		"show",
+		"-json",
+		fmt.Sprintf("%s", c.model.PlanFileLocalPath),
+	}
+
+	showCmd := c.terraformCmd(planArgs, nil)
+	rawOutput, err := showCmd.Output()
+	if err != nil {
+		return fmt.Errorf("Failed to retrieve output.\nError: %s\nOutput: %s", err, rawOutput)
+	}
+
+	err = ioutil.WriteFile(c.model.JSONPlanFileLocalPath, rawOutput, 0644)
+	if err != nil {
+		return fmt.Errorf("Failed to write JSON planfile to %s: %s", c.model.JSONPlanFileLocalPath, err)
 	}
 
 	return nil
@@ -285,13 +364,7 @@ func (c *client) Output(envName string) (map[string]map[string]interface{}, erro
 
 	rawOutput, err := outputCmd.Output()
 	if err != nil {
-		// TF CLI currently doesn't provide a nice way to detect an empty set of outputs
-		// https://github.com/hashicorp/terraform/issues/11696
-		if exitErr, ok := err.(*exec.ExitError); ok && strings.Contains(string(exitErr.Stderr), "no outputs defined") {
-			rawOutput = []byte("{}")
-		} else {
-			return nil, fmt.Errorf("Failed to retrieve output.\nError: %s\nOutput: %s", err, rawOutput)
-		}
+		return nil, fmt.Errorf("Failed to retrieve output.\nError: %s\nOutput: %s", err, rawOutput)
 	}
 
 	tfOutput := map[string]map[string]interface{}{}
@@ -362,13 +435,10 @@ func (c *client) Import(envName string) error {
 			"import",
 		}
 
-		varFile, err := c.writeVarFile()
-		if err != nil {
-			return err
+		for _, varFile := range c.model.ConvertedVarFiles {
+			importArgs = append(importArgs, fmt.Sprintf("-var-file=%s", varFile))
 		}
-		defer os.RemoveAll(varFile)
 
-		importArgs = append(importArgs, fmt.Sprintf("-var-file=%s", varFile))
 		importArgs = append(importArgs, tfID)
 		importArgs = append(importArgs, iaasID)
 
@@ -403,13 +473,10 @@ func (c *client) ImportWithLegacyStorage() error {
 			fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 		}
 
-		varFile, err := c.writeVarFile()
-		if err != nil {
-			return err
+		for _, varFile := range c.model.ConvertedVarFiles {
+			importArgs = append(importArgs, fmt.Sprintf("-var-file=%s", varFile))
 		}
-		defer os.RemoveAll(varFile)
 
-		importArgs = append(importArgs, fmt.Sprintf("-var-file=%s", varFile))
 		importArgs = append(importArgs, tfID)
 		importArgs = append(importArgs, iaasID)
 
@@ -430,7 +497,7 @@ func (c *client) WorkspaceList() ([]string, error) {
 	}, nil)
 	rawOutput, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Error running `workspace list`: %s, Output: %s", err, rawOutput)
+		return nil, fmt.Errorf("Error running `workspace list`: %s, Output: %s", err, err.(*exec.ExitError).Stderr)
 	}
 
 	envs := []string{}
@@ -516,12 +583,16 @@ func (c *client) WorkspaceNewFromExistingStateFile(envName string, localStateFil
 }
 
 func (c *client) WorkspaceDelete(envName string) error {
+	if envName == defaultWorkspace {
+		return nil
+	}
+
 	cmd := c.terraformCmd([]string{
 		"workspace",
 		"delete",
 		envName,
 	}, []string{
-		"TF_WORKSPACE=default",
+		fmt.Sprintf("TF_WORKSPACE=%s", defaultWorkspace),
 	})
 
 	if output, err := cmd.CombinedOutput(); err != nil {
@@ -532,13 +603,17 @@ func (c *client) WorkspaceDelete(envName string) error {
 }
 
 func (c *client) WorkspaceDeleteWithForce(envName string) error {
+	if envName == defaultWorkspace {
+		return nil
+	}
+
 	cmd := c.terraformCmd([]string{
 		"workspace",
 		"delete",
 		"-force",
 		envName,
 	}, []string{
-		"TF_WORKSPACE=default",
+		fmt.Sprintf("TF_WORKSPACE=%s", defaultWorkspace),
 	})
 
 	if output, err := cmd.CombinedOutput(); err != nil {
@@ -558,7 +633,11 @@ func (c *client) StatePull(envName string) ([]byte, error) {
 
 	rawOutput, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Error running `state pull`: %s, Output: %s", err, rawOutput)
+		errOutput := rawOutput
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			errOutput = exitErr.Stderr
+		}
+		return nil, fmt.Errorf("Error running `state pull`: %s, Output: %s", err, errOutput)
 	}
 
 	return rawOutput, nil
@@ -595,6 +674,10 @@ func (c *client) SavePlanToBackend(planEnvName string) error {
 	if err != nil {
 		return err
 	}
+	planContentsJSON, err := ioutil.ReadFile(c.model.JSONPlanFileLocalPath)
+	if err != nil {
+		return err
+	}
 
 	tmpDir, err := ioutil.TempDir("", "tf-resource-plan")
 	if err != nil {
@@ -615,7 +698,13 @@ func (c *client) SavePlanToBackend(planEnvName string) error {
 		return err
 	}
 	c.model.Source = tmpDir
-	c.logWriter = ioutil.Discard // prevent provider from logging creds
+
+	logFile, err := os.OpenFile(path.Join(os.TempDir(), "tf-plan.log"), os.O_RDWR|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+	defer logFile.Close()
+	c.logWriter = logFile // prevent provider from logging creds
 
 	defer func() {
 		os.Chdir(origDir)
@@ -623,7 +712,7 @@ func (c *client) SavePlanToBackend(planEnvName string) error {
 		c.logWriter = origLogger
 	}()
 
-	err = c.writePlanProviderConfig(tmpDir, planContents)
+	err = c.writePlanProviderConfig(tmpDir, planContents, planContentsJSON)
 	if err != nil {
 		return err
 	}
@@ -655,7 +744,13 @@ func (c *client) GetPlanFromBackend(planEnvName string) error {
 	if err != nil {
 		return err
 	}
-	encodedPlan := outputs["plan_content"]["value"].(string)
+
+	var encodedPlan string
+	if val, ok := outputs[models.PlanContent]; ok {
+		encodedPlan = val["value"].(string)
+	} else {
+		return fmt.Errorf("state has no output for key %s", models.PlanContent)
+	}
 
 	decodedPlan, err := base64.StdEncoding.DecodeString(encodedPlan)
 	if err != nil {
@@ -731,30 +826,4 @@ func (c *client) terraformCmd(args []string, env []string) *exec.Cmd {
 	}
 
 	return cmd
-}
-
-func (c *client) writeVarFile() (string, error) {
-	yamlContents, err := yaml.Marshal(c.model.Vars)
-	if err != nil {
-		return "", err
-	}
-
-	// avoids marshalling errors around map[interface{}]interface{}
-	jsonFileContents, err := yamlConverter.YAMLToJSON(yamlContents)
-	if err != nil {
-		return "", err
-	}
-
-	varsFile, err := ioutil.TempFile("", "*vars-file.tfvars.json")
-	if err != nil {
-		return "", err
-	}
-	if _, err := varsFile.Write(jsonFileContents); err != nil {
-		return "", err
-	}
-	if err := varsFile.Close(); err != nil {
-		return "", err
-	}
-
-	return varsFile.Name(), nil
 }

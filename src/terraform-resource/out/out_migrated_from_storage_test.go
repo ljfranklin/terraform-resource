@@ -10,11 +10,11 @@ import (
 	"path"
 	"time"
 
-	"terraform-resource/models"
-	"terraform-resource/namer/namerfakes"
-	"terraform-resource/out"
-	"terraform-resource/storage"
-	"terraform-resource/test/helpers"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/namer/namerfakes"
+	"github.com/ljfranklin/terraform-resource/out"
+	"github.com/ljfranklin/terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -606,7 +606,7 @@ var _ = Describe("Out - Migrated From Storage", func() {
 
 	Context("when applying a plan", func() {
 		BeforeEach(func() {
-			err := downloadStatefulPlugin(workingDir)
+			err := helpers.DownloadStatefulPlugin(workingDir)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -677,6 +677,8 @@ var _ = Describe("Out - Migrated From Storage", func() {
 
 			Expect(planOutput.Version.EnvName).To(Equal(planRequest.Params.EnvName))
 			Expect(planOutput.Version.PlanOnly).To(Equal("true"), "Expected PlanOnly to be true, but was false")
+			Expect(planOutput.Version.Serial).To(BeEmpty())
+			Expect(planOutput.Version.PlanChecksum).To(MatchRegexp("[0-9|a-f]+"))
 
 			By("ensuring s3 file does not already exist")
 
@@ -695,6 +697,8 @@ var _ = Describe("Out - Migrated From Storage", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(createOutput.Version.PlanOnly).To(BeEmpty())
+			Expect(createOutput.Version.Serial).ToNot(BeEmpty())
+			Expect(createOutput.Version.PlanChecksum).To(BeEmpty())
 
 			Expect(createOutput.Metadata).ToNot(BeEmpty())
 			fields := map[string]interface{}{}

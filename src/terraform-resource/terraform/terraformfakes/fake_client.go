@@ -2,9 +2,9 @@
 package terraformfakes
 
 import (
-	sync "sync"
-	models "terraform-resource/models"
-	terraform "terraform-resource/terraform"
+	"sync"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/terraform"
 )
 
 type FakeClient struct {
@@ -93,6 +93,16 @@ type FakeClient struct {
 	initWithoutBackendReturnsOnCall map[int]struct {
 		result1 error
 	}
+	JSONPlanStub        func() error
+	jSONPlanMutex       sync.RWMutex
+	jSONPlanArgsForCall []struct {
+	}
+	jSONPlanReturns struct {
+		result1 error
+	}
+	jSONPlanReturnsOnCall map[int]struct {
+		result1 error
+	}
 	OutputStub        func(string) (map[string]map[string]interface{}, error)
 	outputMutex       sync.RWMutex
 	outputArgsForCall []struct {
@@ -118,15 +128,17 @@ type FakeClient struct {
 		result1 map[string]map[string]interface{}
 		result2 error
 	}
-	PlanStub        func() error
+	PlanStub        func() (string, error)
 	planMutex       sync.RWMutex
 	planArgsForCall []struct {
 	}
 	planReturns struct {
-		result1 error
+		result1 string
+		result2 error
 	}
 	planReturnsOnCall map[int]struct {
-		result1 error
+		result1 string
+		result2 error
 	}
 	SavePlanToBackendStub        func(string) error
 	savePlanToBackendMutex       sync.RWMutex
@@ -684,6 +696,58 @@ func (fake *FakeClient) InitWithoutBackendReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeClient) JSONPlan() error {
+	fake.jSONPlanMutex.Lock()
+	ret, specificReturn := fake.jSONPlanReturnsOnCall[len(fake.jSONPlanArgsForCall)]
+	fake.jSONPlanArgsForCall = append(fake.jSONPlanArgsForCall, struct {
+	}{})
+	fake.recordInvocation("JSONPlan", []interface{}{})
+	fake.jSONPlanMutex.Unlock()
+	if fake.JSONPlanStub != nil {
+		return fake.JSONPlanStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.jSONPlanReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeClient) JSONPlanCallCount() int {
+	fake.jSONPlanMutex.RLock()
+	defer fake.jSONPlanMutex.RUnlock()
+	return len(fake.jSONPlanArgsForCall)
+}
+
+func (fake *FakeClient) JSONPlanCalls(stub func() error) {
+	fake.jSONPlanMutex.Lock()
+	defer fake.jSONPlanMutex.Unlock()
+	fake.JSONPlanStub = stub
+}
+
+func (fake *FakeClient) JSONPlanReturns(result1 error) {
+	fake.jSONPlanMutex.Lock()
+	defer fake.jSONPlanMutex.Unlock()
+	fake.JSONPlanStub = nil
+	fake.jSONPlanReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeClient) JSONPlanReturnsOnCall(i int, result1 error) {
+	fake.jSONPlanMutex.Lock()
+	defer fake.jSONPlanMutex.Unlock()
+	fake.JSONPlanStub = nil
+	if fake.jSONPlanReturnsOnCall == nil {
+		fake.jSONPlanReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.jSONPlanReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeClient) Output(arg1 string) (map[string]map[string]interface{}, error) {
 	fake.outputMutex.Lock()
 	ret, specificReturn := fake.outputReturnsOnCall[len(fake.outputArgsForCall)]
@@ -802,7 +866,7 @@ func (fake *FakeClient) OutputWithLegacyStorageReturnsOnCall(i int, result1 map[
 	}{result1, result2}
 }
 
-func (fake *FakeClient) Plan() error {
+func (fake *FakeClient) Plan() (string, error) {
 	fake.planMutex.Lock()
 	ret, specificReturn := fake.planReturnsOnCall[len(fake.planArgsForCall)]
 	fake.planArgsForCall = append(fake.planArgsForCall, struct {
@@ -813,10 +877,10 @@ func (fake *FakeClient) Plan() error {
 		return fake.PlanStub()
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
 	fakeReturns := fake.planReturns
-	return fakeReturns.result1
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeClient) PlanCallCount() int {
@@ -825,33 +889,36 @@ func (fake *FakeClient) PlanCallCount() int {
 	return len(fake.planArgsForCall)
 }
 
-func (fake *FakeClient) PlanCalls(stub func() error) {
+func (fake *FakeClient) PlanCalls(stub func() (string, error)) {
 	fake.planMutex.Lock()
 	defer fake.planMutex.Unlock()
 	fake.PlanStub = stub
 }
 
-func (fake *FakeClient) PlanReturns(result1 error) {
+func (fake *FakeClient) PlanReturns(result1 string, result2 error) {
 	fake.planMutex.Lock()
 	defer fake.planMutex.Unlock()
 	fake.PlanStub = nil
 	fake.planReturns = struct {
-		result1 error
-	}{result1}
+		result1 string
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeClient) PlanReturnsOnCall(i int, result1 error) {
+func (fake *FakeClient) PlanReturnsOnCall(i int, result1 string, result2 error) {
 	fake.planMutex.Lock()
 	defer fake.planMutex.Unlock()
 	fake.PlanStub = nil
 	if fake.planReturnsOnCall == nil {
 		fake.planReturnsOnCall = make(map[int]struct {
-			result1 error
+			result1 string
+			result2 error
 		})
 	}
 	fake.planReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+		result1 string
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeClient) SavePlanToBackend(arg1 string) error {
@@ -1438,6 +1505,8 @@ func (fake *FakeClient) Invocations() map[string][][]interface{} {
 	defer fake.initWithBackendMutex.RUnlock()
 	fake.initWithoutBackendMutex.RLock()
 	defer fake.initWithoutBackendMutex.RUnlock()
+	fake.jSONPlanMutex.RLock()
+	defer fake.jSONPlanMutex.RUnlock()
 	fake.outputMutex.RLock()
 	defer fake.outputMutex.RUnlock()
 	fake.outputWithLegacyStorageMutex.RLock()

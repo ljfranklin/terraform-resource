@@ -3,19 +3,15 @@ package out_test
 import (
 	"crypto/md5"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
-	"runtime"
 	"time"
 
-	"terraform-resource/models"
-	"terraform-resource/out"
-	"terraform-resource/test/helpers"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/out"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -69,7 +65,7 @@ var _ = Describe("Out Plan", func() {
 		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
 		Expect(err).ToNot(HaveOccurred())
 
-		err = downloadStatefulPlugin(workingDir)
+		err = helpers.DownloadStatefulPlugin(workingDir)
 		Expect(err).ToNot(HaveOccurred())
 	})
 
@@ -136,6 +132,8 @@ var _ = Describe("Out Plan", func() {
 		planOutput, err := planrunner.Run(planOutRequest)
 		Expect(err).ToNot(HaveOccurred())
 
+		defer os.RemoveAll(path.Join(os.TempDir(), "tf-plan.log"))
+
 		By("ensuring that plan file exists")
 
 		awsVerifier.ExpectS3FileToExist(
@@ -146,6 +144,10 @@ var _ = Describe("Out Plan", func() {
 
 		Expect(planOutput.Version.EnvName).To(Equal(planOutRequest.Params.EnvName))
 		Expect(planOutput.Version.PlanOnly).To(Equal("true"), "Expected PlanOnly to be true, but was false")
+		Expect(planOutput.Version.Serial).To(BeEmpty())
+		Expect(planOutput.Version.PlanChecksum).To(MatchRegexp("[0-9|a-f]+"))
+
+		Expect(path.Join(os.TempDir(), "tf-plan.log")).To(BeAnExistingFile())
 
 		By("ensuring s3 file does not already exist")
 
@@ -164,6 +166,8 @@ var _ = Describe("Out Plan", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		Expect(createOutput.Version.PlanOnly).To(BeEmpty())
+		Expect(createOutput.Version.Serial).ToNot(BeEmpty())
+		Expect(createOutput.Version.PlanChecksum).To(BeEmpty())
 
 		Expect(createOutput.Metadata).ToNot(BeEmpty())
 		fields := map[string]interface{}{}
@@ -491,38 +495,3 @@ var _ = Describe("Out Plan", func() {
 		)
 	})
 })
-
-func downloadStatefulPlugin(workingDir string) error {
-	var hostOS string
-	if runtime.GOOS == "darwin" {
-		hostOS = "darwin"
-	} else {
-		hostOS = "linux"
-	}
-	url := fmt.Sprintf("https://github.com/ashald/terraform-provider-stateful/releases/download/v1.1.0/terraform-provider-stateful_v1.1.0-%s-amd64", hostOS)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	err = os.MkdirAll(filepath.Join(workingDir, ".terraform.d", "plugins"), os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	pluginPath := filepath.Join(workingDir, ".terraform.d", "plugins", "terraform-provider-stateful")
-	out, err := os.Create(pluginPath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	if err = out.Chmod(0755); err != nil {
-		return err
-	}
-
-	_, err = io.Copy(out, resp.Body)
-	return err
-}

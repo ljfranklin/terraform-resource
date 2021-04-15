@@ -19,7 +19,7 @@ jobs:
     on_success: *success-alert
     on_failure: *failure-alert
     plan:
-      - aggregate:
+      - in_parallel:
         - get: terraform-github-release
           trigger: true
         - get: resource-src
@@ -51,12 +51,13 @@ jobs:
       - put: terraform-dev-image
         params:
           build: build-artifacts/
+          buildx_platforms: "linux/amd64,linux/arm64"
 
   - name: test-unit
     serial_groups: [track1, track2, track3, track4, track5]
     on_failure: *failure-alert
     plan:
-      - aggregate:
+      - in_parallel:
         - get: resource-src
           trigger: true
           passed: [push-dev-image]
@@ -82,7 +83,7 @@ jobs:
     serial_groups: [track1, track2, track3, track4, track5]
     on_failure: *failure-alert
     plan:
-      - aggregate:
+      - in_parallel:
         - get: resource-src
           trigger: true
           passed: [test-unit]
@@ -94,15 +95,26 @@ jobs:
       - put: terraform-test-image
         params:
           build: build-artifacts/
-          cache: true
+          buildx_platforms: "linux/amd64,linux/arm64"
+
+  - name: wait-for-test-image
+    serial_groups: [track1, track2, track3, track4, track5]
+    on_failure: *failure-alert
+    plan:
+      - in_parallel:
+        - get: resource-src
+          trigger: true
+          passed: [push-test-image]
+        - get: terraform-test-image
+          passed: [push-test-image]
       - task: wait-for-resource-type-to-update
-        image: terraform-dev-image
+        image: terraform-test-image
         config:
           platform: linux
           run:
             path: sleep
             args:
-              - 120 # concourse updates resource images every minute
+              - "300" # concourse updates resource images every couple minutes
 
   - name: create-env-with-s3-backend
     serial_groups: [track1]
@@ -110,7 +122,7 @@ jobs:
     plan:
       - get: resource-src
         trigger: true
-        passed: [push-test-image]
+        passed: [wait-for-test-image]
       - put: terraform
         resource: terraform-s3-backend
         params:
@@ -177,7 +189,7 @@ jobs:
     plan:
       - get: resource-src
         trigger: true
-        passed: [push-test-image]
+        passed: [wait-for-test-image]
       - put: terraform
         resource: terraform-gcs-backend
         params:
@@ -211,7 +223,7 @@ jobs:
     plan:
       - get: resource-src
         trigger: true
-        passed: [push-test-image]
+        passed: [wait-for-test-image]
       - put: terraform
         resource: terraform-s3-backend
         params:
@@ -277,7 +289,7 @@ jobs:
     plan:
       - get: resource-src
         trigger: true
-        passed: [push-test-image]
+        passed: [wait-for-test-image]
       - put: terraform
         resource: terraform-legacy-storage
         params:
@@ -327,7 +339,7 @@ jobs:
     plan:
       - get: resource-src
         trigger: true
-        passed: [push-test-image]
+        passed: [wait-for-test-image]
       - put: terraform
         resource: terraform-s3-backend
         params:
@@ -375,28 +387,52 @@ jobs:
       - get: resource-src
         passed: [destroy-env-with-s3-backend, destroy-env-with-gcs-backend, destroy-env-and-lock, destroy-migrated-env, destroy-plan-env]
         trigger: true
-      - aggregate:
-        - put: terraform-pinned-image
-          params:
-            pull_repository: ljfranklin/terraform-resource
-            pull_tag: test
-            cache: true
-            tag: resource-src/config/terraform-version
-        - put: terraform-prod-image
-          params:
-            pull_repository: ljfranklin/terraform-resource
-            pull_tag: test
-            cache: true
+      - task: write-docker-metadata-files
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: ljfranklin/terraform-resource
+              tag: dev
+          inputs:
+            - name: resource-src
+          outputs:
+            - name: docker-metadata
+          run:
+            path: /bin/bash
+            args:
+              - "-c"
+              - |
+                  TF_VERSION="$(cat resource-src/config/terraform-version)"
+                  SHA="$(cat resource-src/.git/short_ref)"
+                  echo "${TF_VERSION} ${TF_VERSION}-${SHA}" > docker-metadata/tags
+                  echo "{\"terraform_version\": \"${TF_VERSION}\"}" > docker-metadata/labels
+      - task: build-artifacts
+        file: resource-src/ci/tasks/build-prod-artifacts.yml
+      - put: terraform-prod-image
+        params:
+          build: build-artifacts/
+          tag_as_latest: true
+          additional_tags: docker-metadata/tags
+          labels_file: docker-metadata/labels
+          buildx_platforms: "linux/amd64,linux/arm64"
 
 resource_types:
-- name: terraform
-  type: docker-image
+- name: docker-buildx
+  type: registry-image
+  privileged: true
+  source:
+    repository: ljfranklin/docker-buildx-resource
+    tag: latest
+- name: terraform-test
+  type: registry-image
   source:
     # use tag `latest` for stable release
     repository: ljfranklin/terraform-resource
     tag: test
 - name: slack-notification
-  type: docker-image
+  type: registry-image
   source:
     repository: cfcommunity/slack-notification-resource
     tag: latest
@@ -415,7 +451,7 @@ resources:
     repository: terraform
     access_token: {{github_access_token}}
 - name: terraform-dev-image
-  type: docker-image
+  type: docker-buildx
   source:
     repository: ljfranklin/terraform-resource
     tag: dev
@@ -423,22 +459,15 @@ resources:
     username: {{docker_username}}
     password: {{docker_password}}
 - name: terraform-test-image
-  type: docker-image
+  type: docker-buildx
   source:
     repository: ljfranklin/terraform-resource
     tag: test
     email: {{docker_email}}
     username: {{docker_username}}
     password: {{docker_password}}
-- name: terraform-pinned-image
-  type: docker-image
-  source:
-    repository: ljfranklin/terraform-resource
-    email: {{docker_email}}
-    username: {{docker_username}}
-    password: {{docker_password}}
 - name: terraform-prod-image
-  type: docker-image
+  type: docker-buildx
   source:
     repository: ljfranklin/terraform-resource
     tag: latest
@@ -453,7 +482,7 @@ resources:
     pool: aws-ci-pool
     private_key: {{git_private_key}}
 - name: terraform-s3-backend
-  type: terraform
+  type: terraform-test
   source:
     backend_type: s3
     backend_config:
@@ -469,12 +498,11 @@ resources:
       secret_key:  {{ec2_secret_key}}
       bucket:      {{storage_bucket}}
 - name: terraform-gcs-backend
-  type: terraform
+  type: terraform-test
   source:
     backend_type: gcs
     backend_config:
       bucket: {{gcs_bucket}}
-      region: {{gcs_region}}
       credentials: {{gcs_credentials_json}}
       prefix: terraform-backend-ci
     terraform_source: resource-src/fixtures/aws
@@ -483,7 +511,7 @@ resources:
       secret_key:  {{ec2_secret_key}}
       bucket:      {{storage_bucket}}
 - name: terraform-migrated-backend
-  type: terraform
+  type: terraform-test
   source:
     backend_type: s3
     backend_config:
@@ -504,7 +532,7 @@ resources:
       secret_key:  {{ec2_secret_key}}
       bucket:      {{storage_bucket}}
 - name: terraform-legacy-storage
-  type: terraform
+  type: terraform-test
   source:
     storage:
       access_key_id:     {{storage_access_key}}

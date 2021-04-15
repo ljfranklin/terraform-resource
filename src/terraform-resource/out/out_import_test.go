@@ -1,15 +1,16 @@
 package out_test
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
 
-	"terraform-resource/models"
-	"terraform-resource/out"
-	"terraform-resource/test/helpers"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/out"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -43,6 +44,9 @@ var _ = Describe("Out Import", func() {
 
 		fixturesDir := path.Join(helpers.ProjectRoot(), "fixtures")
 		err = exec.Command("cp", "-r", fixturesDir, workingDir).Run()
+		Expect(err).ToNot(HaveOccurred())
+
+		err = helpers.DownloadStatefulPlugin(workingDir)
 		Expect(err).ToNot(HaveOccurred())
 	})
 
@@ -118,5 +122,62 @@ var _ = Describe("Out Import", func() {
 			bucket,
 			s3ObjectPath,
 		)
+	})
+
+	It("imports the existing resource during plan", func() {
+		awsVerifier.ExpectS3BucketToExist(bucket)
+
+		importsFilePath := path.Join(workingDir, "imports")
+		importsFileContents := fmt.Sprintf("aws_s3_bucket.bucket: %s", bucket)
+		err := ioutil.WriteFile(importsFilePath, []byte(importsFileContents), 0700)
+		Expect(err).ToNot(HaveOccurred())
+
+		By("Ensuring that an existing bucket is imported prior to plan")
+
+		importRequest := models.OutRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					PlanOnly: true,
+					ImportFiles: []string{
+						importsFilePath,
+					},
+					Source: "fixtures/import/",
+					Env: map[string]string{
+						"HOME": workingDir, // in prod plugin is installed system-wide
+					},
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		logs := bytes.Buffer{}
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: &logs,
+		}
+		_, err = runner.Run(importRequest)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(logs.String()).To(ContainSubstring("Importing `aws_s3_bucket.bucket"))
 	})
 })

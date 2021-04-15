@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"terraform-resource/in"
-	"terraform-resource/models"
-	"terraform-resource/test/helpers"
+	"github.com/ljfranklin/terraform-resource/in"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -213,6 +213,58 @@ var _ = Describe("In with Backend", func() {
 			_, err := runner.Run(inReq)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp("output_module"))
+		})
+
+		It("sets env variables from `source.terraform` and `get.params.terraform`", func() {
+			inReq.Params.Terraform.BackendConfig = inReq.Source.Terraform.BackendConfig
+			inReq.Source.Terraform.BackendConfig = nil // will be overridden by get params
+			inReq.Version = models.Version{
+				EnvName: prevEnvName,
+				Serial:  "0",
+			}
+
+			runner := in.Runner{
+				OutputDir: tmpDir,
+			}
+			_, err := runner.Run(inReq)
+			Expect(err).ToNot(HaveOccurred())
+
+			expectedOutputPath := path.Join(tmpDir, "metadata")
+			Expect(expectedOutputPath).To(BeAnExistingFile())
+		})
+
+		Context("when 'default' workspace contains custom plugins", func() {
+			var pathToDefaultS3Fixture string
+
+			BeforeEach(func() {
+				// S3 backend ignores workspace_key_prefix/key for 'default' workspace.
+				// Unfortunately this makes this test vulnerable to test pollution.
+				pathToDefaultS3Fixture = "terraform.tfstate"
+
+				defaultFixture, err := os.Open(helpers.FileLocation("fixtures/custom-plugin-backend/terraform.tfstate"))
+				Expect(err).ToNot(HaveOccurred())
+				defer defaultFixture.Close()
+				awsVerifier.UploadObjectToS3(bucket, pathToDefaultS3Fixture, defaultFixture)
+			})
+
+			AfterEach(func() {
+				awsVerifier.DeleteObjectFromS3(bucket, pathToDefaultS3Fixture)
+			})
+
+			It("fetches the state file without trying to download plugins", func() {
+				inReq.Version = models.Version{
+					EnvName: prevEnvName,
+					Serial:  "0",
+				}
+
+				runner := in.Runner{
+					OutputDir: tmpDir,
+				}
+				resp, err := runner.Run(inReq)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(resp.Version.EnvName).To(Equal(prevEnvName))
+			})
 		})
 	})
 

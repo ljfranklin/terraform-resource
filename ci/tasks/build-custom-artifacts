@@ -5,11 +5,18 @@ set -eu -o pipefail
 release_dir="$( cd "$( dirname "$0" )" && cd ../.. && pwd )"
 workspace_dir="$( cd "${release_dir}" && cd .. && pwd )"
 
+# env
+: ${TARGETARCH:=amd64}
+
 # inputs
 terraform_input_dir="$( cd "${workspace_dir}/terraform-src" && pwd )"
 
 # outputs
-output_dir="${workspace_dir}/build-artifacts"
+if [ "$#" -eq 1 ]; then
+  output_dir="$1"
+else
+  output_dir="${workspace_dir}/build-artifacts"
+fi
 mkdir -p "${output_dir}/terraform/"
 
 tmp_gopath="$(mktemp -d /tmp/gopath-XXXXXX)"
@@ -22,9 +29,8 @@ cp -R "${terraform_input_dir}/." "${terraform_dir}"
 pushd "${terraform_dir}" > /dev/null
   export GOPATH="${tmp_gopath}" PATH="${tmp_gopath}/bin:$PATH"
 
-  make tools
-  XC_OS="linux" XC_ARCH="amd64" make bin
-  cp ./pkg/linux_amd64/terraform* "${output_dir}/terraform/"
+  XC_OS="linux" XC_ARCH="${TARGETARCH}" TF_RELEASE="1" ./scripts/build.sh
+  cp ./pkg/linux_${TARGETARCH}/terraform* "${output_dir}/terraform/"
 popd > /dev/null
 
 pushd "${release_dir}" > /dev/null

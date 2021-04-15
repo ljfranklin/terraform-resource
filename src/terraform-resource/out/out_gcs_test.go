@@ -7,10 +7,10 @@ import (
 	"os/exec"
 	"path"
 
-	"terraform-resource/models"
-	"terraform-resource/namer/namerfakes"
-	"terraform-resource/out"
-	"terraform-resource/test/helpers"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/namer/namerfakes"
+	"github.com/ljfranklin/terraform-resource/out"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

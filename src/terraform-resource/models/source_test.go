@@ -1,8 +1,8 @@
 package models_test
 
 import (
-	"terraform-resource/models"
-	"terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/storage"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"

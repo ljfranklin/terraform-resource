@@ -8,12 +8,12 @@ import (
 	"os"
 	"path"
 
-	"terraform-resource/logger"
-	"terraform-resource/models"
-	"terraform-resource/namer"
-	"terraform-resource/ssh"
-	"terraform-resource/storage"
-	"terraform-resource/terraform"
+	"github.com/ljfranklin/terraform-resource/logger"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/namer"
+	"github.com/ljfranklin/terraform-resource/ssh"
+	"github.com/ljfranklin/terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/terraform"
 )
 
 type Runner struct {
@@ -26,9 +26,14 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 	if err := req.Source.Validate(); err != nil {
 		return models.OutResponse{}, err
 	}
+	tmpDir, err := ioutil.TempDir(os.TempDir(), "terraform-resource-out")
+	if err != nil {
+		return models.OutResponse{}, fmt.Errorf("Failed to create tmp dir at '%s'", os.TempDir())
+	}
+	defer os.RemoveAll(tmpDir)
 
 	req.Source.Terraform = req.Source.Terraform.Merge(req.Params.Terraform)
-	terraformModel, err := r.buildTerraformModel(req)
+	terraformModel, err := r.buildTerraformModel(req, tmpDir)
 	if err != nil {
 		return models.OutResponse{}, err
 	}
@@ -47,6 +52,11 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		if err = os.Setenv("SSH_AUTH_SOCK", agent.SSHAuthSock()); err != nil {
 			return models.OutResponse{}, err
 		}
+	}
+
+	if req.Source.BackendType == "local" {
+		return models.OutResponse{},
+			errors.New("backend type 'local' is not supported, Concourse requires that state is persisted outside the container; use one of the other backend types listed here: https://www.terraform.io/docs/backends/types/index.html")
 	}
 
 	if req.Source.BackendType != "" && req.Source.MigratedFromStorage != (storage.Model{}) {
@@ -71,6 +81,7 @@ func (r Runner) runWithBackend(req models.OutRequest, terraformModel models.Terr
 
 	terraformModel.Env["TF_VAR_env_name"] = envName
 	terraformModel.PlanFileLocalPath = path.Join(tmpDir, "plan")
+	terraformModel.JSONPlanFileLocalPath = path.Join(tmpDir, "plan.json")
 
 	client := terraform.NewClient(
 		terraformModel,
@@ -221,6 +232,7 @@ func (r Runner) runWithMigratedFromStorage(req models.OutRequest, terraformModel
 
 	terraformModel.Env["TF_VAR_env_name"] = envName
 	terraformModel.PlanFileLocalPath = path.Join(tmpDir, "plan")
+	terraformModel.JSONPlanFileLocalPath = path.Join(tmpDir, "plan.json")
 
 	client := terraform.NewClient(
 		terraformModel,
@@ -313,14 +325,14 @@ func (r Runner) buildEnvNameFromMigrated(req models.OutRequest, terraformModel m
 	return namer.EnvName()
 }
 
-func (r Runner) buildTerraformModel(req models.OutRequest) (models.Terraform, error) {
+func (r Runner) buildTerraformModel(req models.OutRequest, tmpDir string) (models.Terraform, error) {
 	terraformModel := req.Source.Terraform
 	if terraformModel.VarFiles != nil {
 		for i := range terraformModel.VarFiles {
 			terraformModel.VarFiles[i] = path.Join(r.SourceDir, terraformModel.VarFiles[i])
 		}
 	}
-	if err := terraformModel.ParseVarsFromFiles(); err != nil {
+	if err := terraformModel.ConvertVarFiles(tmpDir); err != nil {
 		return models.Terraform{}, fmt.Errorf("Failed to parse `terraform.var_files`: %s", err)
 	}
 	if err := terraformModel.ParseImportsFromFile(); err != nil {
@@ -337,6 +349,8 @@ func (r Runner) buildTerraformModel(req models.OutRequest) (models.Terraform, er
 	terraformModel.Env["TF_VAR_build_pipeline_name"] = os.Getenv("BUILD_PIPELINE_NAME")
 	terraformModel.Env["TF_VAR_build_team_name"] = os.Getenv("BUILD_TEAM_NAME")
 	terraformModel.Env["TF_VAR_atc_external_url"] = os.Getenv("ATC_EXTERNAL_URL")
+
+	terraformModel.DownloadPlugins = true
 
 	return terraformModel, nil
 }

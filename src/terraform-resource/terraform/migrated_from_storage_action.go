@@ -3,9 +3,9 @@ package terraform
 import (
 	"fmt"
 	"strconv"
-	"terraform-resource/logger"
-	"terraform-resource/models"
-	"terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/logger"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/storage"
 )
 
 type MigratedFromStorageAction struct {
@@ -268,7 +268,13 @@ func (a *MigratedFromStorageAction) attemptPlan() (Result, error) {
 		}
 	}
 
-	if err := a.Client.Plan(); err != nil {
+	planChecksum, err := a.Client.Plan()
+	if err != nil {
+		return Result{}, err
+	}
+
+	err = a.Client.JSONPlan()
+	if err != nil {
 		return Result{}, err
 	}
 
@@ -279,7 +285,8 @@ func (a *MigratedFromStorageAction) attemptPlan() (Result, error) {
 	return Result{
 		Output: map[string]map[string]interface{}{},
 		Version: models.Version{
-			EnvName: a.EnvName,
+			EnvName:      a.EnvName,
+			PlanChecksum: planChecksum,
 		},
 	}, nil
 }

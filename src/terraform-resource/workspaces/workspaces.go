@@ -1,7 +1,7 @@
 package workspaces
 
 import (
-	"terraform-resource/terraform"
+	"github.com/ljfranklin/terraform-resource/terraform"
 )
 
 type Workspaces struct {

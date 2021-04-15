@@ -5,7 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/storage"
 )
 
 var _ = Describe("Storage Models", func() {

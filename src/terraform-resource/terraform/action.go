@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"terraform-resource/logger"
-	"terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/logger"
+	"github.com/ljfranklin/terraform-resource/models"
 )
 
 type Action struct {
@@ -106,8 +106,10 @@ func (a *Action) attemptApply() (Result, error) {
 		return Result{}, err
 	}
 
-	if err := a.Client.Import(a.EnvName); err != nil {
-		return Result{}, err
+	if !a.Model.PlanRun {
+		if err := a.Client.Import(a.EnvName); err != nil {
+			return Result{}, err
+		}
 	}
 
 	if err := a.Client.Apply(); err != nil {
@@ -210,18 +212,29 @@ func (a *Action) attemptPlan() (Result, error) {
 		return Result{}, err
 	}
 
-	if err := a.Client.Plan(); err != nil {
+	if err := a.Client.Import(a.EnvName); err != nil {
 		return Result{}, err
 	}
 
-	if err := a.Client.SavePlanToBackend(a.planNameForEnv()); err != nil {
+	checksum, err := a.Client.Plan()
+	if err != nil {
+		return Result{}, err
+	}
+
+	err = a.Client.JSONPlan()
+	if err != nil {
+		return Result{}, err
+	}
+
+	if err = a.Client.SavePlanToBackend(a.planNameForEnv()); err != nil {
 		return Result{}, err
 	}
 
 	return Result{
 		Output: map[string]map[string]interface{}{},
 		Version: models.Version{
-			EnvName: a.EnvName,
+			EnvName:      a.EnvName,
+			PlanChecksum: checksum,
 		},
 	}, nil
 }

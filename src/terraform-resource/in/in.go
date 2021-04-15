@@ -1,6 +1,8 @@
 package in
 
 import (
+	"compress/gzip"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -8,12 +10,13 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
-	"terraform-resource/encoder"
-	"terraform-resource/logger"
-	"terraform-resource/models"
-	"terraform-resource/storage"
-	"terraform-resource/terraform"
+	"github.com/ljfranklin/terraform-resource/encoder"
+	"github.com/ljfranklin/terraform-resource/logger"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/terraform"
 )
 
 type Runner struct {
@@ -87,14 +90,7 @@ func (r Runner) inWithMigratedFromStorage(req models.InRequest, tmpDir string) (
 }
 
 func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InResponse, error) {
-	if req.Version.IsPlan() {
-		resp := models.InResponse{
-			Version: req.Version,
-		}
-		return resp, nil
-	}
-
-	terraformModel := req.Source.Terraform
+	terraformModel := req.Source.Terraform.Merge(req.Params.Terraform)
 	if err := terraformModel.Validate(); err != nil {
 		return models.InResponse{}, fmt.Errorf("Failed to validate terraform Model: %s", err)
 	}
@@ -114,6 +110,34 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 		return models.InResponse{}, err
 	}
 
+	if req.Version.IsPlan() {
+		if req.Params.OutputJSONPlanfile {
+			if err := r.writeJSONPlanToFile(targetEnvName+"-plan", client); err != nil {
+				return models.InResponse{}, err
+			}
+		}
+
+		// HACK: Attempt to download a statefile if one exists, but silently ignore
+		// any errors on failure. This is a workaround for an intermittent issue
+		// where generating and applying a plan within the same job will incorrectly
+		// mark the plan run as the latest version. This results in missing `metadata`
+		// file on subsequent `get` calls. Issue:
+		// https://github.com/ljfranklin/terraform-resource/issues/136. A better long-term
+		// fix would be to make `check` more robust by updating Terraform to record
+		// timestamps in the statefile: https://github.com/hashicorp/terraform/issues/15950.
+		_, _ = r.writeBackendOutputs(req, targetEnvName, client)
+
+		resp := models.InResponse{
+			Version: req.Version,
+		}
+
+		return resp, nil
+	}
+
+	return r.writeBackendOutputs(req, targetEnvName, client)
+}
+
+func (r Runner) writeBackendOutputs(req models.InRequest, targetEnvName string, client terraform.Client) (models.InResponse, error) {
 	if err := r.ensureEnvExistsInBackend(targetEnvName, client); err != nil {
 		return models.InResponse{}, err
 	}
@@ -135,7 +159,6 @@ func (r Runner) inWithBackend(req models.InRequest, tmpDir string) (models.InRes
 			return models.InResponse{}, err
 		}
 	}
-
 	stateVersion, err := client.CurrentStateVersion(targetEnvName)
 	if err != nil {
 		return models.InResponse{}, err
@@ -206,6 +229,48 @@ func (r Runner) writeBackendStateToFile(envName string, client terraform.Client)
 		return err
 	}
 	return ioutil.WriteFile(stateFilePath, stateContents, 0777)
+}
+
+func (r Runner) writeJSONPlanToFile(envName string, client terraform.Client) error {
+	tfOutput, err := client.Output(envName)
+	if err != nil {
+		return err
+	}
+
+	planFilePath := path.Join(r.OutputDir, "plan.json")
+
+	var encodedPlan string
+	if val, ok := tfOutput[models.PlanContentJSON]; ok {
+		encodedPlan = val["value"].(string)
+	} else {
+		return fmt.Errorf("state has no output for key %s", models.PlanContentJSON)
+	}
+
+	// Base64 decode then gunzip the JSON plan
+	rawPlanReader := strings.NewReader(encodedPlan)
+	decodedReader := base64.NewDecoder(base64.StdEncoding, rawPlanReader)
+	zr, err := gzip.NewReader(decodedReader)
+	if err != nil {
+		return err
+	}
+	outputFile, err := os.OpenFile(planFilePath, os.O_RDWR|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+
+	if _, err := io.Copy(outputFile, zr); err != nil {
+		return err
+	}
+
+	if err := zr.Close(); err != nil {
+		return err
+	}
+
+	if err := outputFile.Close(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r Runner) writeLegacyStateToFile(localStatefilePath string) error {

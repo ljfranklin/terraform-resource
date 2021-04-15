@@ -5,14 +5,38 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
+	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
+)
+
+const (
+	// customRetryerMinRetryDelay sets min retry delay
+	customRetryerMinRetryDelay = 1 * time.Second
+
+	// customRetryerMaxRetryDelay sets max retry delay
+	customRetryerMaxRetryDelay = 8 * time.Second
 )
 
 func init() {
 	initRequest = func(r *request.Request) {
 		if r.Operation.Name == opCopySnapshot { // fill the PresignedURL parameter
 			r.Handlers.Build.PushFront(fillPresignedURL)
+		}
+
+		// only set the retryer on request if config doesn't have a retryer
+		if r.Config.Retryer == nil && (r.Operation.Name == opModifyNetworkInterfaceAttribute || r.Operation.Name == opAssignPrivateIpAddresses) {
+			maxRetries := client.DefaultRetryerMaxNumRetries
+			if m := r.Config.MaxRetries; m != nil && *m != aws.UseServiceDefaultRetries {
+				maxRetries = *m
+			}
+			r.Retryer = client.DefaultRetryer{
+				NumMaxRetries:    maxRetries,
+				MinRetryDelay:    customRetryerMinRetryDelay,
+				MinThrottleDelay: customRetryerMinRetryDelay,
+				MaxRetryDelay:    customRetryerMaxRetryDelay,
+				MaxThrottleDelay: customRetryerMaxRetryDelay,
+			}
 		}
 	}
 }

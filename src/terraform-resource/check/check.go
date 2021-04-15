@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"time"
 
-	"terraform-resource/workspaces"
+	"github.com/ljfranklin/terraform-resource/workspaces"
 
-	"terraform-resource/models"
-	"terraform-resource/storage"
-	"terraform-resource/terraform"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/terraform"
 )
 
 type Runner struct {

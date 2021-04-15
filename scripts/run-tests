@@ -5,10 +5,9 @@ set -eu -o pipefail
 release_dir="$( cd "$( dirname "$0" )" && cd .. && pwd )"
 src_dir="$( cd "${release_dir}/src/terraform-resource/" && pwd )"
 
-source "${release_dir}/.envrc"
-
 pushd "${src_dir}" > /dev/null
   set -x
+  # flakeAttempts to temporarily work around S3 eventual consistency issues
   ginkgo \
     -r \
     -p \
@@ -16,6 +15,7 @@ pushd "${src_dir}" > /dev/null
     -randomizeAllSpecs \
     -randomizeSuites \
     -slowSpecThreshold 30 \
+    -flakeAttempts 2 \
     "$@"
   set +x
 popd > /dev/null

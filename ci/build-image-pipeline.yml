@@ -21,7 +21,7 @@ jobs:
   - name: push-custom-image
     plan:
       - do:
-        - aggregate:
+        - in_parallel:
           # - get: nightly
           #   trigger: true
           - get: terraform-src
@@ -32,10 +32,17 @@ jobs:
         - put: resource-custom-image
           params:
             build: build-artifacts/
+            buildx_platforms: "linux/amd64,linux/arm64"
         # on_success: *success-alert
         # on_failure: *failure-alert
 
 resource_types:
+- name: docker-buildx
+  type: docker-image
+  privileged: true
+  source:
+    repository: ljfranklin/docker-buildx-resource
+    tag: latest
 - name: slack-notification
   type: docker-image
   source:
@@ -46,22 +53,22 @@ resources:
 - name: resource-src
   type: git
   source:
-    uri: {{resource_git_uri}}
-    branch: {{resource_git_branch}}
+    uri: ((resource_git_uri))
+    branch: ((resource_git_branch))
 - name: terraform-src
   type: git
   source:
-    uri: {{terraform_git_uri}}
-    branch: {{terraform_git_branch}}
-    tag_filter: {{terraform_git_tag_filter}}
+    uri: ((terraform_git_uri))
+    branch: ((terraform_git_branch))
+    tag_filter: ((terraform_git_tag_filter))
 - name: resource-custom-image
-  type: docker-image
+  type: docker-buildx
   source:
-    repository: {{docker_repository}}
-    tag: {{docker_tag}}
-    email: {{docker_email}}
-    username: {{docker_username}}
-    password: {{docker_password}}
+    repository: ((docker_repository))
+    tag: ((docker_tag))
+    email: ((docker_email))
+    username: ((docker_username))
+    password: ((docker_password))
 # - name: nightly
 #   type: time
 #   source:
@@ -70,4 +77,4 @@ resources:
 # - name: slack-alert
 #   type: slack-notification
 #   source:
-#     url: {{slack_url}}
+#     url: ((slack_url))

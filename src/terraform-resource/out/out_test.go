@@ -11,12 +11,12 @@ import (
 	"strconv"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/namer/namerfakes"
+	"github.com/ljfranklin/terraform-resource/out"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 
-	"terraform-resource/models"
-	"terraform-resource/namer/namerfakes"
-	"terraform-resource/out"
-	"terraform-resource/test/helpers"
+	yaml "gopkg.in/yaml.v2"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -41,16 +41,18 @@ var _ = Describe("Out", func() {
 		workspacePath     string
 	)
 
-	BeforeEach(func() {
-		region := os.Getenv("AWS_REGION") // optional
-		if region == "" {
-			region = "us-east-1"
-		}
+	region := os.Getenv("AWS_REGION") // optional
+	if region == "" {
+		region = "us-east-1"
+	}
 
+	stateFileName := "terraform.tfstate"
+
+	BeforeEach(func() {
 		workspacePath = helpers.RandomString("out-backend-test")
 
 		envName = helpers.RandomString("out-test")
-		stateFilePath = path.Join(workspacePath, envName, "terraform.tfstate")
+		stateFilePath = path.Join(workspacePath, envName, stateFileName)
 		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-test"))
 
 		os.Setenv("BUILD_ID", "sample-build-id")
@@ -63,7 +65,7 @@ var _ = Describe("Out", func() {
 		backendType = "s3"
 		backendConfig = map[string]interface{}{
 			"bucket":               bucket,
-			"key":                  "terraform.tfstate",
+			"key":                  stateFileName,
 			"access_key":           accessKey,
 			"secret_key":           secretKey,
 			"region":               region,
@@ -94,6 +96,66 @@ var _ = Describe("Out", func() {
 		_ = os.RemoveAll(workingDir)
 		awsVerifier.DeleteObjectFromS3(bucket, s3ObjectPath)
 		awsVerifier.DeleteObjectFromS3(bucket, stateFilePath)
+	})
+
+	applyAndDestroyInWorkspace := func(workspace string) {
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: &logWriter,
+			Namer:     &namer,
+		}
+
+		req := models.OutRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":     bucket,
+						"access_key": accessKey,
+						"secret_key": secretKey,
+						"region":     region,
+						"key":        stateFileName,
+					},
+				},
+			},
+			Params: models.OutParams{
+				Action: "plan",
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"region":         region,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+					},
+				},
+			},
+		}
+
+		req.Params.EnvName = workspace
+
+		_, err := runner.Run(req)
+		Expect(err).ToNot(HaveOccurred())
+
+		req.Params.Action = models.DestroyAction
+
+		_, err = runner.Run(req)
+		Expect(err).ToNot(HaveOccurred())
+	}
+
+	It("deletes a non default workspace", func() {
+		workspace := "non-default"
+		applyAndDestroyInWorkspace(workspace)
+
+		statePath := path.Join(workspace, stateFileName)
+		awsVerifier.ExpectS3FileToNotExist(bucket, statePath)
+	})
+
+	It("does not delete the default workspace", func() {
+		applyAndDestroyInWorkspace("default")
+		awsVerifier.ExpectS3FileToExist(bucket, stateFileName)
 	})
 
 	It("creates IaaS resources from a local terraform source", func() {
@@ -396,7 +458,13 @@ var _ = Describe("Out", func() {
 object = {
 	key = "%s"
 	content = "terraform-files-are-neat"
-}`, s3ObjectPath)
+}
+map_of_maps = {
+	another_map = {
+		key = "value"
+	}
+}
+`, s3ObjectPath)
 				_, err = varFile.Write([]byte(tfvarsContent))
 				Expect(err).ToNot(HaveOccurred())
 			})
@@ -407,7 +475,7 @@ object = {
 						Terraform: models.Terraform{
 							BackendType:   backendType,
 							BackendConfig: backendConfig,
-							Source:        "fixtures/aws-map/",
+							Source:        "fixtures/aws-map-of-maps/",
 							Vars: map[string]interface{}{
 								"access_key": accessKey,
 								"secret_key": secretKey,
@@ -847,6 +915,41 @@ object = {
 		}
 
 		assertOutBehavior(req, expectedMetadata)
+	})
+
+	It("errors if 'local' backend is given", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					BackendType:   "local",
+					BackendConfig: map[string]interface{}{},
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "fixtures/aws/",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: &bytes.Buffer{},
+			Namer:     &namer,
+		}
+		_, err := runner.Run(req)
+
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("local"))
 	})
 
 	Context("when bucket contains a state file", func() {

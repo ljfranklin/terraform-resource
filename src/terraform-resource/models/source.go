@@ -2,7 +2,7 @@ package models
 
 import (
 	"errors"
-	"terraform-resource/storage"
+	"github.com/ljfranklin/terraform-resource/storage"
 )
 
 type Source struct {

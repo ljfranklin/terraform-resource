@@ -1,22 +1,18 @@
 package out_test
 
 import (
-	"archive/zip"
 	"crypto/md5"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"runtime"
 
-	"terraform-resource/models"
-	"terraform-resource/out"
-	"terraform-resource/storage"
-	"terraform-resource/test/helpers"
+	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/out"
+	"github.com/ljfranklin/terraform-resource/test/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -31,13 +27,16 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		s3ObjectPath  string
 		workingDir    string
 		pluginDir     string
+		workspacePath string
 	)
 
 	BeforeEach(func() {
+		workspacePath = helpers.RandomString("out-backend-test")
+
 		envName = helpers.RandomString("out-test")
-		stateFilePath = path.Join(bucketPath, fmt.Sprintf("%s.tfstate", envName))
-		planFilePath = path.Join(bucketPath, fmt.Sprintf("%s.plan", envName))
-		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-lifecycle"))
+		stateFilePath = path.Join(workspacePath, envName, "terraform.tfstate")
+		planFilePath = path.Join(workspacePath, fmt.Sprintf("%s-plan", envName), "terraform.tfstate")
+		s3ObjectPath = path.Join(bucketPath, helpers.RandomString("out-test"))
 
 		var err error
 		workingDir, err = ioutil.TempDir(os.TempDir(), "terraform-resource-out-test")
@@ -47,7 +46,18 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		awsProviderURL := fmt.Sprintf("https://releases.hashicorp.com/terraform-provider-aws/2.9.0/terraform-provider-aws_2.9.0_%s_%s.zip", runtime.GOOS, runtime.GOARCH)
-		err = downloadPlugins(pluginDir, awsProviderURL)
+		awsPluginDir := path.Join(pluginDir, "registry.terraform.io", "hashicorp", "aws", "2.9.0", fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
+		err = os.MkdirAll(awsPluginDir, 0700)
+		Expect(err).ToNot(HaveOccurred())
+		err = helpers.DownloadPlugins(awsPluginDir, awsProviderURL)
+		Expect(err).ToNot(HaveOccurred())
+		// In production image the stateful provider is installed in system-wide location, but manually install
+		// this plugin in plugin dir to avoid needing to run tests as root.
+		statefulProviderURL := fmt.Sprintf("https://github.com/ashald/terraform-provider-stateful/releases/download/v1.2.0/terraform-provider-stateful_v1.2.0-%s-%s.zip", runtime.GOOS, runtime.GOARCH)
+		statefulPluginDir := path.Join(pluginDir, "github.com", "ashald", "stateful", "1.2.0", fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
+		err = os.MkdirAll(statefulPluginDir, 0700)
+		Expect(err).ToNot(HaveOccurred())
+		err = helpers.DownloadPlugins(statefulPluginDir, statefulProviderURL)
 		Expect(err).ToNot(HaveOccurred())
 
 		// ensure relative paths resolve correctly
@@ -70,12 +80,16 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 	It("plan infrastructure and apply it", func() {
 		planOutRequest := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
@@ -98,12 +112,16 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 
 		applyRequest := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
@@ -124,13 +142,6 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		}
 		_, err := planrunner.Run(planOutRequest)
 		Expect(err).ToNot(HaveOccurred())
-
-		By("ensuring state file does not already exist")
-
-		awsVerifier.ExpectS3FileToNotExist(
-			applyRequest.Source.Storage.Bucket,
-			stateFilePath,
-		)
 
 		By("applying the plan")
 
@@ -153,7 +164,7 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		Expect(fields["content_md5"]).To(Equal(expectedMD5))
 
 		awsVerifier.ExpectS3FileToExist(
-			applyRequest.Source.Storage.Bucket,
+			bucket,
 			s3ObjectPath,
 		)
 	})
@@ -161,12 +172,16 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 	It("creates, updates, and deletes infrastructure", func() {
 		outRequest := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
@@ -205,7 +220,7 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		Expect(fields["content_md5"]).To(Equal(expectedMD5))
 
 		awsVerifier.ExpectS3FileToExist(
-			outRequest.Source.Storage.Bucket,
+			bucket,
 			s3ObjectPath,
 		)
 
@@ -216,7 +231,7 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		awsVerifier.ExpectS3FileToNotExist(
-			outRequest.Source.Storage.Bucket,
+			bucket,
 			s3ObjectPath,
 		)
 	})
@@ -224,12 +239,16 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 	It("honors plugins stored in Terraform.Source/terraform.d/plugins", func() {
 		outRequest := models.OutRequest{
 			Source: models.Source{
-				Storage: storage.Model{
-					Bucket:          bucket,
-					BucketPath:      bucketPath,
-					AccessKeyID:     accessKey,
-					SecretAccessKey: secretKey,
-					RegionName:      region,
+				Terraform: models.Terraform{
+					BackendType: "s3",
+					BackendConfig: map[string]interface{}{
+						"bucket":               bucket,
+						"key":                  "terraform.tfstate",
+						"access_key":           accessKey,
+						"secret_key":           secretKey,
+						"region":               region,
+						"workspace_key_prefix": workspacePath,
+					},
 				},
 			},
 			Params: models.OutParams{
@@ -241,17 +260,17 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		}
 
 		customProviderURL := fmt.Sprintf("https://releases.hashicorp.com/terraform-provider-tls/2.0.1/terraform-provider-tls_2.0.1_%s_%s.zip", runtime.GOOS, runtime.GOARCH)
-		thirdPartyPluginDir := fmt.Sprintf("fixtures/custom-plugin/terraform.d/plugins/%s_%s/", runtime.GOOS, runtime.GOARCH)
+		thirdPartyPluginDir := path.Join("fixtures", "custom-plugin", "terraform.d", "plugins", "github.com", "ljfranklin", "custom", "999.999.999", fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
 		err := os.MkdirAll(thirdPartyPluginDir, 0700)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = downloadPlugins(thirdPartyPluginDir, customProviderURL)
+		err = helpers.DownloadPlugins(thirdPartyPluginDir, customProviderURL)
 		Expect(err).ToNot(HaveOccurred())
 
 		extractedFiles, err := filepath.Glob(filepath.Join(thirdPartyPluginDir, "terraform-provider-tls_*"))
 		Expect(err).ToNot(HaveOccurred())
 
-		err = os.Rename(extractedFiles[0], filepath.Join(thirdPartyPluginDir, "terraform-provider-tls_v999.999.999"))
+		err = os.Rename(extractedFiles[0], filepath.Join(thirdPartyPluginDir, "terraform-provider-custom_v999.999.999"))
 		Expect(err).ToNot(HaveOccurred())
 
 		By("running 'out' to verify custom plugin is detected")
@@ -264,53 +283,3 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		Expect(err).ToNot(HaveOccurred())
 	})
 })
-
-func downloadPlugins(pluginPath string, url string) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	zipFile, err := ioutil.TempFile("", "terraform-resource-out-test")
-	if err != nil {
-		return err
-	}
-	defer zipFile.Close()
-
-	if _, err := io.Copy(zipFile, resp.Body); err != nil {
-		return err
-	}
-
-	zipReader, err := zip.OpenReader(zipFile.Name())
-	if err != nil {
-		return err
-	}
-	defer zipReader.Close()
-
-	for _, sourceFile := range zipReader.File {
-		path := filepath.Join(pluginPath, sourceFile.Name)
-
-		reader, err := sourceFile.Open()
-		if err != nil {
-			return err
-		}
-		defer reader.Close()
-
-		writer, err := os.Create(path)
-		if err != nil {
-			return err
-		}
-		defer writer.Close()
-
-		if _, err := io.Copy(writer, reader); err != nil {
-			return err
-		}
-
-		if err := os.Chmod(path, 0700); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}

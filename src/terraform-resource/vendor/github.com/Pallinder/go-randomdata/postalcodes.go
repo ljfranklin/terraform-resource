@@ -1,10 +1,8 @@
-// Package randomdata implements a bunch of simple ways to generate (pseudo) random data
 package randomdata
 
 import (
 	"fmt"
 	"math"
-	"math/rand"
 	"strings"
 )
 
@@ -72,7 +70,7 @@ func PostalCode(countrycode string) string {
 
 	case "FI":
 		// Last digit is usually 0 but can, in some cases, be 1 or 5.
-		switch rand.Intn(2) {
+		switch privateRand.Intn(2) {
 		case 0:
 			return Digits(4) + "0"
 		case 1:
@@ -165,8 +163,11 @@ func PostalCode(countrycode string) string {
 	case "FK", "TC":
 		return Letters(4) + Digits(1) + Letters(2)
 
-	case "GG", "IM", "JE", "GB":
+	case "GG", "IM", "JE":
 		return Letters(2) + Digits(2) + Letters(2)
+
+	case "GB":
+		return Letters(2) + Digits(1) + " " + Digits(1) + Letters(2)
 
 	case "KY":
 		return Letters(2) + Digits(1) + "-" + Digits(4)
@@ -213,7 +214,7 @@ func Letters(letters int) string {
 	list := make([]byte, letters)
 
 	for i := range list {
-		list[i] = byte(rand.Intn('Z'-'A') + 'A')
+		list[i] = byte(privateRand.Intn('Z'-'A') + 'A')
 	}
 
 	return string(list)
@@ -222,7 +223,7 @@ func Letters(letters int) string {
 // Digits generates a string of N random digits, padded with zeros if necessary.
 func Digits(digits int) string {
 	max := int(math.Pow10(digits)) - 1
-	num := rand.Intn(max)
+	num := privateRand.Intn(max)
 	format := fmt.Sprintf("%%0%dd", digits)
 	return fmt.Sprintf(format, num)
 }
@@ -239,7 +240,7 @@ func BoundedDigits(digits, low, high int) string {
 		high = max
 	}
 
-	num := rand.Intn(high-low+1) + low
+	num := privateRand.Intn(high-low+1) + low
 	format := fmt.Sprintf("%%0%dd", digits)
 	return fmt.Sprintf(format, num)
 }
