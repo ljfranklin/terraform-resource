@@ -32,10 +32,10 @@ output "content_md5" {
     value = aws_s3_bucket_object.s3_object.etag
 }
 output "map" {
-    value = map(
-      "key-1", "value-1",
-      "key-2", "value-2"
-    )
+    value = tomap({
+      "key-1" = "value-1",
+      "key-2" = "value-2"
+    })
 }
 output "list" {
     value = ["item-1", "item-2"]

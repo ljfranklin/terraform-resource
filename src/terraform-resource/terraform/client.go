@@ -80,7 +80,6 @@ func (c *client) InitWithBackend() error {
 		"-get=true",
 		"-backend=true",
 		fmt.Sprintf("-backend-config=%s", backendConfigPath),
-		fmt.Sprintf("-get-plugins=%t", c.model.DownloadPlugins),
 	}
 	if c.model.PluginDir != "" {
 		initArgs = append(initArgs, fmt.Sprintf("-plugin-dir=%s", c.model.PluginDir))
@@ -89,14 +88,11 @@ func (c *client) InitWithBackend() error {
 	initCmd := c.terraformCmd(initArgs, nil)
 	var output []byte
 	if output, err = initCmd.CombinedOutput(); err != nil {
-		// Even though we tell Terraform to skip downloading plugins, it will still return
+		// Terraform 0.15.0 removes the -get-plugins=false flag, it will return
 		// an error if the user has previously uploaded a "default" workspace which uses
 		// custom provider plugins. Despite the error message the initialization has otherwise
 		// succeeded so we swallow this error.
 		if !c.model.DownloadPlugins {
-			// TODO: Terraform 0.13.0 breaks the -get-plugins=false functionality:
-			//       https://github.com/hashicorp/terraform/issues/25813. Swallow
-			//       errors related to downloading plugins until this is fixed.
 			downloadErrsToIgnore := []string{
 				"Failed to install provider",
 				"Failed to query available provider packages",
@@ -278,7 +274,7 @@ func (c *client) Destroy() error {
 	destroyArgs := []string{
 		"destroy",
 		"-backup='-'", // no need to backup state file
-		"-force",      // do not prompt for confirmation
+		"-auto-approve",      // do not prompt for confirmation
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 
