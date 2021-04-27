@@ -31,7 +31,7 @@ pushd "${tmp_dir}" > /dev/null
   echo "Verifying artifacts..."
   # verify checksum file with Hashicorp public key
   # https://www.hashicorp.com/security.html
-  gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys 51852D87348FFC4C
+  gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys 72D7468F
   gpg --verify terraform_SHA256SUMS.sig terraform_SHA256SUMS
   grep terraform_${terraform_version}_linux_${TARGETARCH}.zip terraform_SHA256SUMS | sha256sum -c -
 
