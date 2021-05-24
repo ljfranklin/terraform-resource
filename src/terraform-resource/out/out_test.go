@@ -917,6 +917,41 @@ map_of_maps = {
 		assertOutBehavior(req, expectedMetadata)
 	})
 
+	It("errors if 'terraform_source' doesn't exist", func() {
+		req := models.OutRequest{
+			Source: models.Source{
+				Terraform: models.Terraform{
+					BackendType:   backendType,
+					BackendConfig: backendConfig,
+				},
+			},
+			Params: models.OutParams{
+				EnvName: envName,
+				Terraform: models.Terraform{
+					Source: "INVALID_PATH",
+					Vars: map[string]interface{}{
+						"access_key":     accessKey,
+						"secret_key":     secretKey,
+						"bucket":         bucket,
+						"object_key":     s3ObjectPath,
+						"object_content": "terraform-is-neat",
+						"region":         region,
+					},
+				},
+			},
+		}
+
+		runner := out.Runner{
+			SourceDir: workingDir,
+			LogWriter: &bytes.Buffer{},
+			Namer:     &namer,
+		}
+		_, err := runner.Run(req)
+
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(MatchRegexp("terraform_source.*INVALID_PATH"))
+	})
+
 	It("errors if 'local' backend is given", func() {
 		req := models.OutRequest{
 			Source: models.Source{

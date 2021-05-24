@@ -38,6 +38,10 @@ func (r Runner) Run(req models.OutRequest) (models.OutResponse, error) {
 		return models.OutResponse{}, err
 	}
 
+	if _, err = os.Stat(terraformModel.Source); err != nil {
+		return models.OutResponse{}, fmt.Errorf("Failed to open 'terraform_source' directory: %v", err)
+	}
+
 	if terraformModel.PrivateKey != "" {
 		agent, err := ssh.SpawnAgent()
 		if err != nil {
