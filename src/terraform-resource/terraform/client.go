@@ -259,6 +259,10 @@ func (c *client) Apply() error {
 		applyArgs = append(applyArgs, c.model.PlanFileLocalPath)
 	}
 
+	if c.model.Parallelism > 0 {
+		applyArgs = append(applyArgs, fmt.Sprintf("-parallelism=%d", c.model.Parallelism))
+	}
+
 	applyCmd := c.terraformCmd(applyArgs, nil)
 	applyCmd.Stdout = c.logWriter
 	applyCmd.Stderr = c.logWriter
@@ -273,8 +277,8 @@ func (c *client) Apply() error {
 func (c *client) Destroy() error {
 	destroyArgs := []string{
 		"destroy",
-		"-backup='-'", // no need to backup state file
-		"-auto-approve",      // do not prompt for confirmation
+		"-backup='-'",   // no need to backup state file
+		"-auto-approve", // do not prompt for confirmation
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 

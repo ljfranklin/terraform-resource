@@ -144,6 +144,8 @@ The source file is specified with `src` and the destination directory with `dst`
 
 * `plugin_dir`: *Optional.* The path (relative to your `terraform_source`) of the directory containing plugin binaries. This overrides the default plugin directory and Terraform will not automatically fetch built-in plugins if this option is used. To preserve the automatic fetching of plugins, omit `plugin_dir` and place third-party plugins in `${terraform_source}/terraform.d/plugins`. See https://www.terraform.io/docs/configuration/providers.html#third-party-plugins for more information.
 
+* `parallelism`: *Optional. Default `10`* This int limit the number of concurrent operations Terraform will perform. See the [Terraform docs](https://www.terraform.io/docs/cli/commands/apply.html#parallelism-n) for more information.
+
 #### Put Example
 
 Every `put` action creates `name` and `metadata` files as an output containing the `env_name` and [Terraform Outputs](https://www.terraform.io/intro/getting-started/outputs.html) in JSON format.
