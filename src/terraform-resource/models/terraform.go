@@ -24,6 +24,7 @@ type Terraform struct {
 	PluginDir             string                 `json:"plugin_dir,omitempty"`            // optional
 	BackendType           string                 `json:"backend_type,omitempty"`          // optional
 	BackendConfig         map[string]interface{} `json:"backend_config,omitempty"`        // optional
+	Parallelism           int                    `json:"parallelism,omitempty"`           // optional
 	PrivateKey            string                 `json:"private_key,omitempty"`
 	PlanFileLocalPath     string                 `json:"-"` // not specified pipeline
 	JSONPlanFileLocalPath string                 `json:"-"` // not specified pipeline
@@ -137,6 +138,10 @@ func (m Terraform) Merge(other Terraform) Terraform {
 
 	if other.BackendConfig != nil {
 		m.BackendConfig = other.BackendConfig
+	}
+
+	if other.Parallelism > 0 {
+		m.Parallelism = other.Parallelism
 	}
 
 	return m
