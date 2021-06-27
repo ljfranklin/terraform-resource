@@ -277,7 +277,6 @@ var _ = Describe("JSON Plan", func() {
 		Expect(string(stateContents)).To(ContainSubstring("variables"))
 		Expect(string(stateContents)).To(ContainSubstring("output_changes"))
 		Expect(string(stateContents)).To(ContainSubstring("resource_changes"))
-		Expect(string(stateContents)).To(ContainSubstring("\"format_version\":\"0.1\""))
 	})
 
 	It("HACK: outputs metadata file if statefile exists", func() {
