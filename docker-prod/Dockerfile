@@ -3,7 +3,7 @@ FROM alpine:latest
 ARG TARGETARCH
 
 RUN apk update && \
-    apk add ca-certificates git bash openssh-client
+    apk add ca-certificates git bash openssh-client curl
 
 # this glibc compatibility module is needed for some downloaded binaries,
 # such as aws cli, to run in provisioners.
