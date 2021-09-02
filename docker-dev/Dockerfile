@@ -6,7 +6,7 @@ ARG TARGETARCH
 RUN echo '@previous http://nl.alpinelinux.org/alpine/v3.11/community' >> /etc/apk/repositories
 RUN apk update && \
    apk --no-cache add ca-certificates git bash wget gnupg zip unzip make \
-                      openssh-client build-base bzr@previous
+                      openssh-client build-base bzr@previous curl
 
 # this glibc compatibility module is needed for some downloaded binaries,
 # such as aws cli, to run in provisioners.
