@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/ljfranklin/terraform-resource/models"
+	"github.com/ljfranklin/terraform-resource/runner"
 )
 
 const defaultWorkspace = "default"
@@ -868,7 +869,7 @@ func (c *client) resourceExistsLegacyStorage(tfID string) (bool, error) {
 	return (len(strings.TrimSpace(string(rawOutput))) > 0), nil
 }
 
-func (c *client) terraformCmd(args []string, env []string) (*exec.Cmd, error) {
+func (c *client) terraformCmd(args []string, env []string) (*runner.Runner, error) {
 	cmdPath, err := exec.LookPath("terraform")
 	if err != nil {
 		return nil, err
@@ -892,5 +893,5 @@ func (c *client) terraformCmd(args []string, env []string) (*exec.Cmd, error) {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
 	}
 
-	return cmd, nil
+	return runner.New(cmd, c.logWriter), nil
 }
