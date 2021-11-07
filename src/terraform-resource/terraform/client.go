@@ -757,7 +757,8 @@ func (c *client) SavePlanToBackend(planEnvName string) error {
 	}
 	c.model.Source = tmpDir
 
-	logFile, err := os.OpenFile(path.Join(os.TempDir(), "tf-plan.log"), os.O_RDWR|os.O_CREATE, 0600)
+	logPath := path.Join(os.TempDir(), "tf-plan.log")
+	logFile, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return err
 	}
@@ -770,24 +771,27 @@ func (c *client) SavePlanToBackend(planEnvName string) error {
 		c.logWriter = origLogger
 	}()
 
+	// The /tmp/tf-plan.log file can contain credentials, so we tell the user to
+	// SSH into the container to view it rather than printing logs directly to the build logs.
+	errPrefix := "Failed to upload plan file to TF backend. Use `fly intercept` to SSH into this container and view %s for more logs. Error: %s"
 	err = c.writePlanProviderConfig(tmpDir, planContents, planContentsJSON)
 	if err != nil {
-		return err
+		return fmt.Errorf(errPrefix, logPath, err)
 	}
 
 	err = c.InitWithBackend()
 	if err != nil {
-		return err
+		return fmt.Errorf(errPrefix, logPath, err)
 	}
 
 	err = c.WorkspaceNewIfNotExists(planEnvName)
 	if err != nil {
-		return err
+		return fmt.Errorf(errPrefix, logPath, err)
 	}
 
 	err = c.Apply()
 	if err != nil {
-		return err
+		return fmt.Errorf(errPrefix, logPath, err)
 	}
 
 	return nil
