@@ -18,31 +18,33 @@ echo "Comparing Upstream and Downstream Terraform versions..."
 
 upstream_version="$( cat ${github_dir}/version )"
 downstream_version="$( cat ${release_dir}/config/terraform-version )"
-semver_regex='^([0-9]+\.[0-9]+)\.([0-9]+)$'
+semver_regex='^([0-9]+)\.([0-9]+)\.([0-9]+)$'
 
 if [[ "${upstream_version}" =~ ${semver_regex} ]]; then
-  upstream_major_minor="${BASH_REMATCH[1]}"
-  upstream_patch="${BASH_REMATCH[2]}"
+  upstream_major="${BASH_REMATCH[1]}"
+  upstream_minor="${BASH_REMATCH[2]}"
+  upstream_patch="${BASH_REMATCH[3]}"
 else
   echo "Non-semver format for upstream version '${upstream_version}'."
   exit 1
 fi
 
 if [[ "${downstream_version}" =~ ${semver_regex} ]]; then
-  downstream_major_minor="${BASH_REMATCH[1]}"
-  downstream_patch="${BASH_REMATCH[2]}"
+  downstream_major="${BASH_REMATCH[1]}"
+  downstream_minor="${BASH_REMATCH[2]}"
+  downstream_patch="${BASH_REMATCH[3]}"
 else
   echo "Non-semver format for downstream version '${downstream_version}'."
   exit 1
 fi
 
-if [[ "${upstream_major_minor}" != "${downstream_major_minor}" ]]; then
-  echo "Refusing to perform an automatic major or minor version bump to '${upstream_version}'."
+if [[ "${upstream_major}" != "${downstream_major}" ]]; then
+  echo "Refusing to perform an automatic major version bump to '${upstream_version}'."
   exit 1
 fi
 
-if [[ "${upstream_patch}" -gt "${downstream_patch}" ]]; then
-  echo "Bumping to new patch version '${upstream_version}'!"
+if [[ "${upstream_minor}" -gt "${downstream_minor}" || ("${upstream_minor}" -eq "${downstream_minor}" && "${upstream_patch}" -gt "${downstream_patch}") ]]; then
+  echo "Bumping to new version '${upstream_version}'!"
   echo -n "${upstream_version}" > "${output_dir}/config/terraform-version"
 else
   echo "Downstream version '${downstream_version}' is up-to-date!"
