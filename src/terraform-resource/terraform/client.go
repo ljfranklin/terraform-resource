@@ -250,25 +250,24 @@ func (c *client) Apply() error {
 		"-auto-approve",
 	}
 
+	// only used in non-backend flow
+	if c.model.StateFileLocalPath != "" {
+		applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.model.StateFileLocalPath))
+	}
+
 	if c.model.PlanRun == false {
 		for _, varFile := range c.model.ConvertedVarFiles {
 			applyArgs = append(applyArgs, fmt.Sprintf("-var-file=%s", varFile))
 		}
-		if c.model.StateFileLocalPath != "" {
-			applyArgs = append(applyArgs, fmt.Sprintf("-state=%s", c.model.StateFileLocalPath))
-		}
-	} else {
-		// only used in non-backend flow
-		if c.model.StateFileLocalPath != "" {
-			applyArgs = append(applyArgs, "-state=''")
-			applyArgs = append(applyArgs, fmt.Sprintf("-state-out=%s", c.model.StateFileLocalPath))
-		}
-
-		applyArgs = append(applyArgs, c.model.PlanFileLocalPath)
 	}
 
 	if c.model.Parallelism > 0 {
 		applyArgs = append(applyArgs, fmt.Sprintf("-parallelism=%d", c.model.Parallelism))
+	}
+
+	if c.model.PlanRun {
+		// Since the plan path is a positional arg it must come last.
+		applyArgs = append(applyArgs, c.model.PlanFileLocalPath)
 	}
 
 	applyCmd, err := c.terraformCmd(applyArgs, nil)
