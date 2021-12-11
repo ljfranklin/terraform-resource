@@ -259,8 +259,10 @@ func (c *client) Apply() error {
 		}
 	} else {
 		// only used in non-backend flow
-		applyArgs = append(applyArgs, "-state=''")
-		applyArgs = append(applyArgs, fmt.Sprintf("-state-out=%s", c.model.StateFileLocalPath))
+		if c.model.StateFileLocalPath != "" {
+			applyArgs = append(applyArgs, "-state=''")
+			applyArgs = append(applyArgs, fmt.Sprintf("-state-out=%s", c.model.StateFileLocalPath))
+		}
 
 		applyArgs = append(applyArgs, c.model.PlanFileLocalPath)
 	}
