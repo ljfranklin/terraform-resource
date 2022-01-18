@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	yamlConverter "github.com/ghodss/yaml"
@@ -152,7 +153,12 @@ func (m Terraform) Merge(other Terraform) Terraform {
 // This method converts all YAML files to JSON and writes Vars to the
 // first file to ensure precedence rules are respected.
 func (m *Terraform) ConvertVarFiles(tmpDir string) error {
-	varsContents, err := yaml.Marshal(m.Vars)
+	vars, err := m.collectVars()
+	if err != nil {
+		return err
+	}
+
+	varsContents, err := yaml.Marshal(vars)
 	if err != nil {
 		return err
 	}
@@ -247,4 +253,27 @@ func (m *Terraform) ParseImportsFromFile() error {
 	}
 
 	return nil
+}
+
+func (m *Terraform) collectVars() (map[string]interface{}, error) {
+	terraformVars := map[string]interface{}{}
+
+	for key, value := range m.Vars {
+		path, ok := value.(string)
+		if ok {
+			if _, err := os.Stat(path); os.IsNotExist(err) {
+				terraformVars[key] = value
+			} else {
+				fileContents, readErr := ioutil.ReadFile(path)
+				if readErr != nil {
+					return nil, fmt.Errorf("Failed to read Terraform Vars file at '%s': %s", path, readErr)
+				}
+				terraformVars[key] = string(fileContents)
+			}
+		} else {
+			terraformVars[key] = value
+		}
+	}
+
+	return terraformVars, nil
 }
