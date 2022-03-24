@@ -146,6 +146,8 @@ The source file is specified with `src` and the destination directory with `dst`
 
 * `parallelism`: *Optional. Default `10`* This int limit the number of concurrent operations Terraform will perform. See the [Terraform docs](https://www.terraform.io/docs/cli/commands/apply.html#parallelism-n) for more information.
 
+* `lock_timeout`: *Optional. Default `0`* Duration is seconds to retry a state lock. See the [Terraform docs](https://www.terraform.io/cli/commands/apply#lock-timeout-duration) for more information.
+
 #### Put Example
 
 Every `put` action creates `name` and `metadata` files as an output containing the `env_name` and [Terraform Outputs](https://www.terraform.io/intro/getting-started/outputs.html) in JSON format.
