@@ -32,6 +32,7 @@ fi
 
 image_name=""
 terraform_url=""
+target_arch=""
 set +u
 while true ; do
   if [ "$#" = 0 ]; then
@@ -97,7 +98,11 @@ pushd "${tmpdir}" > /dev/null
 
   echo "Building docker image '${image_name}'..."
   cp "${release_dir}/docker-prod/Dockerfile" .
-  docker build --build-arg TARGETARCH=${target_arch} -t "${image_name}" .
+  BUILD_ARGS=""
+  if [ -n "${target_arch}" ]; then
+    BUILD_ARGS="--build-arg TARGETARCH=${target_arch}"
+  fi
+  docker build ${BUILD_ARGS} -t "${image_name}" .
 popd > /dev/null
 
 echo -e "${green}Successfully created docker image '${image_name}'!${nc}"
