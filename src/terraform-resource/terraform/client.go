@@ -265,8 +265,8 @@ func (c *client) Apply() error {
 		applyArgs = append(applyArgs, fmt.Sprintf("-parallelism=%d", c.model.Parallelism))
 	}
 
-	if c.model.LockTimeout > 0 {
-		applyArgs = append(applyArgs, fmt.Sprintf("-lock-timeout=%ds", c.model.LockTimeout))
+	if c.model.LockTimeout != "" {
+		applyArgs = append(applyArgs, fmt.Sprintf("-lock-timeout=%s", c.model.LockTimeout))
 	}
 
 	if c.model.PlanRun {
@@ -296,8 +296,8 @@ func (c *client) Destroy() error {
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 
-	if c.model.LockTimeout > 0 {
-		destroyArgs = append(destroyArgs, fmt.Sprintf("-lock-timeout=%ds", c.model.LockTimeout))
+	if c.model.LockTimeout != "" {
+		destroyArgs = append(destroyArgs, fmt.Sprintf("-lock-timeout=%s", c.model.LockTimeout))
 	}
 
 	for _, varFile := range c.model.ConvertedVarFiles {
@@ -326,8 +326,8 @@ func (c *client) Plan() (string, error) {
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 
-	if c.model.LockTimeout > 0 {
-		planArgs = append(planArgs, fmt.Sprintf("-lock-timeout=%ds", c.model.LockTimeout))
+	if c.model.LockTimeout != "" {
+		planArgs = append(planArgs, fmt.Sprintf("-lock-timeout=%s", c.model.LockTimeout))
 	}
 
 	for _, varFile := range c.model.ConvertedVarFiles {
