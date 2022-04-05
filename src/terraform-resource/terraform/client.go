@@ -265,6 +265,10 @@ func (c *client) Apply() error {
 		applyArgs = append(applyArgs, fmt.Sprintf("-parallelism=%d", c.model.Parallelism))
 	}
 
+	if c.model.LockTimeout != "" {
+		applyArgs = append(applyArgs, fmt.Sprintf("-lock-timeout=%s", c.model.LockTimeout))
+	}
+
 	if c.model.PlanRun {
 		// Since the plan path is a positional arg it must come last.
 		applyArgs = append(applyArgs, c.model.PlanFileLocalPath)
@@ -292,6 +296,10 @@ func (c *client) Destroy() error {
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
 	}
 
+	if c.model.LockTimeout != "" {
+		destroyArgs = append(destroyArgs, fmt.Sprintf("-lock-timeout=%s", c.model.LockTimeout))
+	}
+
 	for _, varFile := range c.model.ConvertedVarFiles {
 		destroyArgs = append(destroyArgs, fmt.Sprintf("-var-file=%s", varFile))
 	}
@@ -316,6 +324,10 @@ func (c *client) Plan() (string, error) {
 		"-input=false", // do not prompt for inputs
 		fmt.Sprintf("-out=%s", c.model.PlanFileLocalPath),
 		fmt.Sprintf("-state=%s", c.model.StateFileLocalPath),
+	}
+
+	if c.model.LockTimeout != "" {
+		planArgs = append(planArgs, fmt.Sprintf("-lock-timeout=%s", c.model.LockTimeout))
 	}
 
 	for _, varFile := range c.model.ConvertedVarFiles {

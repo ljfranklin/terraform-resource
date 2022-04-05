@@ -18,6 +18,7 @@ USAGE:
 MANDATORY ARGUMENTS:
     --image-name <name>        Name of the Docker image you'd like to build, e.g. ljfranklin/terraform-resource:PR-test
     --terraform-url <url>      URL of the terraform release you'd like to include, e.g. https://releases.hashicorp.com/terraform/0.9.3/terraform_0.9.3_linux_amd64.zip
+    --target-arch <arch>       Architecture to build the image for e.g. amd64 or arm64
 OPTIONAL ARGUMENTS:
     -h                         Prints this usage text.
 EOF
@@ -31,6 +32,7 @@ fi
 
 image_name=""
 terraform_url=""
+target_arch=""
 set +u
 while true ; do
   if [ "$#" = 0 ]; then
@@ -51,6 +53,14 @@ while true ; do
         exit 1
       fi
       terraform_url="$2"
+      shift 2
+      ;;
+    --target-arch)
+      if [ -z "$2" ]; then
+        >&2 echo -e "${red}--target-arch requires an argument!${nc}"
+        exit 1
+      fi
+      target_arch="$2"
       shift 2
       ;;
     -h)
@@ -88,7 +98,11 @@ pushd "${tmpdir}" > /dev/null
 
   echo "Building docker image '${image_name}'..."
   cp "${release_dir}/docker-prod/Dockerfile" .
-  docker build -t "${image_name}" .
+  BUILD_ARGS=""
+  if [ -n "${target_arch}" ]; then
+    BUILD_ARGS="--build-arg TARGETARCH=${target_arch}"
+  fi
+  docker build ${BUILD_ARGS} -t "${image_name}" .
 popd > /dev/null
 
 echo -e "${green}Successfully created docker image '${image_name}'!${nc}"

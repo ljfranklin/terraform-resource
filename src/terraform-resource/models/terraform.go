@@ -25,6 +25,7 @@ type Terraform struct {
 	BackendType           string                 `json:"backend_type,omitempty"`          // optional
 	BackendConfig         map[string]interface{} `json:"backend_config,omitempty"`        // optional
 	Parallelism           int                    `json:"parallelism,omitempty"`           // optional
+	LockTimeout           string                 `json:"lock_timeout,omitempty"`          // optional
 	PrivateKey            string                 `json:"private_key,omitempty"`
 	PlanFileLocalPath     string                 `json:"-"` // not specified pipeline
 	JSONPlanFileLocalPath string                 `json:"-"` // not specified pipeline
