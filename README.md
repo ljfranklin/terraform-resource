@@ -23,7 +23,7 @@ See [DEVELOPMENT](DEVELOPMENT.md) if you're interested in submitting a PR :+1:
 
 * `vars`: *Optional.* A collection of Terraform input variables.
 These are typically used to specify credentials or override default module values.
-See [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html) for more details.
+See [Terraform Input Variables](https://spacelift.io/blog/how-to-use-terraform-variables) for more details.
 
 * `env`: *Optional.* Similar to `vars`, this collection of key-value pairs can be used to pass environment variables to Terraform, e.g. "AWS_ACCESS_KEY_ID".
 
