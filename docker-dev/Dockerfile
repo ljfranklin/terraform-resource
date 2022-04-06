@@ -29,7 +29,7 @@ RUN if [ "${TARGETARCH}" = "amd64" ]; then \
   rm -rf /tmp/glibc-bin.apk
 
 # install go deps
-RUN go install github.com/onsi/ginkgo/v2/ginkgo@latest
+RUN go install github.com/onsi/ginkgo/ginkgo@v1.16.5
 ENV PATH=$PATH:/go/bin
 
 RUN mkdir -p $HOME/.ssh
