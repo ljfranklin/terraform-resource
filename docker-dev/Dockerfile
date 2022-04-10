@@ -30,6 +30,7 @@ RUN if [ "${TARGETARCH}" = "amd64" ]; then \
 
 # install go deps
 RUN go install github.com/onsi/ginkgo/ginkgo@v1.16.5
+RUN go install github.com/mitchellh/gox@latest
 ENV PATH=$PATH:/go/bin
 
 RUN mkdir -p $HOME/.ssh
