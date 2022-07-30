@@ -46,6 +46,8 @@ fi
 if [[ "${upstream_minor}" -gt "${downstream_minor}" || ("${upstream_minor}" -eq "${downstream_minor}" && "${upstream_patch}" -gt "${downstream_patch}") ]]; then
   echo "Bumping to new version '${upstream_version}'!"
   echo -n "${upstream_version}" > "${output_dir}/config/terraform-version"
+  echo "Sleeping 10 minutes to wait for releases.hashicorp.com to update..."
+  sleep 600
 else
   echo "Downstream version '${downstream_version}' is up-to-date!"
 fi
