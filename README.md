@@ -71,7 +71,6 @@ resources:
       backend_config:
         bucket: mybucket
         prefix: mydir
-        region: us-central1
         credentials: {{gcp_credentials_json}}
       ...
 ```
