@@ -8,6 +8,6 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/onsi/ginkgo v1.15.0
 	github.com/onsi/gomega v1.10.5
-	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
+	golang.org/x/crypto v0.1.0
 	gopkg.in/yaml.v2 v2.4.0
 )
