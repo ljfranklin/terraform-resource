@@ -67,6 +67,9 @@ func NewClient(model models.Terraform, logWriter io.Writer) Client {
 }
 
 func (c *client) InitWithBackend() error {
+	if err := c.clearTerraformState(); err != nil {
+		return err
+	}
 	if err := c.writeBackendOverride(c.model.Source); err != nil {
 		return err
 	}
