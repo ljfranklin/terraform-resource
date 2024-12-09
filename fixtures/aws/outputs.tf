@@ -3,21 +3,27 @@ output "env_name" {
 }
 output "build_id" {
     value = var.build_id
+    ephemeral = true
 }
 output "build_name" {
     value = var.build_name
+    ephemeral = true
 }
 output "build_job_name" {
     value = var.build_job_name
+    ephemeral = true
 }
 output "build_pipeline_name" {
     value = var.build_pipeline_name
+    ephemeral = true
 }
 output "build_team_name" {
     value = var.build_team_name
+    ephemeral = true
 }
 output "atc_external_url" {
     value = var.atc_external_url
+    ephemeral = true
 }
 output "bucket" {
     value = var.bucket
