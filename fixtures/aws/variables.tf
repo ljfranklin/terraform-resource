@@ -4,24 +4,12 @@ variable "region" {
     default = "us-east-1"
 }
 variable "env_name" {}
-variable "build_id" {
-    ephemeral = true
-}
-variable "build_name" {
-    ephemeral = true
-}
-variable "build_job_name" {
-    ephemeral = true
-}
-variable "build_pipeline_name" {
-    ephemeral = true
-}
-variable "build_team_name" {
-    ephemeral = true
-}
-variable "atc_external_url" {
-    ephemeral = true
-}
+variable "build_id" {}
+variable "build_name" {}
+variable "build_job_name" {}
+variable "build_pipeline_name" {}
+variable "build_team_name" {}
+variable "atc_external_url" {}
 
 variable "bucket" {}
 variable "object_key" {}
