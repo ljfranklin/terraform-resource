@@ -909,6 +909,11 @@ func (c *client) terraformCmd(args []string, env []string) (*runner.Runner, erro
 	}
 
 	for key, value := range c.model.Env {
+		// Terraform requires that no vars are specified when applying
+		// a plan file.
+		if c.model.PlanRun && strings.HasPrefix(key, "TF_VAR_") {
+			continue
+		}
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
 	}
 
