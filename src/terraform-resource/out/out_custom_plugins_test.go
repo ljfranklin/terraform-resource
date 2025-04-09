@@ -51,14 +51,6 @@ var _ = Describe("Out Lifecycle with Custom Plugins", func() {
 		Expect(err).ToNot(HaveOccurred())
 		err = helpers.DownloadPlugins(awsPluginDir, awsProviderURL)
 		Expect(err).ToNot(HaveOccurred())
-		// In production image the stateful provider is installed in system-wide location, but manually install
-		// this plugin in plugin dir to avoid needing to run tests as root.
-		statefulProviderURL := fmt.Sprintf("https://github.com/ashald/terraform-provider-stateful/releases/download/v1.2.0/terraform-provider-stateful_v1.2.0-%s-%s.zip", runtime.GOOS, runtime.GOARCH)
-		statefulPluginDir := path.Join(pluginDir, "github.com", "ashald", "stateful", "1.2.0", fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
-		err = os.MkdirAll(statefulPluginDir, 0700)
-		Expect(err).ToNot(HaveOccurred())
-		err = helpers.DownloadPlugins(statefulPluginDir, statefulProviderURL)
-		Expect(err).ToNot(HaveOccurred())
 
 		// ensure relative paths resolve correctly
 		err = os.Chdir(workingDir)
