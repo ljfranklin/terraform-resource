@@ -42,8 +42,8 @@ jobs:
                 type: docker-image
                 source:
                   repository: alpine
-                  username: ((DOCKER_HUB_SKYSCRAPERS_CREDS.username))
-                  password: ((DOCKER_HUB_SKYSCRAPERS_CREDS.password))
+                  username: ((docker-hub-skyscrapers-creds.username))
+                  password: ((docker-hub-skyscrapers-creds.password))
               inputs:
                 - name: resource-src
                 - name: opentofu-release
@@ -102,7 +102,7 @@ resources:
     source:
       uri: git@github.com:skyscrapers/terragrunt-resource.git
       branch: master
-      private_key: ((GIT_PRIVATE_KEY))
+      private_key: ((git-private-key))
   - name: terragrunt-release
     type: github-release
     icon: github
@@ -110,7 +110,7 @@ resources:
     source:
       owner: gruntwork-io
       repository: terragrunt
-      access_token: ((GITHUB_REPO_ACCESS_TOKEN_SKY_TECH))
+      access_token: ((github-repo-access-token-sky-tech))
   - name: opentofu-release
     type: github-release
     check_every: 24h
@@ -118,17 +118,17 @@ resources:
     source:
       user: opentofu
       repository: opentofu
-      access_token: ((GITHUB_REPO_ACCESS_TOKEN_SKY_TECH))
+      access_token: ((github-repo-access-token-sky-tech))
   - name: terragrunt-resource-image
     type: registry-image
     icon: docker
     source:
       repository: skyscrapers/terragrunt-resource
       tag: latest
-      username: ((DOCKER_HUB_SKYSCRAPERS_CREDS.username))
-      password: ((DOCKER_HUB_SKYSCRAPERS_CREDS.password))
+      username: ((docker-hub-skyscrapers-creds.username))
+      password: ((docker-hub-skyscrapers-creds.password))
   - name: slack-alert
     type: slack-notification
     icon: slack
     source:
-      url: ((SLACK_NOTIFICATIONS_URL))
+      url: ((slack-notifications-url))
