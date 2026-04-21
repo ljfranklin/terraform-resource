@@ -3,8 +3,9 @@ FROM alpine:latest
 ARG TARGETARCH
 
 RUN apk update && \
-  apk add aws-cli ca-certificates git bash openssh-client curl sops
+  apk add aws-cli ca-certificates git bash openssh-client curl sops kubectl
 RUN aws --version
+RUN kubectl version --client
 
 RUN mkdir -p $HOME/.ssh
 RUN echo "StrictHostKeyChecking no" >> $HOME/.ssh/config
