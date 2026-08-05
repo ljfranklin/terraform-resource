@@ -220,6 +220,8 @@ This resource can be used to manage a single environment or a pool of many envir
 To use this resource to manage a single environment, set `source.env_name` or `put.params.env_name` to a fixed name like `staging` or `production` as shown in the previous `put` example.
 Each `put` will update the IaaS resources and state file for that environment.
 
+> When `source.env_name` is omitted, the resource will not discover existing environments stored on your backend. Environments created through the resource in Concourse will be known to Concourse, but Concourse sometimes clear this state and will then forget about previously-created environments. For example, if you change the values under the `source` key, Concourse will forget about any previosly-created environments and not rediscover them unless `source.env_name` is set.
+
 #### Pool of Environments
 
 To manage a pool of many environments, you can use this resource in combination with the [pool-resource](https://github.com/concourse/pool-resource).
